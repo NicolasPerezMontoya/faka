@@ -1,0 +1,29 @@
+{
+  "source_path": "/home/mandark/faka/docs/AMENDMENT-csv-source.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Amendment 001 — CSV Upload como fuente de datos de primera clase",
+  "summary": "Locked amendment elevating CSV upload from a Dropi fallback to a first-class, channel-agnostic data source with immutable raw history and a generic CSVConnector.",
+  "scope": [
+    "CSV upload ingestion",
+    "raw_csv_uploads table",
+    "raw_csv_rows table",
+    "csv_mapping_profiles table",
+    "CSVConnector (ChannelConnector implementation)",
+    "Dashboard Operación view (3-step upload wizard)",
+    "Supabase Storage payload retention",
+    "Phase 0 Discovery (catalog ingestion)",
+    "Phase 1 Foundation (schema + connector + endpoint)",
+    "Phase 2 WordPress historical backfill",
+    "Phase 4 Dropi scraper fallback",
+    "Mapping profiles versioning",
+    "Reprocessing pipeline"
+  ],
+  "cross_refs": [
+    "docs/PRD.md"
+  ],
+  "locked": true,
+  "precedence": 0,
+  "notes": "Manifest declared type=ADR with precedence 0; document self-declares Estado: LOCKED and Decisor: Nicolás. Treated as an Accepted ADR amending docs/PRD.md."
+}

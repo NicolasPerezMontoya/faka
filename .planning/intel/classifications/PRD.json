@@ -1,0 +1,25 @@
+{
+  "source_path": "/home/mandark/faka/docs/PRD.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Dashboard Omnicanal de Ventas + Capa de IA",
+  "summary": "Architecture and implementation plan for a multi-channel sales dashboard consolidating WordPress, Mercado Libre, Dropi, POS, WhatsApp, and Falabella with an autonomous + conversational AI layer.",
+  "scope": [
+    "omnichannel sales dashboard",
+    "data ingestion orchestrator",
+    "channel connectors (WordPress, Mercado Libre Colombia, Dropi, POS, WhatsApp, Falabella)",
+    "Supabase Postgres 5-layer schema (raw, master, facts, marts, insights)",
+    "product master catalog and matching pipeline",
+    "AI layer (scheduled insights + conversational chat)",
+    "LLMProvider adapter (Kimi K2, Claude Haiku, GPT-4o-mini, Gemini Flash)",
+    "auth, roles, RLS, audit",
+    "KPIs and dashboard views (Hoy, Productos, Canales, Inteligencia, Operacion)",
+    "phased delivery plan (Fase 0-4)",
+    "risk register and pre-Phase-1 open decisions"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": 2,
+  "notes": ""
+}
