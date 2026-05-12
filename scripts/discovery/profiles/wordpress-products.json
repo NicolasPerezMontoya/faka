@@ -1,0 +1,18 @@
+{
+  "channel": "wordpress",
+  "type": "products",
+  "delimiter": ",",
+  "column_map": {
+    "external_id": "ID",
+    "sku": "SKU",
+    "name": "Name",
+    "description": "Short description",
+    "category": "Categories",
+    "brand": "Attribute 1 value(s)",
+    "price": "Regular price",
+    "barcode": "Attribute 2 value(s)",
+    "supplier_code": "Attribute 3 value(s)",
+    "image_url": "Images",
+    "status": "Visibility in catalog"
+  }
+}

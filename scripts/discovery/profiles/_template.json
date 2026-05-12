@@ -1,0 +1,22 @@
+{
+  "_comment": "Mapping profile template. Copy to <channel>-products.json and edit column_map values to match the actual CSV headers from the export.",
+  "channel": "wordpress",
+  "type": "products",
+  "delimiter": ",",
+  "column_map": {
+    "external_id": "ID",
+    "sku": "SKU",
+    "name": "Name",
+    "description": "Short description",
+    "category": "Categories",
+    "brand": "Attribute 1 value(s)",
+    "price": "Regular price",
+    "cost": null,
+    "barcode": "Attribute 2 value(s)",
+    "supplier_code": "Attribute 3 value(s)",
+    "image_url": "Images",
+    "status": "Visibility in catalog"
+  },
+  "defaults": {},
+  "_notes": "Set a value to the exact header in the CSV. Set to null or omit if the channel doesn't export that field."
+}

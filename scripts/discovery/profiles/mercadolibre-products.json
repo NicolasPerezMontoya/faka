@@ -1,0 +1,16 @@
+{
+  "channel": "mercadolibre",
+  "type": "products",
+  "delimiter": ",",
+  "column_map": {
+    "external_id": "Item ID",
+    "sku": "SKU",
+    "name": "Título",
+    "category": "Categoría",
+    "brand": "Marca",
+    "price": "Precio",
+    "barcode": "GTIN",
+    "image_url": "Imagen",
+    "status": "Estado"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "channel": "pos",
+  "type": "products",
+  "delimiter": ",",
+  "column_map": {
+    "external_id": "id_producto",
+    "sku": "sku",
+    "name": "nombre_producto",
+    "category": "categoría",
+    "price": "precio_venta",
+    "cost": "precio_costo",
+    "barcode": "código_barras",
+    "supplier_code": "código_proveedor",
+    "status": "activo"
+  }
+}

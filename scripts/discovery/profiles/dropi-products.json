@@ -1,0 +1,15 @@
+{
+  "channel": "dropi",
+  "type": "products",
+  "delimiter": ",",
+  "column_map": {
+    "external_id": "ID producto",
+    "sku": "SKU proveedor",
+    "name": "Nombre",
+    "category": "Categoría",
+    "cost": "Precio proveedor",
+    "price": "Precio público Dropi",
+    "image_url": "Imagen",
+    "status": "Estado producto"
+  }
+}
