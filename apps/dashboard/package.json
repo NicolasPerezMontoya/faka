@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "echo '(lint deferred to Phase 2 — use pnpm typecheck for type errors)'",
     "test": "vitest run --passWithNoTests",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "echo '(integration tests deferred to Phase 2 — needs live Supabase)'"
   },
   "dependencies": {
     "@faka/auth": "workspace:*",
