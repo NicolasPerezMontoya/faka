@@ -105,22 +105,19 @@ faka/
 1. **Configurar Supabase staging** con los tokens que ya tienes → `SETUP.md`
 2. **Configurar Railway** con `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
 3. **Configurar Vercel** con env vars (incl. `NEXT_PUBLIC_SUPABASE_*`)
-4. **CI VERDE ✓** desde commit `98c4136` (run 25816668833). Ver `memoria/CI-FIXES.md` para la cascada de 14 fixes.
+4. **CI VERDE ✓ Y ESTRICTO** desde commit `796540e` (run 25824861447). Ver `memoria/CI-FIXES.md` para la cascada completa.
 
-### En el código (deuda técnica de CI)
+### En el código (estado actual)
 
-Tres steps quedaron `continue-on-error: true` para destrabar el primer green run; cierre en F2:
+- **`packages/db/types/database.ts`** es el output verbatim de `supabase gen types`; excluido de prettier via `.prettierignore`. CI lo regenera y `git diff --exit-code` valida que esté al día. Si tocas migrations, corre `pnpm db:types` y commitea.
+- **Format check** es estricto: cualquier archivo sin formato falla CI. Si pnpm está disponible, `pnpm format` antes de commit. Si no, podemos volver al truco del patch artifact (ver CI-FIXES.md).
+- **Type check** es estricto end-to-end.
 
-1. **Format check** — `prettier --write` no se pudo correr local por red WSL2. F2: una pasada + commit, dropear `continue-on-error`.
-2. **Type check** — packages/db/types/database.ts es un stub. Cuando CI lo regenera real, commitear como baseline + dropear `continue-on-error`.
-3. **Assert generated types are committed** — mismo motivo. Una vez committed el baseline, se vuelve estricto.
+### Pendientes menores
 
-### Otros pendientes en código
-
-1. Plans 1.2.5 + 1.4.3 (tests de integración) — los scripts `test:integration` están noop por ahora; F2 escribe vitest configs reales contra Supabase live.
-2. Generar `pnpm-lock.yaml` en CI o local con red estable → commitear como baseline (actualmente CI corre sin `--frozen-lockfile`).
-3. Generar `packages/db/types/database.ts` real con `pnpm db:types` → commitear baseline.
-4. ESLint dashboard noop. F2: alinear a ESLint 8.57.1 + eslint-config-next 14 (o bump a Next 15) y re-habilitar.
+1. Plans 1.2.5 + 1.4.3 (tests de integración) — scripts `test:integration` están noop. F2 escribe vitest configs reales contra Supabase live.
+2. Generar `pnpm-lock.yaml` baseline → commitear (CI corre sin `--frozen-lockfile`).
+3. ESLint dashboard noop. F2: alinear a ESLint 8.57.1 + eslint-config-next 14 (o bump a Next 15) y re-habilitar.
 
 ### Roadmap restante
 

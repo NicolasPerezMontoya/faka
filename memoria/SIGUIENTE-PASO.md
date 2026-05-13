@@ -14,13 +14,11 @@ Esto le da contexto al modelo nuevo para evaluar dónde quedamos.
 gh run list --repo NicolasPerezMontoya/faka --limit 3
 ```
 
-**Estado actual (2026-05-14)**: CI verde desde `98c4136`. Run de referencia: `25816668833`. Ver `memoria/CI-FIXES.md` para la historia.
+**Estado actual (2026-05-14)**: CI verde **y estricto** desde `796540e`. Run de referencia: `25824861447`. Ver `memoria/CI-FIXES.md` para la historia completa.
 
-Deuda técnica restante (3 steps continue-on-error: true):
+Gates activos: Install, Lint, **Format check (strict)**, **Type check (strict)**, Unit tests, Supabase start, Migrations, **Assert types committed (strict)**, Integration tests, Stop.
 
-- **Format check** — prettier reporta ~60 archivos sin formato. Fix: `pnpm format` cuando red coopere + commit.
-- **Type check** — stub types causan ~30 false positives. Fix: commitear `packages/db/types/database.ts` regenerado del db-integration job.
-- **Assert generated types are committed** — mismo motivo. Una vez committed el baseline real, se vuelve estricto.
+Si tocas migrations: corre `pnpm db:types` y commitea el resultado o CI falla.
 
 ### 2. Si aún no desplegaste: seguir `memoria/SETUP.md`
 

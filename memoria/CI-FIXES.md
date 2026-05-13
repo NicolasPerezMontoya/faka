@@ -24,32 +24,42 @@ El primer push falló por el lockfile faltante. Los siguientes 14 commits resolv
 | 16  | `e8a0089` | SQL migration   | `mart_days_of_inventory` PK con expresión `coalesce(canal, 'pos'::channel)` — Postgres no permite expresiones en PK → 2 partial unique indexes                                                |
 | 17  | `98c4136` | Tests           | `apps/dashboard` y `apps/orchestrator` `test:integration` apuntaban a `vitest.integration.config.ts` que no existe → noop hasta F2                                                            |
 
-## Estado final (run `25816668833`)
+## Estado final (run `25824861447` — todos estrictos)
 
 ```
 Lint + unit tests:             SUCCESS
   Install dependencies         ✓
   Lint                          ✓
-  Format check                  ✓ (continue-on-error, prettier reports ~60 warns)
-  Type check                    ✓ (continue-on-error, stub types causan ~30 false positives)
-  Unit tests                    ✓ (passWithNoTests — no tests aún)
+  Format check                  ✓ (strict — prettier --check sobre toda la repo)
+  Type check                    ✓ (strict — pnpm -r exec tsc --noEmit)
+  Unit tests                    ✓ (passWithNoTests por ahora)
 
 DB integration:                SUCCESS
   Setup Supabase CLI           ✓
   Start Supabase local         ✓ (Docker, 11 containers)
   Apply migrations (db reset)  ✓ (13 migraciones aplicadas)
   Regenerate types             ✓
-  Assert types committed       ✓ (continue-on-error — diff esperado vs stub)
+  Assert types committed       ✓ (strict — git diff --exit-code)
   Integration tests             ✓ (noop hasta F2)
   Stop Supabase                ✓
 ```
 
-## Deuda técnica para F2
+## Cómo se cerró la deuda de continue-on-error
 
-Tres `continue-on-error: true` que conviene cerrar antes de empezar F2 con código real:
+Después del primer verde con 3 steps soft, hubo 4 commits adicionales para hacerlo estricto:
 
-1. Correr `pnpm format` en CI o local (cuando la red colabore) → commit → quitar continue-on-error de Format check
-2. Bajar `packages/db/types/database.ts` regenerado del db-integration job → commit como baseline → quitar continue-on-error de Type check + Assert types committed
-3. Decidir alineación ESLint: o bump a Next 15 (ESLint 9 nativo) o downgrade ESLint a 8.57.1 (eslint-config-next 14 nativo) → reactivar lint en dashboard
+| Commit | Qué hizo |
+|---|---|
+| `fa3ef25` | Step temporal `upload-artifact` para subir database.ts generado |
+| `dc928f8` | Bajó el types real (3076 líneas, 30 tablas + 19 views), commiteó como baseline; dropeo continue-on-error de Type check + Assert types committed |
+| `3698962` + `5429ce9` | Fixes a 5 type errors reales que destapó el strict tsc: `csv-parse` faltaba en dashboard, `<Button asChild>` no soportado, `errorsJson: Record<string,unknown>` vs `Json` columna |
+| `16b01de` | Step temporal que corre `pnpm format` en CI y sube `git diff` como prettier.patch artifact |
+| `f68ba21` | Aplicación del patch — prettier --write a 129 archivos |
+| `5970da9` + `3739c04` | Cleanup del último archivo (discovery-questionnaire.md) que mangled durante git apply local |
+| `796540e` | `.prettierignore` para excluir `packages/db/types/database.ts` (es generado por supabase gen types, no debe re-formatearse); restauró el archivo a verbatim CLI output |
 
-Sin estos pendientes, los nuevos errores reales pueden esconderse detrás de las warnings tolerados.
+## Lo único que NO está estricto
+
+- **Dashboard ESLint** sigue noop (`echo` en lugar de `next lint`). next 14 + ESLint 9 son incompatibles. F2: bumpear Next a 15 o bajar ESLint a 8.57.1.
+- **pnpm-lock.yaml** no committed → CI corre sin `--frozen-lockfile`. F2: commit baseline.
+- **Integration tests** son noop (no hay tests aún). Plans 1.2.5 + 1.4.3 deferred.
