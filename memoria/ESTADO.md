@@ -8,13 +8,13 @@
 
 ## Stack
 
-| Capa | Tecnología | Estado |
-|---|---|---|
-| Base de datos | Supabase Postgres + Auth + Storage + Realtime | Schema 13 migrations LISTAS, no desplegado aún |
-| Orquestador | Hono + cron en Railway (Node 22) | Skeleton + Dockerfile + railway.toml LISTOS |
-| Dashboard | Next.js 14 App Router en Vercel | Wizard end-to-end + auth + historial LISTOS |
-| IA (F5) | AI Gateway via env / Anthropic / OpenAI / Google / Moonshot | Adapter pattern definido, sin código aún |
-| Monorepo | pnpm 10.28.1 + Turborepo | Configurado |
+| Capa          | Tecnología                                                  | Estado                                         |
+| ------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| Base de datos | Supabase Postgres + Auth + Storage + Realtime               | Schema 13 migrations LISTAS, no desplegado aún |
+| Orquestador   | Hono + cron en Railway (Node 22)                            | Skeleton + Dockerfile + railway.toml LISTOS    |
+| Dashboard     | Next.js 14 App Router en Vercel                             | Wizard end-to-end + auth + historial LISTOS    |
+| IA (F5)       | AI Gateway via env / Anthropic / OpenAI / Google / Moonshot | Adapter pattern definido, sin código aún       |
+| Monorepo      | pnpm 10.28.1 + Turborepo                                    | Configurado                                    |
 
 ## 7 fases acordadas
 
@@ -90,13 +90,13 @@ faka/
 
 ## Decisiones operativas tomadas
 
-| Decisión | Por qué | Dónde vive |
-|---|---|---|
-| pnpm pinned 10.28.1 (no 11.1.1) | Lo que está instalado localmente; corepack se colgaba intentando bajar 11.1.1 | `package.json` packageManager |
-| `@supabase/supabase-js@^2.105.1` | 2.105.4 no existe en npm (latest = 2.105.1) | `packages/db/package.json`, `packages/connectors/package.json` |
-| `@typescript-eslint/* 8.18.0` exact | `^8.18.0` resolvía a 8.59.3 con sub-paquete `type-utils@8.59.3` faltante | `packages/config/package.json` |
-| CI sin `--frozen-lockfile` ni `cache: pnpm` | Primer run genera el lockfile; subsecuente lo enforce | `.github/workflows/ci.yml` (fix aplicado) |
-| Tests integration deferred (1.2.5 + 1.4.3) | Requieren local Supabase corriendo; CI los desbloqueará | Documentado en STATE.md |
+| Decisión                                    | Por qué                                                                       | Dónde vive                                                     |
+| ------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| pnpm pinned 10.28.1 (no 11.1.1)             | Lo que está instalado localmente; corepack se colgaba intentando bajar 11.1.1 | `package.json` packageManager                                  |
+| `@supabase/supabase-js@^2.105.1`            | 2.105.4 no existe en npm (latest = 2.105.1)                                   | `packages/db/package.json`, `packages/connectors/package.json` |
+| `@typescript-eslint/* 8.18.0` exact         | `^8.18.0` resolvía a 8.59.3 con sub-paquete `type-utils@8.59.3` faltante      | `packages/config/package.json`                                 |
+| CI sin `--frozen-lockfile` ni `cache: pnpm` | Primer run genera el lockfile; subsecuente lo enforce                         | `.github/workflows/ci.yml` (fix aplicado)                      |
+| Tests integration deferred (1.2.5 + 1.4.3)  | Requieren local Supabase corriendo; CI los desbloqueará                       | Documentado en STATE.md                                        |
 
 ## Lo que está pendiente
 

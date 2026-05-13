@@ -11,16 +11,16 @@
  * the F1 acceptance gate.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Channel,
   CustomerHint,
   NormalizedOrder,
   NormalizedProduct,
-} from '@faka/schema';
+} from "@faka/schema";
 
-export type Capability = 'orders' | 'products' | 'inventory' | 'customers';
-export type ConnectorType = 'pull' | 'push' | 'manual';
+export type Capability = "orders" | "products" | "inventory" | "customers";
+export type ConnectorType = "pull" | "push" | "manual";
 
 export interface RawOrder {
   canal: Channel;
@@ -86,8 +86,14 @@ export interface ChannelConnector {
   fetchProducts(since: Date, ctx: ConnectorContext): Promise<RawProduct[]>;
   fetchInventory?(ctx: ConnectorContext): Promise<RawInventory[]>;
 
-  normalizeOrder(raw: RawOrder, ctx: ConnectorContext): Promise<NormalizedOrder>;
-  normalizeProduct(raw: RawProduct, ctx: ConnectorContext): Promise<NormalizedProduct>;
+  normalizeOrder(
+    raw: RawOrder,
+    ctx: ConnectorContext,
+  ): Promise<NormalizedOrder>;
+  normalizeProduct(
+    raw: RawProduct,
+    ctx: ConnectorContext,
+  ): Promise<NormalizedProduct>;
 
   /**
    * ADR-004 LOCKED hook. Returning null is valid (e.g. ML/Dropi where
@@ -112,8 +118,11 @@ export type ConnectorFactory<TConfig> = (config: TConfig) => ChannelConnector;
  * so error messages stay informative when callers stumble onto a skeleton.
  */
 export class NotImplementedError extends Error {
-  constructor(public readonly phase: string, public readonly hint?: string) {
-    super(`NOT_IMPLEMENTED_${phase}${hint ? `: ${hint}` : ''}`);
-    this.name = 'NotImplementedError';
+  constructor(
+    public readonly phase: string,
+    public readonly hint?: string,
+  ) {
+    super(`NOT_IMPLEMENTED_${phase}${hint ? `: ${hint}` : ""}`);
+    this.name = "NotImplementedError";
   }
 }

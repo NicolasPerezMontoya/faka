@@ -38,16 +38,17 @@ Status: PARTIAL — Claude-side done, client-side blocked.
 #### Handoff trigger
 
 Phase 0 closes (and Phase 1 may start) when:
+
 - Tasks 0.1.7 through 0.1.13 are all complete.
 - `match_rate_automatic` ≥ 60% (below means catalog cleanup is needed before Phase 1; treat as a Phase-0.1 insertion, not a Phase 1 task).
 - All 7 PRD §7 decisions are LOCKED in PROJECT.md.
 
 #### What can go wrong
 
-| Risk | Detection | Response |
-|------|-----------|----------|
-| Client cannot export CSVs from a channel | First inspection of received attachments | Schedule a screen-share where dev exports together; if a channel has zero structured data (e.g. WhatsApp), accept hand-typed 30-row sample |
-| Mapping profile headers don't match real exports | First `npm run match` errors out reading a CSV | Edit `profiles/<channel>-products.json` column_map values; re-run |
-| Stages 1–4 yield < 40% automatic match | Report output | Run LLM arbiter on broader threshold (lower JACCARD_MID); if still poor, recommend a catalog-cleanup sub-phase before F1 |
-| LLM rejection rate > 30% with Haiku | Report output | Re-run with `--model claude-sonnet-4-6` or `--provider openai --model gpt-4o`; document the cost/precision tradeoff |
-| Client decisions on §7 reveal a contradiction with ADR-001 | Manual review | Open a new ADR amendment; do not silently override |
+| Risk                                                       | Detection                                      | Response                                                                                                                                   |
+| ---------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Client cannot export CSVs from a channel                   | First inspection of received attachments       | Schedule a screen-share where dev exports together; if a channel has zero structured data (e.g. WhatsApp), accept hand-typed 30-row sample |
+| Mapping profile headers don't match real exports           | First `npm run match` errors out reading a CSV | Edit `profiles/<channel>-products.json` column_map values; re-run                                                                          |
+| Stages 1–4 yield < 40% automatic match                     | Report output                                  | Run LLM arbiter on broader threshold (lower JACCARD_MID); if still poor, recommend a catalog-cleanup sub-phase before F1                   |
+| LLM rejection rate > 30% with Haiku                        | Report output                                  | Re-run with `--model claude-sonnet-4-6` or `--provider openai --model gpt-4o`; document the cost/precision tradeoff                        |
+| Client decisions on §7 reveal a contradiction with ADR-001 | Manual review                                  | Open a new ADR amendment; do not silently override                                                                                         |

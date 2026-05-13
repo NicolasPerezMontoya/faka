@@ -1,30 +1,38 @@
 // Historial — design from docs/sketches/csv-upload-wizard.html:393-460
 
-import Link from 'next/link';
-import { Badge, Card, CardContent, CardHeader, CardTitle, DataTable } from '@faka/ui';
-import { createClient } from '@/lib/supabase/server';
-import { listUploads, type UploadHistoryRow } from './_actions/list';
-import { HistoryRowActions } from './_components/history-row-actions';
+import Link from "next/link";
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  DataTable,
+} from "@faka/ui";
+import { createClient } from "@/lib/supabase/server";
+import { listUploads, type UploadHistoryRow } from "./_actions/list";
+import { HistoryRowActions } from "./_components/history-row-actions";
 
 interface SearchParams {
   highlight?: string;
 }
 
-const STATUS_VARIANT: Record<string, 'info' | 'ok' | 'warn' | 'err' | 'muted'> = {
-  uploaded: 'info',
-  validating: 'warn',
-  processed: 'ok',
-  failed: 'err',
-};
+const STATUS_VARIANT: Record<string, "info" | "ok" | "warn" | "err" | "muted"> =
+  {
+    uploaded: "info",
+    validating: "warn",
+    processed: "ok",
+    failed: "err",
+  };
 
 function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
   const diffMin = Math.floor((now.getTime() - date.getTime()) / 60000);
-  if (diffMin < 1) return 'hace un momento';
+  if (diffMin < 1) return "hace un momento";
   if (diffMin < 60) return `hace ${diffMin} min`;
   if (diffMin < 60 * 24) return `hace ${Math.floor(diffMin / 60)} h`;
-  return date.toLocaleDateString('es-CO', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString("es-CO", { month: "short", day: "numeric" });
 }
 
 function formatBytes(n: number): string {
@@ -33,12 +41,16 @@ function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
 
-export default async function HistorialPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function HistorialPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const supabase = createClient();
   const uploads = await listUploads(50);
   const { data: profiles } = await supabase
-    .from('csv_mapping_profiles')
-    .select('id, nombre, canal, tipo, version, is_active');
+    .from("csv_mapping_profiles")
+    .select("id, nombre, canal, tipo, version, is_active");
 
   const profilesShaped = (profiles ?? []).map((p) => ({
     id: p.id as string,
@@ -55,12 +67,18 @@ export default async function HistorialPage({ searchParams }: { searchParams: Se
     <div>
       <header className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Historial de cargas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Historial de cargas
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Últimas 50 cargas CSV. Reprocesar usa los bytes inmutables guardados en Storage (ADR-001).
+            Últimas 50 cargas CSV. Reprocesar usa los bytes inmutables guardados
+            en Storage (ADR-001).
           </p>
         </div>
-        <Link href="/operacion/upload" className="text-sm font-medium hover:underline">
+        <Link
+          href="/operacion/upload"
+          className="text-sm font-medium hover:underline"
+        >
           + Nueva carga
         </Link>
       </header>
@@ -72,9 +90,13 @@ export default async function HistorialPage({ searchParams }: { searchParams: Se
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Al subir tu primer CSV aparecerá aquí con su estado y opción de reprocesado.
+              Al subir tu primer CSV aparecerá aquí con su estado y opción de
+              reprocesado.
             </p>
-            <Link href="/operacion/upload" className="text-sm font-medium hover:underline mt-3 inline-block">
+            <Link
+              href="/operacion/upload"
+              className="text-sm font-medium hover:underline mt-3 inline-block"
+            >
               Subir CSV →
             </Link>
           </CardContent>
@@ -85,33 +107,41 @@ export default async function HistorialPage({ searchParams }: { searchParams: Se
           keyFn={(row) => row.upload_id}
           columns={[
             {
-              header: 'Cuándo',
+              header: "Cuándo",
               cell: (row) => (
-                <span className={highlight === row.upload_id ? 'font-medium' : 'text-muted-foreground'}>
+                <span
+                  className={
+                    highlight === row.upload_id
+                      ? "font-medium"
+                      : "text-muted-foreground"
+                  }
+                >
                   {formatTime(row.uploaded_at)}
                 </span>
               ),
             },
-            { header: 'Canal', cell: (row) => row.canal_declarado },
-            { header: 'Tipo', cell: (row) => row.tipo },
+            { header: "Canal", cell: (row) => row.canal_declarado },
+            { header: "Tipo", cell: (row) => row.tipo },
             {
-              header: 'Archivo',
+              header: "Archivo",
               cell: (row) => (
-                <code className="text-xs">{row.filename} · {formatBytes(row.bytes)}</code>
+                <code className="text-xs">
+                  {row.filename} · {formatBytes(row.bytes)}
+                </code>
               ),
             },
             {
-              header: 'Filas',
-              cell: (row) => row.row_count.toLocaleString('es-CO'),
-              className: 'text-right',
-              thClassName: 'text-right',
+              header: "Filas",
+              cell: (row) => row.row_count.toLocaleString("es-CO"),
+              className: "text-right",
+              thClassName: "text-right",
             },
             {
-              header: 'Perfil',
+              header: "Perfil",
               cell: (row) =>
                 row.mapping_profile_nombre ? (
                   <span className="text-xs">
-                    {row.mapping_profile_nombre}{' '}
+                    {row.mapping_profile_nombre}{" "}
                     <Badge variant="info">v{row.mapping_profile_version}</Badge>
                   </span>
                 ) : (
@@ -119,13 +149,15 @@ export default async function HistorialPage({ searchParams }: { searchParams: Se
                 ),
             },
             {
-              header: 'Estado',
+              header: "Estado",
               cell: (row) => (
-                <Badge variant={STATUS_VARIANT[row.status] ?? 'muted'}>{row.status}</Badge>
+                <Badge variant={STATUS_VARIANT[row.status] ?? "muted"}>
+                  {row.status}
+                </Badge>
               ),
             },
             {
-              header: '',
+              header: "",
               cell: (row) => (
                 <HistoryRowActions
                   uploadId={row.upload_id}
@@ -134,13 +166,14 @@ export default async function HistorialPage({ searchParams }: { searchParams: Se
                   currentProfileId={row.mapping_profile_id}
                   currentProfileVersion={row.mapping_profile_version}
                   availableProfiles={profilesShaped.filter(
-                    (p) => p.canal === row.canal_declarado && p.tipo === row.tipo,
+                    (p) =>
+                      p.canal === row.canal_declarado && p.tipo === row.tipo,
                   )}
                   status={row.status}
                 />
               ),
-              thClassName: 'text-right',
-              className: 'text-right',
+              thClassName: "text-right",
+              className: "text-right",
             },
           ]}
         />

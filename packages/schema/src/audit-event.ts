@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * AuditEvent — input shape for the `audit_log` helper in
@@ -11,7 +11,12 @@ import { z } from 'zod';
  * `_truncated: true` marker is appended; see RESEARCH §6 Pitfall).
  */
 
-export const UserRoleSchema = z.enum(['super_admin', 'admin', 'manager', 'analista']);
+export const UserRoleSchema = z.enum([
+  "super_admin",
+  "admin",
+  "manager",
+  "analista",
+]);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
 export const AuditEventSchema = z.object({

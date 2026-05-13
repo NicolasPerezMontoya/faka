@@ -26,13 +26,13 @@ graph TD
   W2 --> W4
 ```
 
-| Wave | Plans | Parallelizable? | Hours subtotal |
-|---|---|---|---|
-| 0 — Monorepo bootstrap | 1.0.1–1.0.3 (serial) | No | ~8h |
-| 1 — DB schema + auth | 1.1.1–1.1.7 | Migrations 1.1.1→1.1.4 are serial (layer order); 1.1.5/1.1.6/1.1.7 build on top | ~20h |
-| 2 — Connectors | 1.2.1 (interface) → 1.2.2 (6 skeletons) ║ 1.2.3 (CSVConnector real) parallel after interface → 1.2.4 (helpers) → 1.2.5 (tests) | Yes between 1.2.2 and 1.2.3 (and inside 1.2.2 across the 6 skeleton files) | ~14h |
-| 3 — Dashboard | 1.3.1 → 1.3.2 → 1.3.3 → 1.3.4 → 1.3.5 → 1.3.6 | Mostly serial (wizard steps share state) | ~28h |
-| 4 — Orchestrator | 1.4.1 (Hono server) ║ 1.4.2 (cron) ║ 1.4.3 (retry+DLQ+observability helpers) → 1.4.4a (Railway/Docker infra) → 1.4.4b (Vercel link + smoke) | Yes between 1.4.1/1.4.2/1.4.3; 1.4.4a can ship in parallel with Wave 3 | ~14h |
+| Wave                   | Plans                                                                                                                                       | Parallelizable?                                                                 | Hours subtotal |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------- |
+| 0 — Monorepo bootstrap | 1.0.1–1.0.3 (serial)                                                                                                                        | No                                                                              | ~8h            |
+| 1 — DB schema + auth   | 1.1.1–1.1.7                                                                                                                                 | Migrations 1.1.1→1.1.4 are serial (layer order); 1.1.5/1.1.6/1.1.7 build on top | ~20h           |
+| 2 — Connectors         | 1.2.1 (interface) → 1.2.2 (6 skeletons) ║ 1.2.3 (CSVConnector real) parallel after interface → 1.2.4 (helpers) → 1.2.5 (tests)              | Yes between 1.2.2 and 1.2.3 (and inside 1.2.2 across the 6 skeleton files)      | ~14h           |
+| 3 — Dashboard          | 1.3.1 → 1.3.2 → 1.3.3 → 1.3.4 → 1.3.5 → 1.3.6                                                                                               | Mostly serial (wizard steps share state)                                        | ~28h           |
+| 4 — Orchestrator       | 1.4.1 (Hono server) ║ 1.4.2 (cron) ║ 1.4.3 (retry+DLQ+observability helpers) → 1.4.4a (Railway/Docker infra) → 1.4.4b (Vercel link + smoke) | Yes between 1.4.1/1.4.2/1.4.3; 1.4.4a can ship in parallel with Wave 3          | ~14h           |
 
 Total: **88h** (within 76–96h range).
 
@@ -45,6 +45,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 > Foundational tooling. No parallelism inside this wave (each task depends on the previous). All later waves depend on Wave 0 finishing.
 
 ### Plan 1.0.1 — pnpm workspaces + Turborepo + root config
+
 - **Task:** Initialize root `package.json` with `pnpm-workspace.yaml` covering `apps/*`, `packages/*`, `scripts/discovery`; install `turbo` and `typescript` as root dev deps; create `turbo.json` with `build/lint/test/dev/db:types/db:migrate` pipelines per RESEARCH §1; create `.npmrc` (`node-linker=isolated`, `strict-peer-dependencies=true`), `.nvmrc` (`22.7`), root `tsconfig.json` extending `packages/config/tsconfig.base.json`. Enable Corepack and pin `pnpm@11.1.1`. Create `.env.example` at repo root per RESEARCH §10 with `SUPABASE_*`, `PORT`, `LOG_LEVEL`, channel placeholders, future LLM keys, and `INITIAL_SUPER_ADMIN_PASSWORD`. Update root `.gitignore` to add `.next/`, `dist/`, `.turbo/`, `node_modules/`, `.env`. Create `README.md` at root with quickstart + pointer to `scripts/discovery/README.md` for Phase 0.
 - **Files:** `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `.npmrc`, `.nvmrc`, `tsconfig.json`, `.env.example`, `.gitignore` (modify existing), `README.md`.
 - **References:** RESEARCH §1 (pnpm + Turborepo skeleton), RESEARCH §10 (`.env.example` layout), PATTERNS §3.I (root files), PATTERNS §2 (Node ≥22.7 + ESM + strict TS conventions from `scripts/discovery/package.json`).
@@ -54,6 +55,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-01.
 
 ### Plan 1.0.2 — Shared TS / lint / prettier config package + base tsconfigs
+
 - **Task:** Create `packages/config/` workspace exporting `tsconfig.base.json` (verbatim flags from RESEARCH §1: `target ES2022`, `module ESNext`, `moduleResolution Bundler`, `strict`, `noUncheckedIndexedAccess`, `isolatedModules`, `skipLibCheck`, `esModuleInterop`, `resolveJsonModule`, `forceConsistentCasingInFileNames`, `incremental`, `declaration`, `lib: [ES2022, DOM]`), `tsconfig.nextjs.json` (adds `jsx: preserve`, `plugins: [{ name: "next" }]`), `eslint.base.cjs` (`@typescript-eslint/recommended-type-checked` + `eslint-config-next` + custom rule banning `any` + custom rule banning `NEXT_PUBLIC_*` env vars whose names contain `SERVICE|SECRET|PRIVATE` per RESEARCH §10 / Pitfall 5), and `prettier.config.cjs`. Add `vitest.config.ts` at repo root with workspace inheritance.
 - **Files:** `packages/config/package.json`, `packages/config/tsconfig.base.json`, `packages/config/tsconfig.nextjs.json`, `packages/config/eslint.base.cjs`, `packages/config/prettier.config.cjs`, `vitest.config.ts`.
 - **References:** RESEARCH §1 (tsconfig snippet), RESEARCH §10 + Pitfall 5 (lint rule for `NEXT_PUBLIC_*` + service-role naming), PATTERNS §3.F (config package), PATTERNS §2 (strictness lineage from `scripts/discovery/tsconfig.json`).
@@ -63,6 +65,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-01.
 
 ### Plan 1.0.3 — GitHub Actions CI skeleton + Supabase CLI installed in CI
+
 - **Task:** Create `.github/workflows/ci.yml` with two jobs: (a) `lint-test` runs `pnpm install`, `pnpm -r run lint`, `pnpm -r run test` (no DB) on every push + PR; (b) `db-integration` uses `supabase/setup-cli@v1`, runs `supabase start`, `supabase db reset`, `pnpm --filter @faka/db run types`, asserts no diff with `git diff --exit-code packages/db/types/database.ts`, then `pnpm -r run test:integration` (configured in next waves), then `supabase stop`. Add GitHub Secrets schema (a `SECRETS.md` in `.github/` documenting required secrets: `SUPABASE_ACCESS_TOKEN` only — no project keys yet; staging projects added in 1.4.4b). The workflow MUST NOT call `supabase db push` from CI — only `db reset` against local stack (per RESEARCH §10 Open Question 1 — RESOLVED).
 - **Files:** `.github/workflows/ci.yml`, `.github/SECRETS.md`.
 - **References:** RESEARCH §2 (CI workflow essentials), RESEARCH §9 (testing strategy), RESEARCH §10 (no `db push` from CI ever).
@@ -80,15 +83,17 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 > **Migration numbering:** post-revision, the migration stream is contiguous (0001–0013). Migrations 0009/0010/0011/0012 were renumbered down by 2 (formerly 0011/0012/0013/0014); the original `cron-heartbeat` enum-extension migration (formerly 0016) was DROPPED — replaced by a `kind` column added inside migration 0008 (observability) per W2 fix. The additive `superseded_at` migration (formerly 0015) is now 0013.
 
 ### Plan 1.1.1 — Supabase project skeleton + extensions + enums + RAW layer (incl. CSV tables)
+
 - **Task:** Initialize Supabase project in `packages/db/`. Create `packages/db/package.json` (per RESEARCH §2 — `name=@faka/db`, scripts `types`, `types:remote`, `db:reset`, `db:migrate`; deps `@supabase/supabase-js@2.105.4`, `@supabase/ssr@0.10.3`; devDep `supabase` CLI). Run `supabase init` to scaffold `supabase/config.toml` + `supabase/migrations/`. Enable Auth + Storage in `config.toml`. Create migration `20260513000001_init_extensions_and_schemas.sql` (`create extension pgcrypto`, `pg_trgm`, `vector`). Create migration `20260513000002_enums.sql` with `channel` enum (per PATTERNS §5.4 / `scripts/discovery/types.ts:1` — `wordpress | mercadolibre | dropi | pos | pos1 | pos2 | whatsapp | csv-upload | falabella`), `match_method` enum (verbatim 9 names from `scripts/discovery/types.ts:20-29`), `csv_upload_status` enum (`uploaded | validating | processed | failed` per AMENDMENT-csv-source.md), `user_role` enum (`super_admin | admin | manager | analista` per ADR-002), **and `connector_run_kind` enum (`channel | cron-heartbeat`)** (per W2 fix — kept separate from `channel` enum so the real-channel contract stays clean; consumed by `connector_runs.kind` in migration 0008). Create migration `20260513000003_raw_layer.sql` with `raw_csv_uploads`, `raw_csv_rows`, `csv_mapping_profiles` (column shapes prescribed verbatim from `docs/AMENDMENT-csv-source.md:30-61`), plus `raw_orders`, `raw_products`, `raw_events`. Configure Supabase Storage bucket `csv-uploads` (private) in `config.toml`.
 - **Files:** `packages/db/package.json`, `packages/db/supabase/config.toml`, `packages/db/supabase/migrations/20260513000001_init_extensions_and_schemas.sql`, `packages/db/supabase/migrations/20260513000002_enums.sql`, `packages/db/supabase/migrations/20260513000003_raw_layer.sql`, `packages/db/index.ts`.
-- **References:** RESEARCH §2 (migration workflow + directory layout), PATTERNS §3.B (table-by-table inventory), PATTERNS §5.4 (channel enum + Falabella addition), `docs/AMENDMENT-csv-source.md:30-61` (raw_csv_* schema LOCKED).
+- **References:** RESEARCH §2 (migration workflow + directory layout), PATTERNS §3.B (table-by-table inventory), PATTERNS §5.4 (channel enum + Falabella addition), `docs/AMENDMENT-csv-source.md:30-61` (raw*csv*\* schema LOCKED).
 - **Anti-duplication note:** PATTERNS §5.3 — `csv_mapping_profiles.column_map_json` MUST be a `jsonb` column accepting the **exact shape** of `scripts/discovery/profiles/_template.json:5-21`. Do NOT redesign the column-map shape into separate rows or different field names. PATTERNS §5.4 — the `channel` enum stays real-channels-only; non-channel run categories live in the separate `connector_run_kind` enum.
 - **Effort:** 4h
 - **Verifies:** `pnpm --filter @faka/db exec supabase start` succeeds (local Docker); `pnpm --filter @faka/db exec supabase db reset` applies all three migrations with zero errors; `psql $(pnpm --filter @faka/db exec supabase status -o env | grep DB_URL | cut -d= -f2-) -c "\d raw_csv_uploads"` shows the prescribed columns; `psql ... -c "select unnest(enum_range(null::channel))"` returns 9 channel values including `falabella` and `csv-upload` — and `cron-heartbeat` is NOT present; `psql ... -c "select unnest(enum_range(null::connector_run_kind))"` returns `channel` and `cron-heartbeat`; `pnpm --filter @faka/db run types` produces `packages/db/types/database.ts` and `git diff --exit-code packages/db/types/database.ts` is clean.
 - **FND:** FND-02 (raw layer + CSV tables locked).
 
 ### Plan 1.1.2 — MASTER layer migration (incl. ADR-004 Mini-CRM stubs)
+
 - **Task:** Create migration `20260513000004_master_layer.sql` defining `master_products` (PK `master_sku uuid`, `name`, `brand?`, `category?`, `barcode?`, `supplier_code?`, `attributes_json jsonb`, `created_at`, `updated_at`); `product_mappings` (`master_sku FK`, `canal channel`, `external_id text`, `external_sku?`, `match_method match_method`, `score numeric`, `validado_humano boolean default false`, `validated_by uuid? FK auth.users`, `validated_at timestamptz?`, `created_at`, unique constraint `(canal, external_id)`); `product_variants`, `master_categories` (jerárquica, parent_id self-FK), `category_mappings`. **ADR-004 LOCKED stubs (empty tables, no data, no logic):** `customers` (columns verbatim from `docs/ADR-004-mini-crm.md:17-31` — `customer_id`, `displayed_name`, `phone`, `email`, `document_id`, `first_purchase_at`, `last_purchase_at`, `total_purchases`, `total_spent`, `channels_purchased text[]`, `tags text[]`, `notes`, `created_at`, `updated_at`); `customer_external_links` (verbatim from `docs/ADR-004-mini-crm.md:32-39`); `customer_merge_log` (verbatim from `docs/ADR-004-mini-crm.md:40-42`). Add indexes for phone, email, document_id on `customers` (per ADR-004 matching cascade in F4).
 - **Files:** `packages/db/supabase/migrations/20260513000004_master_layer.sql`.
 - **References:** PATTERNS §3.B (master layer table list), `docs/ADR-004-mini-crm.md:17-42` (verbatim Mini-CRM schema), PRD §"capa MASTER", PATTERNS §5.5 (NO cascade logic — tables only).
@@ -98,6 +103,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-02.
 
 ### Plan 1.1.3 — FACTS layer (incl. idempotency unique constraint + customer_id FK)
+
 - **Task:** Create migration `20260513000005_facts_layer.sql` with `sales` (PK `sale_id uuid`, `canal channel`, `external_order_id text`, `fecha date`, `hora time?`, `customer_id uuid? FK customers(customer_id)` per ADR-004 nullable from day one, `subtotal numeric(14,2)`, `descuento numeric(14,2)`, `total numeric(14,2)`, `costo_envio numeric(14,2)`, `moneda text default 'COP'`, `estado text`, `punto_venta_id text`, `created_at`, **`unique (canal, external_order_id)`** per CONSTR-idempotency-key / FND-08 / PATTERNS §5.9); `sale_items` (`sale_id FK`, `master_sku uuid? FK master_products` nullable, `quantity int`, `unit_price numeric`, `unit_cost numeric?`, `line_discount numeric?`, `line_total numeric`); `inventory_snapshots` (`master_sku FK`, `canal`, `cantidad`, `captured_at`). Add btree index on `(canal, fecha)` and `(customer_id)`.
 - **Files:** `packages/db/supabase/migrations/20260513000005_facts_layer.sql`.
 - **References:** RESEARCH §3 (sales table excerpt), PATTERNS §5.9 (idempotency = (canal, external_order_id) only — no master_sku or date), CONSTR-idempotency-key.
@@ -107,18 +113,20 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-02, FND-08 (idempotency DB constraint).
 
 ### Plan 1.1.4 — MARTS skeleton + INSIGHTS layer (incl. ADR-003 messaging_log) + observability tables
+
 - **Task:** Three migrations.
   - `20260513000006_marts_skeleton.sql`: empty mart tables/views named per PRD §"capa MARTS" (`mart_top_products_by_window`, `mart_channel_performance`, `mart_product_velocity`, `mart_dead_stock`, `mart_days_of_inventory`, `mart_cannibalization`). Each is a `create table` with FK structure but zero rows (F2+ populates). Add `refreshed_at timestamptz` to each.
   - `20260513000007_insights_layer.sql`: `ai_insights` (id, type, severity, suggested_action, payload_json, created_at, dismissed_at?, dismissed_by?); `ai_conversations` (id, user_id FK auth.users, started_at, messages_json, ended_at?); **`messaging_log`** EMPTY table per ADR-003 LOCKED: cols `id uuid pk`, `direction text check (direction in ('inbound','outbound'))`, `channel text`, `recipient text`, `template_name text?`, `payload_json jsonb`, `status text`, `sent_at timestamptz?`, `error text?`, `created_at timestamptz default now()`.
   - `20260513000008_observability.sql`: `connector_runs` (`id uuid pk`, **`kind connector_run_kind not null default 'channel'`** per W2 fix — distinguishes real-channel runs from cron heartbeats; `canal channel null` (nullable: required when `kind='channel'`, NULL when `kind='cron-heartbeat'`; CHECK `(kind = 'channel' AND canal IS NOT NULL) OR (kind = 'cron-heartbeat' AND canal IS NULL)`), `started_at timestamptz`, `completed_at timestamptz?`, `status text check (status in ('succeeded','partial','failed','running'))`, `records_processed int default 0`, `records_failed int default 0`, `retry_count int default 0`, `errors_json jsonb?`, `duration_ms int?`); `audit_log` (verbatim from `docs/ADR-002-role-matrix.md:43`: `user_id uuid`, `role_at_time user_role`, `action text`, `target_table text`, `target_id text`, `payload_json jsonb`, `at timestamptz default now()`); `dead_letter_queue` (`id uuid pk`, `canal channel`, `payload_json jsonb`, `error text`, `attempts int`, `last_attempted_at timestamptz`, `created_at timestamptz`).
 - **Files:** `packages/db/supabase/migrations/20260513000006_marts_skeleton.sql`, `packages/db/supabase/migrations/20260513000007_insights_layer.sql`, `packages/db/supabase/migrations/20260513000008_observability.sql`.
 - **References:** PRD §"capa MARTS", ADR-003 (`messaging_log` empty + columns), ADR-002:43 (audit_log schema), PATTERNS §3.B (insights + observability), RESEARCH §7 (DLQ table-based).
-- **Anti-duplication note:** ADR-003 — `messaging_log` is EMPTY in F1; do NOT populate, do NOT add seed rows. ADR-002:43 — `audit_log` columns are exact; do NOT add fields like `ip_address` or `user_agent` (defer to post-F4). W2 fix — `connector_runs.kind` column is the *only* place non-channel run categorization lives; do NOT add `cron-heartbeat` to the `channel` enum or to `scripts/discovery/types.ts` re-export.
+- **Anti-duplication note:** ADR-003 — `messaging_log` is EMPTY in F1; do NOT populate, do NOT add seed rows. ADR-002:43 — `audit_log` columns are exact; do NOT add fields like `ip_address` or `user_agent` (defer to post-F4). W2 fix — `connector_runs.kind` column is the _only_ place non-channel run categorization lives; do NOT add `cron-heartbeat` to the `channel` enum or to `scripts/discovery/types.ts` re-export.
 - **Effort:** 3h
 - **Verifies:** All three migrations apply; `psql ... -c "select count(*) from messaging_log"` returns 0; `psql ... -c "\d audit_log"` shows exactly 7 columns matching ADR-002:43; `psql ... -c "\d connector_runs"` shows status check constraint covering the 4 statuses AND the `kind` column referencing `connector_run_kind`; `psql ... -c "select pg_get_constraintdef(oid) from pg_constraint where conrelid = 'connector_runs'::regclass and contype = 'c'"` includes the kind/canal coherence CHECK.
 - **FND:** FND-02, FND-08 (audit_log, connector_runs).
 
 ### Plan 1.1.5 — Profiles table + custom_access_token Auth Hook (ADR-002 JWT claim)
+
 - **Task:** Create migration `20260513000009_profiles_and_role_hook.sql` (renumbered from 0011 to keep migration numbering contiguous per W8 fix) per RESEARCH §4 verbatim:
   - `create table public.profiles (user_id uuid pk references auth.users(id) on delete cascade, email text not null, role public.user_role not null default 'analista', display_name text?, created_at, updated_at)`.
   - RLS on `profiles`: `profiles_self_read` (`user_id = auth.uid()`); `profiles_admin_write` (super_admin via JWT claim).
@@ -135,6 +143,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-03 (Auth Hook + JWT claim).
 
 ### Plan 1.1.6 — Row-level RLS policies + per-role SECURITY INVOKER views + grants
+
 - **Task:** Three migrations (renumbered from 0012/0013/0014 to 0010/0011/0012 per W8 fix).
   - `20260513000010_rls_policies.sql`: `alter table ... enable row level security` on every user-readable table (`sales`, `sale_items`, `inventory_snapshots`, `master_products`, `product_mappings`, `customers`, `customer_external_links`, `customer_merge_log`, `raw_csv_uploads`, `raw_csv_rows`, `csv_mapping_profiles`, `ai_insights`, `ai_conversations`, `messaging_log`, `connector_runs`, `audit_log`). Baseline select policy `authenticated may select if auth.uid() is not null`. NO INSERT/UPDATE/DELETE policies for the `authenticated` role — mutations go through Server Actions running with Service Role. Add `current_role_claim()` SQL helper function per RESEARCH §3.
   - `20260513000011_role_views.sql`: For each table touched by ADR-002 column matrix — minimally `sales`, `sale_items`, `customers`, `customer_external_links`, `customer_merge_log` — create three views `<table>_view_admin`, `<table>_view_manager`, `<table>_view_analista`, each with **`with (security_invoker = true)`** (RESEARCH §3 + Pitfall 1 — mandatory). Column projection per ADR-002 matrix:
@@ -151,6 +160,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-03 (RLS + column-level views).
 
 ### Plan 1.1.7 — Seed mapping profiles + Super Admin CLI seeder + type generation gate
+
 - **Task:** Two artifacts.
   - `packages/db/supabase/seed.sql`: For each existing `scripts/discovery/profiles/*.json` (wordpress, mercadolibre, dropi, pos), `insert into csv_mapping_profiles (id, nombre, canal, tipo, column_map_json, version, is_active, creado_por)` reading the JSON content verbatim via heredoc per RESEARCH §2 seeding snippet. All inserts MUST be idempotent (`on conflict do nothing`) so `supabase db reset` can rerun safely. Add a placeholder row for WhatsApp products even though no JSON exists yet (mark `is_active=false`).
   - `packages/db/scripts/seed-super-admin.ts`: Standalone TS Node script per RESEARCH §2 snippet — creates auth user `nicolasperezmontoya@gmail.com` via `supabase.auth.admin.createUser({ email_confirm: true })`, password from `INITIAL_SUPER_ADMIN_PASSWORD` env, then upserts `profiles` row with `role='super_admin'`. Idempotent: if user exists, only upsert profile. Add `pnpm seed:super-admin` script in `packages/db/package.json`.
@@ -169,6 +179,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 > Builds `packages/connectors`: the `ChannelConnector` interface, 6 skeletons that throw `NotImplementedError`, the **real** `CSVConnector` implementation, and the cross-cutting helpers (idempotency, retry+DLQ, observability). Plan 1.2.1 (interface + schema) must finish before 1.2.2 and 1.2.3 can start; 1.2.2 (6 skeletons) and 1.2.3 (CSVConnector real impl) run in parallel after the interface. 1.2.3 (CSVConnector real impl) additionally depends on Wave 1 migrations 0003 + 0008 (raw_csv tables + connector_runs). 1.2.4 (helpers) follows 1.2.1 and depends on Wave 1 migrations 0005 + 0008. 1.2.5 (tests) follows 1.2.1–1.2.4 and Wave 1 completion.
 
 ### Plan 1.2.1 — `packages/schema` Zod contracts + `packages/connectors` interface + types
+
 - **Task:** Create `packages/schema/`:
   - `src/channel.ts` — `z.enum(['wordpress','mercadolibre','dropi','pos','pos1','pos2','whatsapp','csv-upload','falabella'])`. Elevated from `scripts/discovery/types.ts:1` + `falabella` added per FND-04. **DO NOT include `cron-heartbeat`** — that lives in the separate `connector_run_kind` enum (W2 fix).
   - `src/connector-run-kind.ts` — `z.enum(['channel','cron-heartbeat'])`. Mirrors the DB enum from migration 0002. Consumed by `connector_runs.kind` writes.
@@ -193,6 +204,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-04 (ChannelConnector interface published).
 
 ### Plan 1.2.2 — 6 channel skeletons (WP, ML, Dropi, POS, WhatsApp, Falabella)
+
 - **Task:** Create six skeleton files in `packages/connectors/src/` per RESEARCH §5 skeleton pattern. Each is ~30 lines: imports `ChannelConnector, ConnectorContext, ConnectorFactory` from `../types`; exports `create<Channel>Connector: ConnectorFactory<{ ... }>` returning a connector whose `fetchOrders/fetchProducts/normalizeOrder/normalizeProduct` throw `NOT_IMPLEMENTED_F<N>` with the right phase tag, and whose `healthCheck` returns `{ ok: false, last_error: 'not configured (F1 skeleton)' }`. Specifics:
   - `wordpress/index.ts` — config `{ baseUrl, apiKey }`, throws `NOT_IMPLEMENTED_F2`.
   - `mercadolibre/index.ts` — config `{ clientId, clientSecret }`, throws `NOT_IMPLEMENTED_F4`.
@@ -210,6 +222,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-04 (skeletons compile against interface).
 
 ### Plan 1.2.3 — `CSVConnector` real implementation (the F1 acceptance gate connector)
+
 - **Task:** Create `packages/connectors/src/csv/index.ts` with `createCSVConnector: ConnectorFactory<CSVConnectorConfig>` returning a `CSVConnector extends ChannelConnector` with:
   - `name: 'csv-upload'`, `type: 'manual'`, `capabilities: new Set(['orders','products','inventory'])`.
   - `ingestUpload(uploadId: string): Promise<IngestResult>` — **normalization layer** (W1 fix — this is the row→Normalized conversion engine; the workflow that uploads bytes + writes raw_csv_rows is owned by 1.3.5's `commitUpload` Server Action; ingestUpload reads pre-persisted raw rows and turns them into facts/master rows). Full body per RESEARCH §5 skeleton expanded:
@@ -229,7 +242,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - Create `packages/connectors/src/csv/dry-run.ts` — `dryRun(uploadId, profileId): { rowsValid, rowsWarning, rowsError, errors, projected: { newMasterSkus, autoMatches, llmCandidates, validationQueue } }`. For F1 the `projected.*` fields are placeholder zeros (F2 wires real cascade calls per PATTERNS §3.C). Internally also uses `applyColumnMap` to predict valid/error counts without writing.
 - Create `packages/connectors/src/csv/auto-detect.ts` — `autoDetect(firstRows, channel): Array<{ field, sourceColumn, confidence: 'high'|'mid'|'none' }>` — fuzzy header matching against existing profiles in `csv_mapping_profiles` table for the channel.
 - **Files:** `packages/connectors/src/csv/index.ts`, `packages/connectors/src/csv/column-map.ts`, `packages/connectors/src/csv/dry-run.ts`, `packages/connectors/src/csv/auto-detect.ts`.
-- **Depends on:** 1.2.1 (interface + schema) + Wave 1 migrations 0003 (raw_csv_*) + 0008 (connector_runs). Can run in parallel with 1.2.2.
+- **Depends on:** 1.2.1 (interface + schema) + Wave 1 migrations 0003 (raw*csv*\*) + 0008 (connector_runs). Can run in parallel with 1.2.2.
 - **References:** RESEARCH §5 (CSVConnector skeleton), RESEARCH §6 (commitUpload algorithm — flows into ingestUpload), PATTERNS §3.C (csv subdir files), PATTERNS §4.D (load-csv algorithm reused), `scripts/discovery/load-csv.ts:41-81` (algorithm).
 - **Anti-duplication note (W1 — boundary with 1.3.5):** This plan owns the **normalization layer** (raw row + mapping_profile → NormalizedProduct/NormalizedOrder, Zod validation, UPSERT to facts/master). It is called by the Server Action in 1.3.5. The Server Action in 1.3.5 owns the **workflow** (file upload → write storage → parse CSV bytes → write raw_csv_rows as raw payload → call CSVConnector.ingestUpload). `raw_csv_rows.payload_json` is the raw `Record<string,string>` row (no transformations applied at write time); `applyColumnMap` + Zod parse happen ONLY inside `ingestUpload`. PATTERNS §5 cluster — DO NOT copy the `loadChannel(inputDir, profilesDir, channel)` filesystem walker from `load-csv.ts:83-95`; production reads from Supabase Storage + `raw_csv_rows`, not local files. The `get()` and `num()` helpers ARE ported verbatim. DO NOT port the Jaccard match logic from `cascade.ts` into `dry-run.ts` projections — the projections are placeholder zeros in F1 per PATTERNS §3.C.
 - **Effort:** 5h
@@ -237,6 +250,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-05 (CSVConnector is the first concrete `ChannelConnector`).
 
 ### Plan 1.2.4 — Cross-cutting helpers: idempotency, retry+DLQ, observability, audit
+
 - **Task:** Four helper modules.
   - `packages/connectors/src/idempotency.ts` — `idempotencyKey(canal, externalOrderId): string` (string composition for logs) + `idempotentUpsert(supabase, table, row, conflictCols)` wrapper that calls `.upsert(row, { onConflict: conflictCols.join(',') })` (RESEARCH §7 canonical pattern). Test: two consecutive calls with same `(canal, external_order_id)` produce single `sales` row.
   - `packages/connectors/src/retry.ts` — `withRetryAndDLQ<T>(fn, { canal, payload }, supabase): Promise<T | null>` per RESEARCH §7 verbatim: uses `p-retry` with `retries: 3, factor: 2, minTimeout: 1000`; on final failure inserts into `dead_letter_queue` and returns `null`.
@@ -251,6 +265,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-08 (idempotency + retry+DLQ + connector_runs + audit_log).
 
 ### Plan 1.2.5 — Connector integration tests + interface conformance test + RLS test
+
 - **Task:** Three integration test files using Vitest + local Supabase.
   - `packages/connectors/__tests__/skeletons.test.ts` — type-level test: import each of 6 skeleton factories, assert they satisfy `ChannelConnector` interface, call `healthCheck()`, assert returns `{ ok: false }`.
   - `packages/connectors/__tests__/csv.integration.test.ts` — end-to-end against local Supabase: seed a `raw_csv_uploads` row + 10 `raw_csv_rows` from a fixture CSV (`__fixtures__/wordpress-products-sample.csv`, copy from `docs/csv-templates/`), call `csvConnector.ingestUpload(upload_id)`, assert `master_products` has new rows and `raw_csv_rows.processed = true` for all 10. Reprocess test: call `ingestUpload` a second time, assert UPSERT idempotency (no duplicate rows).
@@ -271,6 +286,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 > Next.js 14 App Router shell on Vercel. Login UI, JWT-claim middleware, role-aware layout, full "Operación" view with 3-step CSV upload wizard + historial table + reprocess action. Most plans are serial since they share state (the wizard's 3 steps live in URL params and share Server Actions). Depends on Wave 1 (auth + schema) + Wave 2 (CSVConnector real impl + helpers).
 
 ### Plan 1.3.1 — `apps/dashboard` Next.js scaffold + Supabase clients + UI primitives package
+
 - **Task:** Two artifacts.
   - `apps/dashboard/`: `next.config.mjs` (`transpilePackages: ['@faka/ui','@faka/auth','@faka/connectors','@faka/schema','@faka/db']`), `package.json` (deps `next@^14`, `react@^18`, `react-dom@^18`, `@supabase/supabase-js@2.105.4`, `@supabase/ssr@0.10.3`, `@faka/*` workspace refs, `tailwindcss`, `nanoid` — explicit per RESEARCH Pitfall 5), `tsconfig.json` extending `@faka/config/tsconfig.nextjs.json`, `tailwind.config.ts` (content includes `packages/ui/**`), `postcss.config.cjs`, `app/layout.tsx` (sidebar + topbar per `csv-upload-wizard.html:28-58` — only "Operación" link active, others placeholders). **W5 fix: the topbar in this plan renders a `<SignInLink href="/login">Iniciar sesión</SignInLink>` placeholder ONLY** (no `getUser()` / `getSession()` calls, no auth-aware user-email display). The auth-aware topbar (user email + avatar + sign-out) is added by Plan 1.3.2 after middleware ships. This ensures `app/layout.tsx` renders safely when no session exists. `app/globals.css` (Tailwind base + design tokens matching sketch colors), `app/page.tsx` (redirect to `/operacion`), `lib/supabase/server.ts` + `lib/supabase/browser.ts` (re-export from `@faka/db/client`), `app/api/health/route.ts` (returns `{ ok: true, migrations: 'in-sync' }`), `.env.example` (NEXT_PUBLIC_SUPABASE_URL/ANON, SUPABASE_SERVICE_ROLE_KEY).
   - `packages/ui/`: shadcn-style components — `src/components/{button,select,toggle,card,table,badge,data-table}.tsx` (standard shadcn copy-pastes), `src/components/stepper.tsx` (design from `csv-upload-wizard.html:71-86`), `src/components/dropzone.tsx` (design from `csv-upload-wizard.html:170-176`), `src/components/mapping-table.tsx` (design from `csv-upload-wizard.html:212-256`), `src/components/sign-in-link.tsx` (W5 — auth-tolerant topbar placeholder; just a styled `<a href="/login">`). `styles/globals.css` Tailwind tokens. `package.json` deps: `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `tailwindcss`.
@@ -282,6 +298,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-01 (Vercel/Next.js linked).
 
 ### Plan 1.3.2 — `packages/auth` + middleware + login UI + role propagation + auth-aware topbar
+
 - **Task:** Create `packages/auth/`:
   - `src/middleware.ts` — Next.js middleware verbatim from RESEARCH §4 reading session cookie via `@supabase/ssr`, asserting JWT, extracting `role` from `user.app_metadata.role` (set by the Auth Hook), redirecting unauthenticated to `/login`, role-gating with `ROUTE_ROLE_REQUIREMENTS` table (`/admin: ['super_admin']`, `/operacion: ['super_admin','admin','manager']`, `/inteligencia/hoy: all 4`), setting `x-user-role` header for Server Components.
   - `src/require-role.ts` — `requireRole(roles[], handler)` HOC for Server Actions returning 403 if role mismatched.
@@ -305,6 +322,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-03 (login + JWT middleware + role gating).
 
 ### Plan 1.3.3 — Operación landing page + Step 1 (Fuente) of CSV upload wizard
+
 - **Task:** Create:
   - `apps/dashboard/app/(app)/operacion/page.tsx` — Operación landing: links to "Subir CSV" + "Historial" + future placeholders for "Health" (F3) + "Cola de validación" (F2). Server Component reading role from `x-user-role` header.
   - `apps/dashboard/app/(app)/operacion/upload/page.tsx` — wizard host. Reads `?step=1|2|3&upload=...&profile=...` from URL params (CONTEXT.md "Specific Ideas" — state lives in URL). Renders the corresponding step component. Uses `<Stepper>` from `@faka/ui` per `csv-upload-wizard.html:71-86`.
@@ -319,6 +337,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-06 (wizard step 1).
 
 ### Plan 1.3.4 — Wizard Step 2 (Mapeo) + upload-csv Server Action + Storage write
+
 - **Task:** Create:
   - `apps/dashboard/app/(app)/operacion/upload/_components/step-mapping.tsx` — Step 2 per `csv-upload-wizard.html:164-280`: dropzone for the CSV file (uses `@faka/ui/dropzone`, 20MB hard cap client-side per RESEARCH Pitfall 6 + accept `.csv`), preview of first 5 parsed rows in a `<DataTable>`, mapping table per sketch:212-256 with auto-detect badges (`auto` / `68% vacío` / `manual`). Calls `autoDetect()` from `@faka/connectors/csv` on file load to suggest column_map. Toggle "Guardar como nueva versión" (creates `csv_mapping_profiles` row v+1 on confirm). "Continuar" → Server Action `createUploadAndMap(formData)`.
   - `apps/dashboard/app/(app)/operacion/upload/_actions/upload-csv.ts` — Server Action verbatim from RESEARCH §6 `createUpload`:
@@ -340,6 +359,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-06 (wizard step 2 + Storage write + audit_log entry).
 
 ### Plan 1.3.5 — Wizard Step 3 (Validar) + dry-run + commit + CSVConnector invocation
+
 - **Task:** Create:
   - `apps/dashboard/app/(app)/operacion/upload/_components/step-validate.tsx` — Step 3 per `csv-upload-wizard.html:282-374`: 3-stat header (valid / warning / error counts from `dryRun` Server Action result), impact projection card (`projected.newMasterSkus`, `projected.autoMatches`, `projected.llmCandidates`, `projected.validationQueue` — all zeros in F1), error list (first 50 errors with row#+reason), "Confirmar y procesar" button → `commitUpload` Server Action with `dry_run: false`.
   - `apps/dashboard/app/(app)/operacion/upload/_actions/dry-run.ts` — Server Action: calls `csvConnector.dryRun(uploadId, profileId)` (from 1.2.3). Returns `{ total, valid, warnings, errors, projected }`.
@@ -364,6 +384,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-06 (full wizard live, test CSV lands rows end-to-end).
 
 ### Plan 1.3.6 — Historial table + reprocess action with versioned mapping profile
+
 - **Task:** Create:
   - `apps/dashboard/app/(app)/operacion/historial/page.tsx` — Server Component listing `raw_csv_uploads` rows ordered by `uploaded_at desc limit 50`, filtered via RLS (role view if applicable). Uses `@faka/ui/data-table` styled per `csv-upload-wizard.html:393-460`: columns Cuándo / Canal / Tipo / Archivo / Filas / Estado / Acciones. Status badges (`uploaded`=info, `validating`=warn, `processed`=ok, `failed`=err) per sketch:21-24. Acciones column: "Ver" (modal with `error_log_json`) + "Reprocesar" (opens reprocess modal).
   - `apps/dashboard/app/(app)/operacion/historial/_components/reprocess-modal.tsx` — Modal allowing user to choose a different `csv_mapping_profile` version (or upload a NEW version via inline form linking to `save-mapping`). On confirm → calls `reprocessUpload` Server Action.
@@ -395,6 +416,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 > **W4 fix — Plan 1.4.4 was split into 1.4.4a (Docker + Railway infra; parallelizable with Wave 3) and 1.4.4b (Vercel link + smoke; depends on Wave 3 dashboard buildable).** This allows orchestrator infrastructure to ship in parallel with dashboard work rather than blocking on it.
 
 ### Plan 1.4.1 — Hono server skeleton + connectors registry + health/connectors endpoints
+
 - **Task:** Create `apps/orchestrator/`:
   - `package.json` — `type: module`, deps: `hono@4.12.18`, `@hono/node-server@2.0.2`, `@hono/zod-validator`, `pino@10.3.1`, `p-retry@7.x`, `@supabase/supabase-js`, `@faka/connectors`, `@faka/schema`, `@faka/db`. `engines: { node: '>=22.7' }`. Scripts: `build` (tsc), `start` (`node dist/server.js`), `dev` (`tsx src/server.ts`).
   - `tsconfig.json` extending `@faka/config/tsconfig.base.json` with `outDir: dist`, `rootDir: src`.
@@ -412,6 +434,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-04 (registry wires interface + 6 skeletons + CSVConnector), FND-01 (orchestrator exists).
 
 ### Plan 1.4.2 — Cron entry + heartbeat to connector_runs
+
 - **Task:** Create:
   - `apps/orchestrator/src/cron.ts` per RESEARCH §7 verbatim: starts pino logger, creates supabase service-role client, inserts a single `connector_runs` heartbeat row with **`kind='cron-heartbeat'`, `canal=null`** (per W2 fix — the kind/canal coherence rule enforced by the CHECK constraint in migration 0008), `status='succeeded'`, `records_processed=0`, then **`process.exit(0)`** (per Pitfall 7 — Railway cron requires clean exit). Use the `recordConnectorRun` helper from 1.2.4 which enforces the rule at the call-site.
   - Build script update: `package.json` `scripts.build` produces both `dist/server.js` and `dist/cron.js`.
@@ -426,6 +449,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-04 (cron skeleton wired), FND-08 (connector_runs writes).
 
 ### Plan 1.4.3 — Orchestrator-side retry+DLQ + observability integration tests
+
 - **Task:** Two integration test files (orchestrator wraps the helpers from 1.2.4 — this plan just exercises them through the orchestrator's surface area):
   - `apps/orchestrator/__tests__/retry-and-dlq.test.ts` — Define a deliberately failing function that fails 4 times in a row, wrap with `withRetryAndDLQ` from `@faka/connectors/retry`, run against local Supabase, assert (a) the function was called 4 times total (1 + 3 retries), (b) a row landed in `dead_letter_queue` with `attempts=4` and `error` matching, (c) the wrapper returns `null`.
   - `apps/orchestrator/__tests__/observability.test.ts` — Define a successful function, wrap with `recordConnectorRun`, run, assert exactly one `connector_runs` row was written with status `succeeded`, duration_ms > 0, records_processed matches.
@@ -439,6 +463,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-08 (idempotency + retry+DLQ + connector_runs exercised by tests).
 
 ### Plan 1.4.4a — Orchestrator Dockerfile + Railway services + DEPLOY runbook (W4 split, orchestrator portion)
+
 - **Task:** Three artifacts (orchestrator-side infra; parallelizable with Wave 3 — does NOT depend on the dashboard being buildable):
   - `apps/orchestrator/Dockerfile` — multi-stage per RESEARCH §10: stage 1 `node:22-alpine` installs pnpm via corepack, copies workspace, runs `pnpm install --frozen-lockfile && pnpm --filter @faka/orchestrator... build`; stage 2 copies `dist/` + production node_modules, sets `CMD ["node","dist/server.js"]`.
   - `apps/orchestrator/railway.toml` (absolute path required per RESEARCH §1 monorepo gotcha) — declares two services: `orchestrator-web` (start `node dist/server.js`, healthcheck `/health`, watch `apps/orchestrator/** packages/**`) and `orchestrator-cron` (start `node dist/cron.js`, schedule `*/30 * * * *` placeholder, no healthcheck).
@@ -452,6 +477,7 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 - **FND:** FND-01 (Railway linked, secrets in env vars only).
 
 ### Plan 1.4.4b — Vercel monorepo config + smoke tests (W4 split, dashboard portion)
+
 - **Task:** Two artifacts (dashboard-side infra + cross-service smoke; depends on Wave 0 + Wave 3 having a buildable dashboard + 1.4.4a being shipped):
   - `apps/dashboard/vercel.json` (or document in repo `DEPLOY.md` from 1.4.4a) — Vercel project settings: Root Directory `apps/dashboard`, Build Command `cd ../.. && turbo run build --filter=dashboard...`, Ignored Build Step `npx turbo-ignore --fallback=HEAD^1`, env var list (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). Add lint rule in CI: `grep -E 'NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE)' apps/dashboard/.env.example apps/dashboard/vercel.json` must return zero matches.
   - **Append to `DEPLOY.md`** (created in 1.4.4a) sections (4) Vercel project creation + branch settings, and (5) smoke test commands.
@@ -470,22 +496,22 @@ Cross-wave parallelism: once W0 closes, **W1 and W2 can run in parallel up to th
 
 These checks must pass at the end of Phase 1 regardless of which plan delivers them. They map directly to ROADMAP.md success criteria 1–5 (lines 41–46).
 
-| ID | Check | Command / Action | Maps to |
-|---|---|---|---|
-| CC-1 | Zero pending migrations against staging | `supabase db diff --linked` returns empty | ROADMAP F1 SC1 |
-| CC-2 | `supabase db reset` applies all 13 migrations clean | `pnpm --filter @faka/db exec supabase db reset` exits 0; `ls packages/db/supabase/migrations | wc -l` returns 13 (contiguous 0001..0013 per W8 fix) | ROADMAP F1 SC1 + FND-02 |
-| CC-3 | Generated `database.ts` matches schema | `pnpm --filter @faka/db run types && git diff --exit-code packages/db/types/database.ts` | FND-02 |
-| CC-4 | All four roles can log in; column-level views enforced | `pnpm vitest run packages/db/__tests__/rls.test.ts apps/dashboard/__tests__/auth.integration.test.ts` passes | ROADMAP F1 SC3 + FND-03 |
-| CC-5 | Service-role key never appears in client bundle | `pnpm --filter dashboard run build && grep -rL SUPABASE_SERVICE_ROLE_KEY apps/dashboard/.next/static apps/dashboard/.next/server/pages` and inspect output (the key must not appear in any `.next/static` JS chunk) | ROADMAP F1 SC3 |
-| CC-6 | 6 channel skeletons + CSVConnector compile | `pnpm --filter @faka/connectors exec tsc --noEmit && pnpm vitest run packages/connectors/__tests__/skeletons.test.ts` | ROADMAP F1 SC4 + FND-04 |
-| CC-7 | End-to-end CSV upload through wizard lands rows | `pnpm vitest run apps/dashboard/__tests__/upload.integration.test.ts` passes; manual smoke: log in as admin, upload fixture, see history row with status=`processed` | ROADMAP F1 SC2 + FND-05 + FND-06 |
-| CC-8 | Reprocess with new profile version works | `pnpm vitest run apps/dashboard/__tests__/reprocess.integration.test.ts` passes | ROADMAP F1 SC2 + FND-07 |
-| CC-9 | Idempotency, retry+DLQ, connector_runs, audit_log exercised | `pnpm vitest run apps/orchestrator/__tests__ packages/connectors/__tests__/idempotency.test.ts` | ROADMAP F1 SC5 + FND-08 |
-| CC-10 | Staging deploys reachable | `bash scripts/smoke.sh <dashboard-url> <orchestrator-url>` exits 0 | FND-01 |
-| CC-11 | Lint rule blocks NEXT_PUBLIC_*-named secrets | `grep -E 'NEXT_PUBLIC_.*(SERVICE\|SECRET\|PRIVATE)' apps/dashboard/.env.example apps/dashboard/vercel.json` returns zero matches | RESEARCH §10 + Pitfall 5 |
-| CC-12 | Every `create view` includes `security_invoker = true` | `grep -c 'create view' packages/db/supabase/migrations/*.sql` equals `grep -c 'security_invoker = true' packages/db/supabase/migrations/*.sql` | RESEARCH Pitfall 1 + FND-03 |
-| CC-13 | CSV upload payload immutability | After upload+reprocess, `select count(*) from storage.objects where bucket_id='csv-uploads' and name like 'csv/<upload_id>/%'` returns 1 (Storage file unchanged) | ADR-001 + FND-07 |
-| CC-14 | `messaging_log` stays empty in F1 (per ADR-003 LOCKED) | F1 acceptance check: `psql ... -c "select count(*) from messaging_log"` returns 0 BOTH (a) immediately after `supabase db reset` AND (b) after the full integration test suite (`pnpm -r run test`) has executed end-to-end. The table exists per ADR-003 but no writers exist until F5.5. | ADR-003 + FND-08 (W3 fix) |
+| ID    | Check                                                       | Command / Action                                                                                                                                                                                                                                                                           | Maps to                                              |
+| ----- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ----------------------- |
+| CC-1  | Zero pending migrations against staging                     | `supabase db diff --linked` returns empty                                                                                                                                                                                                                                                  | ROADMAP F1 SC1                                       |
+| CC-2  | `supabase db reset` applies all 13 migrations clean         | `pnpm --filter @faka/db exec supabase db reset` exits 0; `ls packages/db/supabase/migrations                                                                                                                                                                                               | wc -l` returns 13 (contiguous 0001..0013 per W8 fix) | ROADMAP F1 SC1 + FND-02 |
+| CC-3  | Generated `database.ts` matches schema                      | `pnpm --filter @faka/db run types && git diff --exit-code packages/db/types/database.ts`                                                                                                                                                                                                   | FND-02                                               |
+| CC-4  | All four roles can log in; column-level views enforced      | `pnpm vitest run packages/db/__tests__/rls.test.ts apps/dashboard/__tests__/auth.integration.test.ts` passes                                                                                                                                                                               | ROADMAP F1 SC3 + FND-03                              |
+| CC-5  | Service-role key never appears in client bundle             | `pnpm --filter dashboard run build && grep -rL SUPABASE_SERVICE_ROLE_KEY apps/dashboard/.next/static apps/dashboard/.next/server/pages` and inspect output (the key must not appear in any `.next/static` JS chunk)                                                                        | ROADMAP F1 SC3                                       |
+| CC-6  | 6 channel skeletons + CSVConnector compile                  | `pnpm --filter @faka/connectors exec tsc --noEmit && pnpm vitest run packages/connectors/__tests__/skeletons.test.ts`                                                                                                                                                                      | ROADMAP F1 SC4 + FND-04                              |
+| CC-7  | End-to-end CSV upload through wizard lands rows             | `pnpm vitest run apps/dashboard/__tests__/upload.integration.test.ts` passes; manual smoke: log in as admin, upload fixture, see history row with status=`processed`                                                                                                                       | ROADMAP F1 SC2 + FND-05 + FND-06                     |
+| CC-8  | Reprocess with new profile version works                    | `pnpm vitest run apps/dashboard/__tests__/reprocess.integration.test.ts` passes                                                                                                                                                                                                            | ROADMAP F1 SC2 + FND-07                              |
+| CC-9  | Idempotency, retry+DLQ, connector_runs, audit_log exercised | `pnpm vitest run apps/orchestrator/__tests__ packages/connectors/__tests__/idempotency.test.ts`                                                                                                                                                                                            | ROADMAP F1 SC5 + FND-08                              |
+| CC-10 | Staging deploys reachable                                   | `bash scripts/smoke.sh <dashboard-url> <orchestrator-url>` exits 0                                                                                                                                                                                                                         | FND-01                                               |
+| CC-11 | Lint rule blocks NEXT*PUBLIC*\*-named secrets               | `grep -E 'NEXT_PUBLIC_.*(SERVICE\|SECRET\|PRIVATE)' apps/dashboard/.env.example apps/dashboard/vercel.json` returns zero matches                                                                                                                                                           | RESEARCH §10 + Pitfall 5                             |
+| CC-12 | Every `create view` includes `security_invoker = true`      | `grep -c 'create view' packages/db/supabase/migrations/*.sql` equals `grep -c 'security_invoker = true' packages/db/supabase/migrations/*.sql`                                                                                                                                             | RESEARCH Pitfall 1 + FND-03                          |
+| CC-13 | CSV upload payload immutability                             | After upload+reprocess, `select count(*) from storage.objects where bucket_id='csv-uploads' and name like 'csv/<upload_id>/%'` returns 1 (Storage file unchanged)                                                                                                                          | ADR-001 + FND-07                                     |
+| CC-14 | `messaging_log` stays empty in F1 (per ADR-003 LOCKED)      | F1 acceptance check: `psql ... -c "select count(*) from messaging_log"` returns 0 BOTH (a) immediately after `supabase db reset` AND (b) after the full integration test suite (`pnpm -r run test`) has executed end-to-end. The table exists per ADR-003 but no writers exist until F5.5. | ADR-003 + FND-08 (W3 fix)                            |
 
 ---
 

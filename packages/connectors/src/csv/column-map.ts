@@ -9,10 +9,13 @@
  * single source of truth for parsing semantics).
  */
 
-import type { MappingProfile } from '@faka/schema';
+import type { MappingProfile } from "@faka/schema";
 
 /** Read a column from a raw row, treating empty/whitespace as undefined. */
-export function get(row: Record<string, string>, sourceCol: string | undefined): string | undefined {
+export function get(
+  row: Record<string, string>,
+  sourceCol: string | undefined,
+): string | undefined {
   if (!sourceCol) return undefined;
   const v = row[sourceCol];
   if (v === undefined || v === null) return undefined;
@@ -23,7 +26,7 @@ export function get(row: Record<string, string>, sourceCol: string | undefined):
 /** Parse a numeric string (handles comma decimals). Returns undefined when not finite. */
 export function num(v: string | undefined): number | undefined {
   if (!v) return undefined;
-  const n = Number(v.replace(/,/g, '.'));
+  const n = Number(v.replace(/,/g, "."));
   return Number.isFinite(n) ? n : undefined;
 }
 
@@ -38,31 +41,35 @@ export function num(v: string | undefined): number | undefined {
  */
 export function applyColumnMap(
   row: Record<string, string>,
-  profile: Pick<MappingProfile, 'column_map'>,
+  profile: Pick<MappingProfile, "column_map">,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   const numericCanonicalFields = new Set([
-    'price',
-    'cost',
-    'sale_price',
-    'subtotal',
-    'discount',
-    'shipping_cost',
-    'commission',
-    'tax',
-    'total',
-    'quantity',
-    'unit_price',
-    'unit_cost',
-    'line_discount',
-    'line_total',
-    'stock',
+    "price",
+    "cost",
+    "sale_price",
+    "subtotal",
+    "discount",
+    "shipping_cost",
+    "commission",
+    "tax",
+    "total",
+    "quantity",
+    "unit_price",
+    "unit_cost",
+    "line_discount",
+    "line_total",
+    "stock",
   ]);
 
-  for (const [canonicalField, sourceCol] of Object.entries(profile.column_map)) {
+  for (const [canonicalField, sourceCol] of Object.entries(
+    profile.column_map,
+  )) {
     const raw = get(row, sourceCol);
     if (raw === undefined) continue;
-    out[canonicalField] = numericCanonicalFields.has(canonicalField) ? num(raw) : raw;
+    out[canonicalField] = numericCanonicalFields.has(canonicalField)
+      ? num(raw)
+      : raw;
   }
 
   return out;

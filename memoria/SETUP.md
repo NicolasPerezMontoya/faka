@@ -6,17 +6,17 @@ Este doc asume que ya tienes los tokens de Supabase. Si necesitas más detalle, 
 
 Hay **3 valores** que vienen de Supabase y se reparten entre 3 lugares:
 
-| Token | De dónde sale | Va en |
-|---|---|---|
-| `SUPABASE_URL` | Supabase dashboard → Settings → API → "Project URL" | Vercel + Railway + tu `.env` local |
-| `SUPABASE_ANON_KEY` (pública) | Settings → API → "anon public" | Vercel como `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| `SUPABASE_SERVICE_ROLE_KEY` ⚠️ | Settings → API → "service_role secret" | Vercel + Railway (**nunca** prefijar con `NEXT_PUBLIC_*`) |
+| Token                          | De dónde sale                                       | Va en                                                     |
+| ------------------------------ | --------------------------------------------------- | --------------------------------------------------------- |
+| `SUPABASE_URL`                 | Supabase dashboard → Settings → API → "Project URL" | Vercel + Railway + tu `.env` local                        |
+| `SUPABASE_ANON_KEY` (pública)  | Settings → API → "anon public"                      | Vercel como `NEXT_PUBLIC_SUPABASE_ANON_KEY`               |
+| `SUPABASE_SERVICE_ROLE_KEY` ⚠️ | Settings → API → "service_role secret"              | Vercel + Railway (**nunca** prefijar con `NEXT_PUBLIC_*`) |
 
 Adicional (no de Supabase):
 
-| Token | De dónde sale | Va en |
-|---|---|---|
-| `INITIAL_SUPER_ADMIN_PASSWORD` | Tú lo eliges (mínimo 12 chars + símbolos) | `.env` local cuando corras el seeder |
+| Token                              | De dónde sale                                              | Va en                                                                |
+| ---------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| `INITIAL_SUPER_ADMIN_PASSWORD`     | Tú lo eliges (mínimo 12 chars + símbolos)                  | `.env` local cuando corras el seeder                                 |
 | `SUPABASE_ACCESS_TOKEN` (para CLI) | https://supabase.com/dashboard/account/tokens → "Generate" | Solo si vas a usar `supabase` CLI fuera del proyecto local; opcional |
 
 ## Paso a paso
@@ -137,6 +137,7 @@ NO son necesarios para F1. Los conectores son skeletons que tiran `NOT_IMPLEMENT
 ## Si algo falla en CI
 
 Después del último fix (commit `8f41c38` y siguientes en `memoria/`), CI debería:
+
 1. Setear Node 22.7 desde `.nvmrc`
 2. Detectar pnpm 10.28.1 desde `packageManager`
 3. Correr `pnpm install` SIN `--frozen-lockfile` (primer run genera lockfile)

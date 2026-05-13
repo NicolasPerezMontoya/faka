@@ -1,7 +1,7 @@
 // Supabase browser-side client. Used by Client Components only.
 
-import { createBrowserClient } from '@supabase/ssr';
-import type { Database } from '@faka/db/types';
+import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "@faka/db/types";
 
 export function createClient() {
   return createBrowserClient<Database>(

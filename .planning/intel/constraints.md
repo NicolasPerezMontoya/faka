@@ -54,8 +54,8 @@ Technical contracts, schemas, NFRs, and protocol-level constraints extracted fro
 ```typescript
 interface ChannelConnector {
   name: string;
-  type: 'pull' | 'push' | 'manual';
-  capabilities: Set<'orders' | 'products' | 'inventory' | 'customers'>;
+  type: "pull" | "push" | "manual";
+  capabilities: Set<"orders" | "products" | "inventory" | "customers">;
 
   fetchOrders(since: Date): Promise<RawOrder[]>;
   fetchProducts(since: Date): Promise<RawProduct[]>;
@@ -81,8 +81,8 @@ New channels MUST conform without modifying existing connectors.
 
 ```typescript
 class CSVConnector implements ChannelConnector {
-  name = 'csv-upload';
-  type = 'manual';
+  name = "csv-upload";
+  type = "manual";
   // Receives upload + mapping profile, emits NormalizedOrder/NormalizedProduct
   async ingestUpload(uploadId: string): Promise<IngestResult>;
 }

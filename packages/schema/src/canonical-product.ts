@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ChannelSchema } from './channel.js';
+import { z } from "zod";
+import { ChannelSchema } from "./channel.js";
 
 /**
  * Canonical product — channel-agnostic shape that the matching cascade

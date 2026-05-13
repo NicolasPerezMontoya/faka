@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 /**
  * reprocess-upload — Run a past upload through the pipeline again with a
@@ -14,14 +14,14 @@
  * don't duplicate even if reprocess emits the same external IDs.
  */
 
-import { parse as parseCsvSync } from 'csv-parse/sync';
-import { revalidatePath } from 'next/cache';
-import { requireRole, ForbiddenError } from '@faka/auth';
-import { createCSVConnector } from '@faka/connectors/csv';
-import { recordConnectorRun } from '@faka/connectors';
-import { auditLog } from '@faka/db';
-import type { Json } from '@faka/db/types';
-import { createClient } from '@/lib/supabase/server';
+import { parse as parseCsvSync } from "csv-parse/sync";
+import { revalidatePath } from "next/cache";
+import { requireRole, ForbiddenError } from "@faka/auth";
+import { createCSVConnector } from "@faka/connectors/csv";
+import { recordConnectorRun } from "@faka/connectors";
+import { auditLog } from "@faka/db";
+import type { Json } from "@faka/db/types";
+import { createClient } from "@/lib/supabase/server";
 
 const CHUNK_SIZE = 500;
 
@@ -38,88 +38,104 @@ export interface ReprocessResult {
   reprocess_id?: string;
 }
 
-export async function reprocessUploadAction(input: ReprocessInput): Promise<ReprocessResult> {
+export async function reprocessUploadAction(
+  input: ReprocessInput,
+): Promise<ReprocessResult> {
   const supabase = createClient();
 
   let ctx;
   try {
-    ctx = await requireRole(supabase, ['super_admin', 'admin', 'manager']);
+    ctx = await requireRole(supabase, ["super_admin", "admin", "manager"]);
   } catch (err) {
-    if (err instanceof ForbiddenError) return { ok: false, error: 'forbidden' };
-    return { ok: false, error: 'auth_failed' };
+    if (err instanceof ForbiddenError) return { ok: false, error: "forbidden" };
+    return { ok: false, error: "auth_failed" };
   }
 
   const startedAt = new Date();
-  let runStatus: 'succeeded' | 'partial' | 'failed' = 'succeeded';
+  let runStatus: "succeeded" | "partial" | "failed" = "succeeded";
   let recordsProcessed = 0;
   let recordsFailed = 0;
   let errorsJson: Json | null = null;
 
   // History row records the reprocess event regardless of outcome.
   const { data: historyRow, error: historyErr } = await supabase
-    .from('csv_reprocess_history')
+    .from("csv_reprocess_history")
     .insert({
       upload_id: input.uploadId,
       triggered_by: ctx.user.id,
       mapping_profile_id_after: input.newProfileId,
-      status: 'running',
+      status: "running",
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (historyErr || !historyRow) {
-    return { ok: false, error: `reprocess_history_insert_failed: ${historyErr?.message ?? 'unknown'}` };
+    return {
+      ok: false,
+      error: `reprocess_history_insert_failed: ${historyErr?.message ?? "unknown"}`,
+    };
   }
   const reprocessId = historyRow.id as string;
 
   try {
     // 1. Load upload + current profile.
     const { data: upload, error: uploadErr } = await supabase
-      .from('raw_csv_uploads')
-      .select('upload_id, canal_declarado, tipo, storage_path, mapping_profile_id')
-      .eq('upload_id', input.uploadId)
+      .from("raw_csv_uploads")
+      .select(
+        "upload_id, canal_declarado, tipo, storage_path, mapping_profile_id",
+      )
+      .eq("upload_id", input.uploadId)
       .single();
     if (uploadErr || !upload) {
-      return { ok: false, error: `upload_not_found: ${uploadErr?.message ?? input.uploadId}` };
+      return {
+        ok: false,
+        error: `upload_not_found: ${uploadErr?.message ?? input.uploadId}`,
+      };
     }
 
     // 2. Validate new profile matches (canal, tipo).
     const { data: newProfile, error: newProfileErr } = await supabase
-      .from('csv_mapping_profiles')
-      .select('id, canal, tipo, version')
-      .eq('id', input.newProfileId)
+      .from("csv_mapping_profiles")
+      .select("id, canal, tipo, version")
+      .eq("id", input.newProfileId)
       .single();
     if (newProfileErr || !newProfile) {
-      return { ok: false, error: 'profile_not_found' };
+      return { ok: false, error: "profile_not_found" };
     }
-    if (newProfile.canal !== upload.canal_declarado || newProfile.tipo !== upload.tipo) {
-      return { ok: false, error: 'profile_mismatch_canal_or_tipo' };
+    if (
+      newProfile.canal !== upload.canal_declarado ||
+      newProfile.tipo !== upload.tipo
+    ) {
+      return { ok: false, error: "profile_mismatch_canal_or_tipo" };
     }
 
     await supabase
-      .from('csv_reprocess_history')
+      .from("csv_reprocess_history")
       .update({ mapping_profile_id_before: upload.mapping_profile_id })
-      .eq('id', reprocessId);
+      .eq("id", reprocessId);
 
     // 3. Soft-supersede existing raw_csv_rows for this upload.
     await supabase
-      .from('raw_csv_rows')
+      .from("raw_csv_rows")
       .update({ superseded_at: new Date().toISOString() })
-      .eq('upload_id', input.uploadId)
-      .is('superseded_at', null);
+      .eq("upload_id", input.uploadId)
+      .is("superseded_at", null);
 
     // 4. Update upload row to the new profile + status='validating'.
     await supabase
-      .from('raw_csv_uploads')
-      .update({ mapping_profile_id: input.newProfileId, status: 'validating' })
-      .eq('upload_id', input.uploadId);
+      .from("raw_csv_uploads")
+      .update({ mapping_profile_id: input.newProfileId, status: "validating" })
+      .eq("upload_id", input.uploadId);
 
     // 5. Re-download bytes from Storage (immutable per ADR-001).
     const { data: bytes, error: downloadErr } = await supabase.storage
-      .from('csv-uploads')
+      .from("csv-uploads")
       .download(upload.storage_path);
     if (downloadErr || !bytes) {
-      return { ok: false, error: `storage_download_failed: ${downloadErr?.message ?? 'no data'}` };
+      return {
+        ok: false,
+        error: `storage_download_failed: ${downloadErr?.message ?? "no data"}`,
+      };
     }
     const text = await bytes.text();
 
@@ -133,16 +149,19 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
         relax_quotes: true,
       }) as Array<Record<string, string>>;
     } catch (parseErr) {
-      return { ok: false, error: `csv_parse_failed: ${(parseErr as Error).message}` };
+      return {
+        ok: false,
+        error: `csv_parse_failed: ${(parseErr as Error).message}`,
+      };
     }
 
     // Determine starting row_number — use max(existing) + 1 to avoid the
     // unique (upload_id, row_number) constraint colliding with superseded rows.
     const { data: maxRow } = await supabase
-      .from('raw_csv_rows')
-      .select('row_number')
-      .eq('upload_id', input.uploadId)
-      .order('row_number', { ascending: false })
+      .from("raw_csv_rows")
+      .select("row_number")
+      .eq("upload_id", input.uploadId)
+      .order("row_number", { ascending: false })
       .limit(1);
     const startRow = (maxRow?.[0]?.row_number ?? -1) + 1;
 
@@ -154,11 +173,19 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
         processed: false,
         mapping_profile_id_used: input.newProfileId,
       }));
-      const { error: rowsErr } = await supabase.from('raw_csv_rows').insert(batch);
+      const { error: rowsErr } = await supabase
+        .from("raw_csv_rows")
+        .insert(batch);
       if (rowsErr) {
-        runStatus = 'failed';
-        errorsJson = { phase: 'raw_csv_rows_insert', message: rowsErr.message } as Json;
-        return { ok: false, error: `raw_csv_rows_insert_failed: ${rowsErr.message}` };
+        runStatus = "failed";
+        errorsJson = {
+          phase: "raw_csv_rows_insert",
+          message: rowsErr.message,
+        } as Json;
+        return {
+          ok: false,
+          error: `raw_csv_rows_insert_failed: ${rowsErr.message}`,
+        };
       }
     }
 
@@ -167,8 +194,21 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
     type CSVConnectorWithIngest = typeof connector & {
       ingestUpload: (
         uploadId: string,
-        ctx: { supabase: typeof supabase; logger: { debug: (m: string) => void; info: (m: string) => void; warn: (m: string) => void; error: (m: string) => void } },
-      ) => Promise<{ upload_id: string; rows_processed: number; rows_skipped: number; errors: Array<{ row_number: number; field?: string; message: string }> }>;
+        ctx: {
+          supabase: typeof supabase;
+          logger: {
+            debug: (m: string) => void;
+            info: (m: string) => void;
+            warn: (m: string) => void;
+            error: (m: string) => void;
+          };
+        },
+      ) => Promise<{
+        upload_id: string;
+        rows_processed: number;
+        rows_skipped: number;
+        errors: Array<{ row_number: number; field?: string; message: string }>;
+      }>;
     };
     const ingestable = connector as CSVConnectorWithIngest;
     const ingestResult = await ingestable.ingestUpload(input.uploadId, {
@@ -185,15 +225,15 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
     recordsFailed = ingestResult.rows_skipped;
     if (ingestResult.errors.length > 0) {
       errorsJson = { errors: ingestResult.errors.slice(0, 100) } as Json;
-      runStatus = ingestResult.rows_processed === 0 ? 'failed' : 'partial';
+      runStatus = ingestResult.rows_processed === 0 ? "failed" : "partial";
     }
 
     // 8. Audit.
     await auditLog(supabase, {
       user_id: ctx.user.id,
       role_at_time: ctx.role,
-      action: 'csv_upload_reprocessed',
-      target_table: 'raw_csv_uploads',
+      action: "csv_upload_reprocessed",
+      target_table: "raw_csv_uploads",
       target_id: input.uploadId,
       payload_json: {
         from_profile: upload.mapping_profile_id,
@@ -204,15 +244,20 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
       },
     });
 
-    return { ok: true, rows_processed: recordsProcessed, rows_skipped: recordsFailed, reprocess_id: reprocessId };
+    return {
+      ok: true,
+      rows_processed: recordsProcessed,
+      rows_skipped: recordsFailed,
+      reprocess_id: reprocessId,
+    };
   } catch (err) {
-    runStatus = 'failed';
+    runStatus = "failed";
     errorsJson = { caught: (err as Error).message } as Json;
     return { ok: false, error: (err as Error).message };
   } finally {
     // Finalize history row.
     await supabase
-      .from('csv_reprocess_history')
+      .from("csv_reprocess_history")
       .update({
         status: runStatus,
         rows_processed: recordsProcessed,
@@ -221,13 +266,13 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
         completed_at: new Date().toISOString(),
         duration_ms: Date.now() - startedAt.getTime(),
       })
-      .eq('id', reprocessId);
+      .eq("id", reprocessId);
 
     // Record connector_runs.
     try {
       await recordConnectorRun(supabase, {
-        kind: 'channel',
-        canal: 'csv-upload',
+        kind: "channel",
+        canal: "csv-upload",
         started_at: startedAt.toISOString(),
         completed_at: new Date().toISOString(),
         status: runStatus,
@@ -237,12 +282,12 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
         errors_json: errorsJson as Record<string, unknown> | null,
         duration_ms: Date.now() - startedAt.getTime(),
         upload_id: input.uploadId,
-        metadata_json: { reprocess_id: reprocessId, source: 'reprocess' },
+        metadata_json: { reprocess_id: reprocessId, source: "reprocess" },
       });
     } catch (runErr) {
-      console.error('connector_runs_record_failed:', (runErr as Error).message);
+      console.error("connector_runs_record_failed:", (runErr as Error).message);
     }
 
-    revalidatePath('/operacion/historial');
+    revalidatePath("/operacion/historial");
   }
 }

@@ -17,6 +17,7 @@ gh run list --repo NicolasPerezMontoya/faka --limit 3
 **Estado actual (2026-05-14)**: CI verde desde `98c4136`. Run de referencia: `25816668833`. Ver `memoria/CI-FIXES.md` para la historia.
 
 Deuda técnica restante (3 steps continue-on-error: true):
+
 - **Format check** — prettier reporta ~60 archivos sin formato. Fix: `pnpm format` cuando red coopere + commit.
 - **Type check** — stub types causan ~30 false positives. Fix: commitear `packages/db/types/database.ts` regenerado del db-integration job.
 - **Assert generated types are committed** — mismo motivo. Una vez committed el baseline real, se vuelve estricto.
@@ -24,6 +25,7 @@ Deuda técnica restante (3 steps continue-on-error: true):
 ### 2. Si aún no desplegaste: seguir `memoria/SETUP.md`
 
 Pasos resumidos:
+
 1. Crear proyecto Supabase staging
 2. Aplicar las 13 migrations (CLI o SQL editor)
 3. Seed Super Admin
@@ -40,6 +42,7 @@ Pasos resumidos:
 ```
 
 Phase 2 es **WordPress walking skeleton**: primer canal real end-to-end. Entregables esperados:
+
 - WordPress connector real (no skeleton): OAuth o REST API key, fetchOrders + fetchProducts
 - Pipeline de matching cascada en SQL functions (barcode → supplier_code → sku → normalized_name → LLM arbiter stub)
 - Cola de validación humana en `apps/dashboard/app/(app)/operacion/cola-validacion/`
@@ -85,6 +88,7 @@ gh run list --repo NicolasPerezMontoya/faka --limit 5
 ```
 
 Esto corre discuss→plan→execute para todas las fases restantes sin pausar. **Solo recomendado** si ya tienes:
+
 - Phase 1 deployed y validado
 - Credenciales WP del cliente
 - Comodidad con que ~28h de código sucedan sin tu review intermedio

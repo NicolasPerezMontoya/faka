@@ -12,13 +12,13 @@
  * Called from the Server Action that powers the wizard step 3.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   NormalizedOrderSchema,
   NormalizedProductSchema,
   type MappingProfile,
-} from '@faka/schema';
-import { applyColumnMap } from './column-map.js';
+} from "@faka/schema";
+import { applyColumnMap } from "./column-map.js";
 
 export interface DryRunError {
   row_number: number;
@@ -51,9 +51,9 @@ export async function dryRun(input: DryRunInput): Promise<DryRunResult> {
   const { supabase, uploadId, profileId, sampleSize = 500 } = input;
 
   const { data: profile, error: profileErr } = await supabase
-    .from('csv_mapping_profiles')
-    .select('id, canal, tipo, column_map_json')
-    .eq('id', profileId)
+    .from("csv_mapping_profiles")
+    .select("id, canal, tipo, column_map_json")
+    .eq("id", profileId)
     .single();
 
   if (profileErr || !profile) {
@@ -67,18 +67,19 @@ export async function dryRun(input: DryRunInput): Promise<DryRunResult> {
   };
 
   let query = supabase
-    .from('raw_csv_rows')
-    .select('row_number, payload_json')
-    .eq('upload_id', uploadId)
-    .is('superseded_at', null)
-    .order('row_number', { ascending: true });
+    .from("raw_csv_rows")
+    .select("row_number, payload_json")
+    .eq("upload_id", uploadId)
+    .is("superseded_at", null)
+    .order("row_number", { ascending: true });
 
   if (sampleSize > 0) query = query.limit(sampleSize);
 
   const { data: rows, error: rowsErr } = await query;
   if (rowsErr) throw new Error(`raw_csv_rows_read_failed: ${rowsErr.message}`);
 
-  const schema = mapping.type === 'orders' ? NormalizedOrderSchema : NormalizedProductSchema;
+  const schema =
+    mapping.type === "orders" ? NormalizedOrderSchema : NormalizedProductSchema;
 
   let rowsValid = 0;
   let rowsWarning = 0;
@@ -99,7 +100,7 @@ export async function dryRun(input: DryRunInput): Promise<DryRunResult> {
         rowsError++;
         errors.push({
           row_number: row.row_number,
-          field: firstIssue.path.join('.') || undefined,
+          field: firstIssue.path.join(".") || undefined,
           message: firstIssue.message,
         });
       }

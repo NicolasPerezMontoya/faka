@@ -9,9 +9,9 @@
  * RESEARCH §7: DO NOT introduce BullMQ or Redis. DLQ is a Postgres table.
  */
 
-import pRetry, { AbortError } from 'p-retry';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Channel } from '@faka/schema';
+import pRetry, { AbortError } from "p-retry";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Channel } from "@faka/schema";
 
 export interface WithRetryAndDLQOptions {
   canal: Channel;
@@ -54,7 +54,7 @@ export async function withRetryAndDLQ<T>(
       throw err;
     }
     const error = err as Error;
-    await supabase.from('dead_letter_queue').insert({
+    await supabase.from("dead_letter_queue").insert({
       canal: options.canal,
       source: options.source,
       payload_json: options.payload,

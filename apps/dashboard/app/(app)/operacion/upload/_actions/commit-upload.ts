@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 /**
  * commit-upload — the F1 acceptance gate Server Action.
@@ -16,13 +16,13 @@
  * `applyColumnMap` count in this file is exactly 0.
  */
 
-import { parse as parseCsvSync } from 'csv-parse/sync';
-import { redirect } from 'next/navigation';
-import { requireRole, ForbiddenError } from '@faka/auth';
-import { createCSVConnector } from '@faka/connectors/csv';
-import { recordConnectorRun } from '@faka/connectors';
-import { auditLog } from '@faka/db';
-import { createClient } from '@/lib/supabase/server';
+import { parse as parseCsvSync } from "csv-parse/sync";
+import { redirect } from "next/navigation";
+import { requireRole, ForbiddenError } from "@faka/auth";
+import { createCSVConnector } from "@faka/connectors/csv";
+import { recordConnectorRun } from "@faka/connectors";
+import { auditLog } from "@faka/db";
+import { createClient } from "@/lib/supabase/server";
 
 const CHUNK_SIZE = 500;
 
@@ -38,19 +38,21 @@ export interface CommitUploadResult {
   rows_skipped?: number;
 }
 
-export async function commitUploadAction(input: CommitUploadInput): Promise<CommitUploadResult> {
+export async function commitUploadAction(
+  input: CommitUploadInput,
+): Promise<CommitUploadResult> {
   const supabase = createClient();
 
   let ctx;
   try {
-    ctx = await requireRole(supabase, ['super_admin', 'admin', 'manager']);
+    ctx = await requireRole(supabase, ["super_admin", "admin", "manager"]);
   } catch (err) {
-    if (err instanceof ForbiddenError) return { ok: false, error: 'forbidden' };
-    return { ok: false, error: 'auth_failed' };
+    if (err instanceof ForbiddenError) return { ok: false, error: "forbidden" };
+    return { ok: false, error: "auth_failed" };
   }
 
   const startedAt = new Date();
-  let runStatus: 'succeeded' | 'partial' | 'failed' = 'succeeded';
+  let runStatus: "succeeded" | "partial" | "failed" = "succeeded";
   let recordsProcessed = 0;
   let recordsFailed = 0;
   let errorsJson: Record<string, unknown> | null = null;
@@ -58,31 +60,42 @@ export async function commitUploadAction(input: CommitUploadInput): Promise<Comm
   try {
     // 1. Load upload metadata.
     const { data: upload, error: uploadErr } = await supabase
-      .from('raw_csv_uploads')
-      .select('upload_id, canal_declarado, tipo, storage_path, mapping_profile_id, status')
-      .eq('upload_id', input.uploadId)
+      .from("raw_csv_uploads")
+      .select(
+        "upload_id, canal_declarado, tipo, storage_path, mapping_profile_id, status",
+      )
+      .eq("upload_id", input.uploadId)
       .single();
     if (uploadErr || !upload) {
-      return { ok: false, error: `upload_not_found: ${uploadErr?.message ?? input.uploadId}` };
+      return {
+        ok: false,
+        error: `upload_not_found: ${uploadErr?.message ?? input.uploadId}`,
+      };
     }
 
     // 2. Ensure mapping_profile_id is set (caller passes the latest version).
     if (upload.mapping_profile_id !== input.profileId) {
       const { error: updateErr } = await supabase
-        .from('raw_csv_uploads')
+        .from("raw_csv_uploads")
         .update({ mapping_profile_id: input.profileId })
-        .eq('upload_id', input.uploadId);
+        .eq("upload_id", input.uploadId);
       if (updateErr) {
-        return { ok: false, error: `profile_link_failed: ${updateErr.message}` };
+        return {
+          ok: false,
+          error: `profile_link_failed: ${updateErr.message}`,
+        };
       }
     }
 
     // 3. Download CSV bytes from Storage.
     const { data: bytes, error: downloadErr } = await supabase.storage
-      .from('csv-uploads')
+      .from("csv-uploads")
       .download(upload.storage_path);
     if (downloadErr || !bytes) {
-      return { ok: false, error: `storage_download_failed: ${downloadErr?.message ?? 'no data'}` };
+      return {
+        ok: false,
+        error: `storage_download_failed: ${downloadErr?.message ?? "no data"}`,
+      };
     }
     const text = await bytes.text();
 
@@ -96,27 +109,35 @@ export async function commitUploadAction(input: CommitUploadInput): Promise<Comm
         relax_quotes: true,
       }) as Array<Record<string, string>>;
     } catch (parseErr) {
-      return { ok: false, error: `csv_parse_failed: ${(parseErr as Error).message}` };
+      return {
+        ok: false,
+        error: `csv_parse_failed: ${(parseErr as Error).message}`,
+      };
     }
 
     // 5. Persist each parsed row AS-IS into raw_csv_rows (W1 — no applyColumnMap here).
     await supabase
-      .from('raw_csv_uploads')
-      .update({ status: 'validating', row_count: rows.length })
-      .eq('upload_id', input.uploadId);
+      .from("raw_csv_uploads")
+      .update({ status: "validating", row_count: rows.length })
+      .eq("upload_id", input.uploadId);
 
     for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
       const batch = rows.slice(i, i + CHUNK_SIZE).map((row, idx) => ({
         upload_id: input.uploadId,
         row_number: i + idx,
-        payload_json: row,                              // raw Record<string,string>
+        payload_json: row, // raw Record<string,string>
         processed: false,
       }));
-      const { error: rowsErr } = await supabase.from('raw_csv_rows').insert(batch);
+      const { error: rowsErr } = await supabase
+        .from("raw_csv_rows")
+        .insert(batch);
       if (rowsErr) {
-        runStatus = 'failed';
-        errorsJson = { phase: 'raw_csv_rows_insert', message: rowsErr.message };
-        return { ok: false, error: `raw_csv_rows_insert_failed: ${rowsErr.message}` };
+        runStatus = "failed";
+        errorsJson = { phase: "raw_csv_rows_insert", message: rowsErr.message };
+        return {
+          ok: false,
+          error: `raw_csv_rows_insert_failed: ${rowsErr.message}`,
+        };
       }
     }
 
@@ -135,7 +156,12 @@ export async function commitUploadAction(input: CommitUploadInput): Promise<Comm
             error: (msg: string, meta?: Record<string, unknown>) => void;
           };
         },
-      ) => Promise<{ upload_id: string; rows_processed: number; rows_skipped: number; errors: Array<{ row_number: number; field?: string; message: string }> }>;
+      ) => Promise<{
+        upload_id: string;
+        rows_processed: number;
+        rows_skipped: number;
+        errors: Array<{ row_number: number; field?: string; message: string }>;
+      }>;
     };
     const ingestable = connector as CSVConnectorWithIngest;
     const ingestResult = await ingestable.ingestUpload(input.uploadId, {
@@ -152,15 +178,15 @@ export async function commitUploadAction(input: CommitUploadInput): Promise<Comm
     recordsFailed = ingestResult.rows_skipped;
     if (ingestResult.errors.length > 0) {
       errorsJson = { errors: ingestResult.errors.slice(0, 100) };
-      runStatus = ingestResult.rows_processed === 0 ? 'failed' : 'partial';
+      runStatus = ingestResult.rows_processed === 0 ? "failed" : "partial";
     }
 
     // 7. Audit + result.
     await auditLog(supabase, {
       user_id: ctx.user.id,
       role_at_time: ctx.role,
-      action: 'csv_upload_processed',
-      target_table: 'raw_csv_uploads',
+      action: "csv_upload_processed",
+      target_table: "raw_csv_uploads",
       target_id: input.uploadId,
       payload_json: {
         rows_processed: recordsProcessed,
@@ -169,17 +195,21 @@ export async function commitUploadAction(input: CommitUploadInput): Promise<Comm
       },
     });
 
-    return { ok: true, rows_processed: recordsProcessed, rows_skipped: recordsFailed };
+    return {
+      ok: true,
+      rows_processed: recordsProcessed,
+      rows_skipped: recordsFailed,
+    };
   } catch (err) {
-    runStatus = 'failed';
+    runStatus = "failed";
     errorsJson = { caught: (err as Error).message };
     return { ok: false, error: (err as Error).message };
   } finally {
     // RESEARCH §8: connector_runs written ONCE at the end, regardless of outcome.
     try {
       await recordConnectorRun(supabase, {
-        kind: 'channel',
-        canal: 'csv-upload',
+        kind: "channel",
+        canal: "csv-upload",
         started_at: startedAt.toISOString(),
         completed_at: new Date().toISOString(),
         status: runStatus,
@@ -192,7 +222,7 @@ export async function commitUploadAction(input: CommitUploadInput): Promise<Comm
       });
     } catch (runErr) {
       // Don't mask the original error if the connector_run write fails.
-      console.error('connector_runs_record_failed:', (runErr as Error).message);
+      console.error("connector_runs_record_failed:", (runErr as Error).message);
     }
   }
 }

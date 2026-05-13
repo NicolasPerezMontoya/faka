@@ -1,6 +1,7 @@
 # Deployment Runbook — faka
 
 Phase 1 (Foundation). Sets up:
+
 - **Supabase** for Postgres + Auth + Storage
 - **Railway** for the orchestrator (web + cron services)
 - **Vercel** for the Next.js dashboard
@@ -96,6 +97,7 @@ the Railway dashboard **Settings** for each new service:
 - **Root directory**: leave blank (the Dockerfile builds from repo root).
 
 Services declared:
+
 - `orchestrator-web`: HTTP server on `$PORT`, healthcheck at `/health`.
 - `orchestrator-cron`: cron schedule `*/30 * * * *` running `node dist/cron.js`.
 
@@ -137,12 +139,12 @@ limit 5;
 
 In the Vercel project **Settings** → **Environment Variables**:
 
-| Variable | Scope | Value |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Production + Preview | from Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production + Preview | from Supabase (safe-ish) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production + Preview | server-only — **NEVER** prefix with `NEXT_PUBLIC_*` |
-| `CSV_MAX_BYTES` | optional | default 20971520 (20MB) |
+| Variable                        | Scope                | Value                                               |
+| ------------------------------- | -------------------- | --------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Production + Preview | from Supabase                                       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production + Preview | from Supabase (safe-ish)                            |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Production + Preview | server-only — **NEVER** prefix with `NEXT_PUBLIC_*` |
+| `CSV_MAX_BYTES`                 | optional             | default 20971520 (20MB)                             |
 
 ⚠️ The eslint rule in `packages/config/eslint.base.cjs` blocks any code that
 references `NEXT_PUBLIC_*` env vars whose names contain `SERVICE`, `SECRET`,
@@ -202,10 +204,10 @@ distribution point.
 
 ## Troubleshooting
 
-| Symptom | Probable cause | Fix |
-|---|---|---|
-| Sign-in fails with "Database error granting user" | Auth Hook function not granted to `supabase_auth_admin` | Re-run migration 0009 (`pnpm --filter @faka/db exec supabase db push`) |
-| Analista user sees `total` $ values | View-by-role grant missing OR `security_invoker = true` not on view | Re-run migrations 0011 + 0012; CC-12 grep check |
-| `pnpm install` times out on registry | Network instability between WSL/local + npm | Retry; the version pins are stable. CI is the reliable install env |
-| Orchestrator container won't boot | Missing `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` env | `railway variables --service orchestrator-web` to inspect |
-| Cron heartbeat doesn't fire | Railway cron schedule < 5min OR not UTC | Adjust `apps/orchestrator/railway.toml`; minimum 5min granularity |
+| Symptom                                           | Probable cause                                                      | Fix                                                                    |
+| ------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Sign-in fails with "Database error granting user" | Auth Hook function not granted to `supabase_auth_admin`             | Re-run migration 0009 (`pnpm --filter @faka/db exec supabase db push`) |
+| Analista user sees `total` $ values               | View-by-role grant missing OR `security_invoker = true` not on view | Re-run migrations 0011 + 0012; CC-12 grep check                        |
+| `pnpm install` times out on registry              | Network instability between WSL/local + npm                         | Retry; the version pins are stable. CI is the reliable install env     |
+| Orchestrator container won't boot                 | Missing `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` env           | `railway variables --service orchestrator-web` to inspect              |
+| Cron heartbeat doesn't fire                       | Railway cron schedule < 5min OR not UTC                             | Adjust `apps/orchestrator/railway.toml`; minimum 5min granularity      |

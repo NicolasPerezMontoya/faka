@@ -4,7 +4,7 @@
  * `claims.app_metadata.role`. We read with a fallback chain.
  */
 
-import type { UserRole } from '@faka/schema';
+import type { UserRole } from "@faka/schema";
 
 export interface JwtClaims {
   sub: string;
@@ -15,7 +15,9 @@ export interface JwtClaims {
   [key: string]: unknown;
 }
 
-export function extractRole(claims: JwtClaims | null | undefined): UserRole | null {
+export function extractRole(
+  claims: JwtClaims | null | undefined,
+): UserRole | null {
   if (!claims) return null;
   return claims.role ?? claims.app_metadata?.role ?? null;
 }
@@ -28,11 +30,14 @@ export function extractRole(claims: JwtClaims | null | undefined): UserRole | nu
  */
 export function decodeJwtNoVerify(token: string): JwtClaims | null {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
     const payload = parts[1]!;
-    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
-    const decoded = Buffer.from(padded.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8');
+    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+    const decoded = Buffer.from(
+      padded.replace(/-/g, "+").replace(/_/g, "/"),
+      "base64",
+    ).toString("utf-8");
     return JSON.parse(decoded) as JwtClaims;
   } catch {
     return null;

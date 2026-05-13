@@ -1,4 +1,5 @@
 # Dashboard Omnicanal de Ventas + Capa de IA
+
 ## Documento de Arquitectura y Plan de Implementación
 
 ---
@@ -66,15 +67,15 @@ Por eso el plan tiene una **Fase 0** dedicada a normalización, y la IA aparece 
 
 ### 3.2 Stack recomendado
 
-| Capa | Tecnología | Costo/mes | Por qué |
-|------|------------|-----------|---------|
-| Base de datos | Supabase (Postgres + Auth + Storage + Realtime) | $0 free → $25 Pro | Maneja 5K transacciones sin problema; RLS para permisos; auth incluida |
-| Orquestador | Node.js + TypeScript en Railway | $5–10 | Cron jobs, workers, fácil deploy, buen DX |
-| Dashboard | Next.js 14 (App Router) en Vercel | $0 | Free tier sobra; conecta directo a Supabase |
-| IA | Kimi K2 vía API (alternativa: Claude Haiku/Sonnet, GPT-4o-mini) | $20–50 | Pago por uso; ~$0.50/día con uso moderado |
-| WhatsApp | Mini-app interna para registro manual (Fase 1) | $0 | Opción B que elegiste; no requiere WhatsApp Business API |
-| Monitoring | Better Stack o Axiom (free tier) | $0 | Logs y uptime |
-| **Total estimado** | | **$50–85/mes** | Te queda margen de ~$65 |
+| Capa               | Tecnología                                                      | Costo/mes         | Por qué                                                                |
+| ------------------ | --------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------- |
+| Base de datos      | Supabase (Postgres + Auth + Storage + Realtime)                 | $0 free → $25 Pro | Maneja 5K transacciones sin problema; RLS para permisos; auth incluida |
+| Orquestador        | Node.js + TypeScript en Railway                                 | $5–10             | Cron jobs, workers, fácil deploy, buen DX                              |
+| Dashboard          | Next.js 14 (App Router) en Vercel                               | $0                | Free tier sobra; conecta directo a Supabase                            |
+| IA                 | Kimi K2 vía API (alternativa: Claude Haiku/Sonnet, GPT-4o-mini) | $20–50            | Pago por uso; ~$0.50/día con uso moderado                              |
+| WhatsApp           | Mini-app interna para registro manual (Fase 1)                  | $0                | Opción B que elegiste; no requiere WhatsApp Business API               |
+| Monitoring         | Better Stack o Axiom (free tier)                                | $0                | Logs y uptime                                                          |
+| **Total estimado** |                                                                 | **$50–85/mes**    | Te queda margen de ~$65                                                |
 
 ### 3.3 Modelo de datos (esquema lógico)
 
@@ -185,8 +186,8 @@ Cada canal implementa la misma interfaz. Esto es lo que te permite **agregar Fal
 ```typescript
 interface ChannelConnector {
   name: string;
-  type: 'pull' | 'push' | 'manual';
-  capabilities: Set<'orders' | 'products' | 'inventory' | 'customers'>;
+  type: "pull" | "push" | "manual";
+  capabilities: Set<"orders" | "products" | "inventory" | "customers">;
 
   fetchOrders(since: Date): Promise<RawOrder[]>;
   fetchProducts(since: Date): Promise<RawProduct[]>;
@@ -201,14 +202,14 @@ interface ChannelConnector {
 
 **Conectores por canal:**
 
-| Canal | Estrategia | Frecuencia | Notas |
-|-------|-----------|------------|-------|
-| WordPress | REST API + webhooks de WooCommerce/plugin | Realtime + sync cada 1h | Confirmar si es WooCommerce o algo custom |
-| Mercado Libre Colombia | API oficial MLM con OAuth | Cada 15 min orders, 1h productos | Requiere app registrada en MercadoLibre Developers |
-| Dropi | Scraper del panel (no tiene API pública útil para proveedores) | Cada 30 min | Frágil; usar Playwright headless. Plan B: ingesta de exports CSV manuales |
-| POS propio | Webhooks emitidos por el POS al orquestador | Realtime | Lo diseñamos juntos con tu programador del POS |
-| WhatsApp | Formulario interno en el dashboard | Manual | El vendedor pega: cliente, productos, total |
-| Falabella | API Sellercenter (Fase 3) | Cada 30 min | Esqueleto del conector queda en Fase 1 |
+| Canal                  | Estrategia                                                     | Frecuencia                       | Notas                                                                     |
+| ---------------------- | -------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| WordPress              | REST API + webhooks de WooCommerce/plugin                      | Realtime + sync cada 1h          | Confirmar si es WooCommerce o algo custom                                 |
+| Mercado Libre Colombia | API oficial MLM con OAuth                                      | Cada 15 min orders, 1h productos | Requiere app registrada en MercadoLibre Developers                        |
+| Dropi                  | Scraper del panel (no tiene API pública útil para proveedores) | Cada 30 min                      | Frágil; usar Playwright headless. Plan B: ingesta de exports CSV manuales |
+| POS propio             | Webhooks emitidos por el POS al orquestador                    | Realtime                         | Lo diseñamos juntos con tu programador del POS                            |
+| WhatsApp               | Formulario interno en el dashboard                             | Manual                           | El vendedor pega: cliente, productos, total                               |
+| Falabella              | API Sellercenter (Fase 3)                                      | Cada 30 min                      | Esqueleto del conector queda en Fase 1                                    |
 
 **Patrones del orquestador:**
 
@@ -329,6 +330,7 @@ Más allá de lo que mencionaste, te propongo esto. Marcado **[MVP]** lo que va 
 **Objetivo:** entender el catálogo real antes de construir.
 
 Entregables:
+
 - Inventario de fuentes con conteo real de productos por canal.
 - Confirmación de qué identificadores comunes existen (barcode, código proveedor).
 - Export estructurado del catálogo de cada canal (CSVs).
@@ -341,6 +343,7 @@ Dependencias: necesitamos respuestas del cliente sobre identificadores y acceso 
 **Objetivo:** tener ventas consolidadas reales en pantalla.
 
 Entregables:
+
 - Esquema Supabase desplegado.
 - Orquestador en Railway con conectores: **WordPress, POS propio, WhatsApp (formulario manual)**.
 - Pipeline de matching: barcode → nombre exacto → embeddings → LLM árbitro.
@@ -355,6 +358,7 @@ Métrica de éxito: ventas del día reflejadas con menos de 15 minutos de latenc
 **Objetivo:** completar la foto omnicanal y empezar a ver insights útiles.
 
 Entregables:
+
 - Conectores: **Mercado Libre Colombia, Dropi**.
 - Marts adicionales: velocidad, tendencias, días de inventario, canibalización.
 - Vista "Canales" completa.
@@ -368,6 +372,7 @@ Métrica de éxito: los 5 canales actuales reportando al sistema, ≥3 alertas a
 **Objetivo:** IA autónoma generando valor.
 
 Entregables:
+
 - Adaptador `LLMProvider` con soporte para Kimi K2, Claude y GPT (para comparar).
 - Job de insights matutino y vespertino.
 - Feed de insights en el dashboard con feedback.
@@ -388,15 +393,15 @@ Métrica de éxito: 70% de los insights marcados como "útiles" después de 2 se
 
 ## 6. Riesgos y mitigaciones
 
-| Riesgo | Probabilidad | Mitigación |
-|--------|--------------|------------|
-| Catálogo no se puede normalizar bien con IA | Media | Cola de validación humana + iterar prompts; aceptar 90% automático + 10% manual |
-| Dropi cambia su panel y rompe el scraper | Alta | Plan B: ingesta de CSV manual; monitoreo de health check |
-| Mercado Libre rate-limits | Baja | Backoff exponencial; sincronización incremental |
-| WhatsApp manual no se llena con disciplina | Media | Diseño del formulario tipo "máximo 4 clics"; recordatorios al cierre del día |
-| El POS no emite eventos a tiempo | Media | Polling de respaldo + alerta si llevamos >2h sin recibir nada |
-| Costos de IA se disparan | Baja | Caching de respuestas a queries similares; tope de tokens diario configurable |
-| Cliente no tiene acceso o credenciales a algún canal | Alta | Documentar requisitos antes de Fase 1; bloquear conector si falta credencial |
+| Riesgo                                               | Probabilidad | Mitigación                                                                      |
+| ---------------------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| Catálogo no se puede normalizar bien con IA          | Media        | Cola de validación humana + iterar prompts; aceptar 90% automático + 10% manual |
+| Dropi cambia su panel y rompe el scraper             | Alta         | Plan B: ingesta de CSV manual; monitoreo de health check                        |
+| Mercado Libre rate-limits                            | Baja         | Backoff exponencial; sincronización incremental                                 |
+| WhatsApp manual no se llena con disciplina           | Media        | Diseño del formulario tipo "máximo 4 clics"; recordatorios al cierre del día    |
+| El POS no emite eventos a tiempo                     | Media        | Polling de respaldo + alerta si llevamos >2h sin recibir nada                   |
+| Costos de IA se disparan                             | Baja         | Caching de respuestas a queries similares; tope de tokens diario configurable   |
+| Cliente no tiene acceso o credenciales a algún canal | Alta         | Documentar requisitos antes de Fase 1; bloquear conector si falta credencial    |
 
 ---
 
@@ -422,4 +427,4 @@ Métrica de éxito: 70% de los insights marcados como "útiles" después de 2 se
 
 ---
 
-*Documento vivo. Última actualización: 13 de mayo de 2026.*
+_Documento vivo. Última actualización: 13 de mayo de 2026._

@@ -8,15 +8,15 @@ export type {
   Channel,
   MatchMethod,
   MappingProfile,
-} from '@faka/schema';
+} from "@faka/schema";
 
 // Match results are discovery-only (no production analog needed).
 // They describe the in-script cascade output for the matching report.
 
 export interface MatchResult {
-  anchor: import('@faka/schema').CanonicalProduct;
-  candidate: import('@faka/schema').CanonicalProduct;
-  method: import('@faka/schema').MatchMethod;
+  anchor: import("@faka/schema").CanonicalProduct;
+  candidate: import("@faka/schema").CanonicalProduct;
+  method: import("@faka/schema").MatchMethod;
   score: number;
   rationale?: string;
 }
@@ -25,12 +25,12 @@ export interface DiscoveryConfig {
   inputDir: string;
   outputDir: string;
   profilesDir: string;
-  anchorChannel: import('@faka/schema').Channel;
+  anchorChannel: import("@faka/schema").Channel;
   enableEmbeddings: boolean;
   enableLLMArbiter: boolean;
   embeddingThresholdHigh: number;
   embeddingThresholdMid: number;
-  llmProvider: 'openai' | 'anthropic';
+  llmProvider: "openai" | "anthropic";
   llmModelName: string;
   maxLLMCalls: number;
 }
@@ -39,11 +39,19 @@ export interface DiscoveryReport {
   generated_at: string;
   config: Pick<
     DiscoveryConfig,
-    'anchorChannel' | 'embeddingThresholdHigh' | 'embeddingThresholdMid' | 'llmProvider' | 'llmModelName'
+    | "anchorChannel"
+    | "embeddingThresholdHigh"
+    | "embeddingThresholdMid"
+    | "llmProvider"
+    | "llmModelName"
   >;
-  inputs: Array<{ channel: import('@faka/schema').Channel; file: string; row_count: number }>;
+  inputs: Array<{
+    channel: import("@faka/schema").Channel;
+    file: string;
+    row_count: number;
+  }>;
   totals_by_channel: Record<string, number>;
-  matches_by_method: Record<import('@faka/schema').MatchMethod, number>;
+  matches_by_method: Record<import("@faka/schema").MatchMethod, number>;
   match_rate_automatic: number;
   match_rate_review_needed: number;
   unresolved_samples: Array<{ anchor: string; candidates: string[] }>;

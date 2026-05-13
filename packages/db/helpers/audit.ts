@@ -9,12 +9,14 @@
  * `_truncated: true` marker (RESEARCH §6 Pitfall — audit log size).
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AuditEvent } from '@faka/schema';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AuditEvent } from "@faka/schema";
 
 const PAYLOAD_BYTES_CAP = 64 * 1024;
 
-function truncatePayload(payload: Record<string, unknown> | null | undefined): Record<string, unknown> | null {
+function truncatePayload(
+  payload: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null {
   if (!payload) return null;
   try {
     const serialized = JSON.stringify(payload);
@@ -36,7 +38,7 @@ export async function auditLog(
   supabase: SupabaseClient,
   event: AuditEvent,
 ): Promise<void> {
-  const { error } = await supabase.from('audit_log').insert({
+  const { error } = await supabase.from("audit_log").insert({
     user_id: event.user_id,
     role_at_time: event.role_at_time,
     action: event.action,
@@ -48,6 +50,6 @@ export async function auditLog(
   if (error) {
     // Audit failures are unusual; log to console but do NOT throw —
     // audit failures must not break the user-facing mutation.
-    console.error('audit_log_insert_failed:', error.message);
+    console.error("audit_log_insert_failed:", error.message);
   }
 }

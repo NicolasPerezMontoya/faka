@@ -11,18 +11,18 @@
 
 Cuatro roles con matriz **column-level** (no solo row-level):
 
-| Recurso | Super Admin | Admin | Manager | Analista |
-|---|:---:|:---:|:---:|:---:|
-| Crear/editar usuarios y roles | ✅ | ❌ | ❌ | ❌ |
-| Configurar conectores (API keys, webhooks) | ✅ | ✅ | ❌ | ❌ |
-| Subir CSV / reprocesar uploads | ✅ | ✅ | ✅ | ❌ |
-| Validar matches en cola humana | ✅ | ✅ | ✅ | ❌ |
-| Ver volumen de transacciones (# órdenes, # productos) | ✅ | ✅ | ✅ | ✅ |
-| Ver datos de cliente final (teléfono, email, nombre, cédula) | ✅ | ✅ | ❌ | ❌ |
-| Ver montos $ (ingresos, márgenes, ticket promedio, costos) | ✅ | ✅ | ✅ | ❌ |
-| Ver insights IA | ✅ | ✅ | ✅ | ✅ |
-| Chat con datos | ✅ | ✅ | ✅ | ⚠️ filtrado |
-| Ver audit log / logs técnicos | ✅ | ⚠️ propio | ❌ | ❌ |
+| Recurso                                                      | Super Admin |   Admin   | Manager |  Analista   |
+| ------------------------------------------------------------ | :---------: | :-------: | :-----: | :---------: |
+| Crear/editar usuarios y roles                                |     ✅      |    ❌     |   ❌    |     ❌      |
+| Configurar conectores (API keys, webhooks)                   |     ✅      |    ✅     |   ❌    |     ❌      |
+| Subir CSV / reprocesar uploads                               |     ✅      |    ✅     |   ✅    |     ❌      |
+| Validar matches en cola humana                               |     ✅      |    ✅     |   ✅    |     ❌      |
+| Ver volumen de transacciones (# órdenes, # productos)        |     ✅      |    ✅     |   ✅    |     ✅      |
+| Ver datos de cliente final (teléfono, email, nombre, cédula) |     ✅      |    ✅     |   ❌    |     ❌      |
+| Ver montos $ (ingresos, márgenes, ticket promedio, costos)   |     ✅      |    ✅     |   ✅    |     ❌      |
+| Ver insights IA                                              |     ✅      |    ✅     |   ✅    |     ✅      |
+| Chat con datos                                               |     ✅      |    ✅     |   ✅    | ⚠️ filtrado |
+| Ver audit log / logs técnicos                                |     ✅      | ⚠️ propio |   ❌    |     ❌      |
 
 Nota sobre Analista + chat: el chat debe poder responder preguntas de volumen y tendencias, pero **no debe revelar** montos $ ni identidad de clientes en respuestas. Implementado vía system prompt + filtros server-side post-respuesta antes de devolver al cliente.
 

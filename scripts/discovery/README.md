@@ -43,16 +43,17 @@ Pre-seeded profiles match the most common export formats. The `_template.json` d
 
 Copy `.env.example` → `.env` and fill **one** of these blocks. The script reads `.env` automatically via Node's `--env-file-if-exists` flag (Node ≥ 22.7 required).
 
-| Provider | API key env var | Default model | Notes |
-|----------|-----------------|---------------|-------|
-| Vercel AI Gateway (recommended) | `AI_GATEWAY_API_KEY` | `anthropic/claude-haiku-4-5` | Unified API, observability, automatic provider fallback. https://vercel.com/docs/ai-gateway |
-| Anthropic Claude | `ANTHROPIC_API_KEY` | `claude-haiku-4-5-20251001` | https://console.anthropic.com |
-| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` | https://platform.openai.com |
-| Google Gemini | `GOOGLE_GENERATIVE_AI_API_KEY` | `gemini-2.5-flash` | https://aistudio.google.com/apikey |
-| Moonshot (Kimi K2) | `MOONSHOT_API_KEY` | `kimi-k2-0905-preview` | OpenAI-compatible, base URL auto-set |
-| Any OpenAI-compatible | `OPENAI_COMPATIBLE_API_KEY` + `OPENAI_COMPATIBLE_BASE_URL` | depends | Together, Groq, Fireworks, self-hosted |
+| Provider                        | API key env var                                            | Default model                | Notes                                                                                       |
+| ------------------------------- | ---------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
+| Vercel AI Gateway (recommended) | `AI_GATEWAY_API_KEY`                                       | `anthropic/claude-haiku-4-5` | Unified API, observability, automatic provider fallback. https://vercel.com/docs/ai-gateway |
+| Anthropic Claude                | `ANTHROPIC_API_KEY`                                        | `claude-haiku-4-5-20251001`  | https://console.anthropic.com                                                               |
+| OpenAI                          | `OPENAI_API_KEY`                                           | `gpt-4o-mini`                | https://platform.openai.com                                                                 |
+| Google Gemini                   | `GOOGLE_GENERATIVE_AI_API_KEY`                             | `gemini-2.5-flash`           | https://aistudio.google.com/apikey                                                          |
+| Moonshot (Kimi K2)              | `MOONSHOT_API_KEY`                                         | `kimi-k2-0905-preview`       | OpenAI-compatible, base URL auto-set                                                        |
+| Any OpenAI-compatible           | `OPENAI_COMPATIBLE_API_KEY` + `OPENAI_COMPATIBLE_BASE_URL` | depends                      | Together, Groq, Fireworks, self-hosted                                                      |
 
 **Resolution order:**
+
 1. CLI flag (`--provider X --model Y`) — always wins.
 2. Explicit env (`LLM_PROVIDER=X` + `LLM_MODEL=Y`) — wins over auto-detect.
 3. Auto-detection — picks the first provider whose API key is present, in this order: `gateway → anthropic → openai → google → moonshot → compatible`.
@@ -84,18 +85,23 @@ npm run match
 ## Running
 
 **Fast pass (no API, deterministic only):**
+
 ```bash
 npm run match:dry
 ```
+
 Runs stages 1–4 only. No LLM calls, no API key required.
 
 **Full pass:**
+
 ```bash
 npm run match
 ```
+
 Reads `.env`, detects provider, runs stages 1–4 + LLM arbiter on top ~100 hard cases.
 
 **Flags (override env):**
+
 - `--anchor <channel>` — channel to use as the anchor (default: `pos`).
 - `--no-llm` — skip stage 5 even with an API key set.
 - `--no-embeddings` — skip stage 4 (Jaccard) and stage 5.
@@ -110,14 +116,14 @@ Reads `.env`, detects provider, runs stages 1–4 + LLM arbiter on top ~100 hard
 
 ## Stages
 
-| # | Method | Description | Score |
-|---|--------|-------------|-------|
-| 1 | `barcode_exact` | Normalized barcode (digits only, ≥8 chars) match | 1.00 |
-| 2 | `supplier_code_exact` | Supplier code match (case-insensitive) | 1.00 |
-| 3 | `sku_exact` | SKU match (case-insensitive) | 0.95 |
-| 4 | `normalized_name_exact` | After lowercase/strip-accents/strip-punct match | 0.90 |
-| 5 | `embeddings_high` / `embeddings_mid` | Jaccard token overlap (proxy for embeddings until OpenAI embeddings are wired) | 0.45–0.99 |
-| 6 | `llm_arbiter_match/reject` | LLM decides for hard cases that didn't pass stage 4 | model confidence |
+| #   | Method                               | Description                                                                    | Score            |
+| --- | ------------------------------------ | ------------------------------------------------------------------------------ | ---------------- |
+| 1   | `barcode_exact`                      | Normalized barcode (digits only, ≥8 chars) match                               | 1.00             |
+| 2   | `supplier_code_exact`                | Supplier code match (case-insensitive)                                         | 1.00             |
+| 3   | `sku_exact`                          | SKU match (case-insensitive)                                                   | 0.95             |
+| 4   | `normalized_name_exact`              | After lowercase/strip-accents/strip-punct match                                | 0.90             |
+| 5   | `embeddings_high` / `embeddings_mid` | Jaccard token overlap (proxy for embeddings until OpenAI embeddings are wired) | 0.45–0.99        |
+| 6   | `llm_arbiter_match/reject`           | LLM decides for hard cases that didn't pass stage 4                            | model confidence |
 
 > **Note:** stage 5 currently uses **Jaccard token overlap** as a proxy. Wiring real OpenAI/voyage embeddings is a Fase-2-time concern; for discovery, Jaccard suffices to size the validation queue. The cascade is structured so embeddings can drop in without touching cascade.ts callers.
 

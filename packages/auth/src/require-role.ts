@@ -8,15 +8,18 @@
  * rather than letting the error propagate to a 500.
  */
 
-import type { SupabaseClient, User } from '@supabase/supabase-js';
-import type { UserRole } from '@faka/schema';
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { UserRole } from "@faka/schema";
 
 export class ForbiddenError extends Error {
-  constructor(public readonly requiredRoles: ReadonlyArray<UserRole>, public readonly actualRole: UserRole | null) {
+  constructor(
+    public readonly requiredRoles: ReadonlyArray<UserRole>,
+    public readonly actualRole: UserRole | null,
+  ) {
     super(
-      `forbidden: required one of [${requiredRoles.join(', ')}], got ${actualRole ?? 'unauthenticated'}`,
+      `forbidden: required one of [${requiredRoles.join(", ")}], got ${actualRole ?? "unauthenticated"}`,
     );
-    this.name = 'ForbiddenError';
+    this.name = "ForbiddenError";
   }
 }
 
@@ -37,7 +40,8 @@ export async function requireRole(
   if (error || !data.user) {
     throw new ForbiddenError(allowed, null);
   }
-  const role: UserRole | null = (data.user.app_metadata?.role as UserRole | undefined) ?? null;
+  const role: UserRole | null =
+    (data.user.app_metadata?.role as UserRole | undefined) ?? null;
   if (!role || !allowed.includes(role)) {
     throw new ForbiddenError(allowed, role);
   }

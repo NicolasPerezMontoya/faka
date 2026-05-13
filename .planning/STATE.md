@@ -21,6 +21,7 @@ Progress: [█████████░] Phase 1: 24 of 26 plans (92%); ~7400 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: — min
 - Total execution time: 0.0 hours
@@ -28,14 +29,15 @@ Progress: [█████████░] Phase 1: 24 of 26 plans (92%); ~7400 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
+| ----- | ----- | ----- | -------- |
+| -     | -     | -     | -        |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: — (no data yet)
 
-*Updated after each plan completion*
+_Updated after each plan completion_
 
 ## Accumulated Context
 
@@ -64,10 +66,10 @@ None yet.
 
 Items acknowledged and carried forward from previous milestone close:
 
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| Cascade | Image-match (CLIP) step in matching cascade | Deferred to v2 (channel-image availability not confirmed across ML/Dropi/WP at v1) | 2026-05-13 |
-| Channel | Falabella Marketplace activation | Deferred to Phase 6 (optional; non-priority per client) | 2026-05-13 |
+| Category | Item                                        | Status                                                                             | Deferred At |
+| -------- | ------------------------------------------- | ---------------------------------------------------------------------------------- | ----------- |
+| Cascade  | Image-match (CLIP) step in matching cascade | Deferred to v2 (channel-image availability not confirmed across ML/Dropi/WP at v1) | 2026-05-13  |
+| Channel  | Falabella Marketplace activation            | Deferred to Phase 6 (optional; non-priority per client)                            | 2026-05-13  |
 
 ## Session Continuity
 
@@ -75,9 +77,10 @@ Last session: 2026-05-14 (Phase 1 Wave 4 — implementation complete)
 Stopped at: 24 plans landed across 5 waves. **Phase 1 Foundation is code-complete.** Only deferred work: integration tests 1.2.5 (packages/connectors) + 1.4.3 (apps/orchestrator) — both need local Supabase running. Next: push to GitHub for CI verification, or proceed to `/gsd-verify-work` followed by `/gsd-plan-phase 2` (WordPress walking skeleton).
 
 **Environment note (2026-05-13)**: tried to run `pnpm install` + `supabase start` + `pnpm db:reset` from this WSL2 environment. Network connectivity to registry.npmjs.org is unstable — curl gets HTTP 200 in 2s but pnpm's parallel fetcher times out on ~95% of requests (both IPv4 and IPv6 routing tried). Only 23 of ~500 dependencies resolved. THREE real version mismatches discovered during the attempt and committed in `2cb0b70`:
-  - packageManager pin pnpm@11.1.1 → 10.28.1 (matches installed; was causing corepack hang)
-  - @supabase/supabase-js ^2.105.4 → ^2.105.1 (2.105.4 doesn't exist; latest is 2.105.1)
-  - @typescript-eslint/* ^8.18.0 → 8.18.0 exact (^ resolved to 8.59.3 which has a missing sibling subpackage)
+
+- packageManager pin pnpm@11.1.1 → 10.28.1 (matches installed; was causing corepack hang)
+- @supabase/supabase-js ^2.105.4 → ^2.105.1 (2.105.4 doesn't exist; latest is 2.105.1)
+- @typescript-eslint/\* ^8.18.0 → 8.18.0 exact (^ resolved to 8.59.3 which has a missing sibling subpackage)
 
 Install will work in GitHub Actions (db-integration job), Vercel preview builds, or any environment with stable npm registry connectivity. Schema verification via `pnpm db:reset` is therefore deferred to first deploy.
 

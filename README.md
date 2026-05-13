@@ -75,6 +75,7 @@ Dashboard en `http://localhost:3000`. Orchestrator en `http://localhost:4000`.
 ## Planning
 
 El proyecto usa [GSD](https://get-shit-done.dev) para planning. Artifacts en `.planning/`:
+
 - `PROJECT.md` — Decisiones del proyecto
 - `ROADMAP.md` — 7 fases (0 → 1 → 2 → 3 → 4 → 5 → 5.5 → 6)
 - `REQUIREMENTS.md` — 40 requirements con trazabilidad por fase

@@ -6,11 +6,14 @@
  * retries and DLQ replays do not duplicate rows.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Channel } from '@faka/schema';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Channel } from "@faka/schema";
 
 /** Stable string composition for logs and tracing. */
-export function idempotencyKey(canal: Channel, externalOrderId: string): string {
+export function idempotencyKey(
+  canal: Channel,
+  externalOrderId: string,
+): string {
   return `${canal}:${externalOrderId}`;
 }
 
@@ -39,13 +42,14 @@ export async function idempotentUpsert<T extends Record<string, unknown>>(
   // Cast to Supabase's overload-unfriendly generic shape — payload is
   // structurally compatible but TS can't prove it against the inferred
   // RejectExcessProperties wrapper exposed by @supabase/supabase-js.
-  const { error, count } = await supabase
-    .from(table)
-    .upsert(payload as never, {
-      onConflict: options.onConflict,
-      ignoreDuplicates: options.ignoreDuplicates ?? false,
-      count: 'exact',
-    });
+  const { error, count } = await supabase.from(table).upsert(payload as never, {
+    onConflict: options.onConflict,
+    ignoreDuplicates: options.ignoreDuplicates ?? false,
+    count: "exact",
+  });
 
-  return { rowsAffected: count ?? payload.length, error: error?.message ?? null };
+  return {
+    rowsAffected: count ?? payload.length,
+    error: error?.message ?? null,
+  };
 }

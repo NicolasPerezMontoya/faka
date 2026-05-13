@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ChannelSchema } from './channel.js';
+import { z } from "zod";
+import { ChannelSchema } from "./channel.js";
 
 /**
  * Mapping profile — maps source-CSV column names to canonical fields.
@@ -14,7 +14,13 @@ import { ChannelSchema } from './channel.js';
  * created_by, is_active) — the discovery script uses the base shape only.
  */
 
-export const ProfileTypeSchema = z.enum(['orders', 'products', 'order_items', 'inventory', 'mixto']);
+export const ProfileTypeSchema = z.enum([
+  "orders",
+  "products",
+  "order_items",
+  "inventory",
+  "mixto",
+]);
 export type ProfileType = z.infer<typeof ProfileTypeSchema>;
 
 export const MappingProfileSchema = z.object({
@@ -39,4 +45,6 @@ export const ProductionMappingProfileSchema = MappingProfileSchema.extend({
   updated_at: z.string().datetime().optional(),
 });
 
-export type ProductionMappingProfile = z.infer<typeof ProductionMappingProfileSchema>;
+export type ProductionMappingProfile = z.infer<
+  typeof ProductionMappingProfileSchema
+>;

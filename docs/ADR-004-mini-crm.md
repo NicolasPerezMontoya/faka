@@ -46,6 +46,7 @@ customer_merge_log
 ## Lógica de matching de clientes (espejo del producto matching)
 
 Cascada en cascada:
+
 1. **Phone exact** (E.164 normalizado): match exacto.
 2. **Email exact** (lowercase trim): match exacto.
 3. **Document exact**: match exacto.
@@ -57,7 +58,8 @@ Igual que el matching de productos: lo que la cascada no resuelve va a una **col
 ## Cobertura visible en UI
 
 La vista **Clientes** debe mostrar arriba:
-- "%  de transacciones con cliente identificado" (visible al rol que pueda ver volumen).
+
+- "% de transacciones con cliente identificado" (visible al rol que pueda ver volumen).
 - Desglose por canal (WP: 65%, POS: 40%, WhatsApp: 80%, ML: 0%, Dropi: 0%).
 
 Esto es transparencia con el cliente: no inventamos cobertura que no existe, y le da motivo para empezar a capturar identificador en POS si quiere mejorar la cobertura.
@@ -71,6 +73,7 @@ Esto es transparencia con el cliente: no inventamos cobertura que no existe, y l
 ## Ubicación en el roadmap
 
 **Fase 4 (Mercado Libre + Dropi + analítica avanzada)** absorbe la implementación porque:
+
 1. Necesita los marts ya construidos.
 2. La cascada de matching de clientes reutiliza la infra de matching de productos (F2).
 3. La vista "Clientes" se complementa con el resto del dashboard.

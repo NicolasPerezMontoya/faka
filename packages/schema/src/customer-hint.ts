@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * CustomerHint — emitted by `ChannelConnector.extractCustomerHint?` so the
@@ -18,9 +18,11 @@ export const CustomerHintSchema = z.object({
   email: z.string().email().optional(),
   document_id: z.string().optional(),
   external_customer_id: z.string().optional(),
-  external_identifier_type: z.enum(['phone', 'email', 'document', 'nickname']).optional(),
+  external_identifier_type: z
+    .enum(["phone", "email", "document", "nickname"])
+    .optional(),
   displayed_name: z.string().optional(),
-  source: z.enum(['order_payload', 'csv_row', 'manual']),
+  source: z.enum(["order_payload", "csv_row", "manual"]),
 });
 
 export type CustomerHint = z.infer<typeof CustomerHintSchema>;

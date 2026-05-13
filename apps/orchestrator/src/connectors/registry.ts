@@ -15,32 +15,32 @@ import {
   createWhatsAppConnector,
   createWordPressConnector,
   type ChannelConnector,
-} from '@faka/connectors';
-import type { Channel } from '@faka/schema';
+} from "@faka/connectors";
+import type { Channel } from "@faka/schema";
 
 export type Registry = Record<Channel, ChannelConnector | null>;
 
 export function buildRegistry(): Registry {
   return {
-    'csv-upload': createCSVConnector({}),
+    "csv-upload": createCSVConnector({}),
     wordpress: createWordPressConnector({
-      baseUrl: process.env.WORDPRESS_API_URL ?? '',
-      apiKey: process.env.WORDPRESS_API_KEY ?? '',
+      baseUrl: process.env.WORDPRESS_API_URL ?? "",
+      apiKey: process.env.WORDPRESS_API_KEY ?? "",
     }),
     mercadolibre: createMercadoLibreConnector({
-      clientId: process.env.ML_CLIENT_ID ?? '',
-      clientSecret: process.env.ML_CLIENT_SECRET ?? '',
+      clientId: process.env.ML_CLIENT_ID ?? "",
+      clientSecret: process.env.ML_CLIENT_SECRET ?? "",
     }),
     dropi: createDropiConnector({
-      username: process.env.DROPI_USER ?? '',
-      password: process.env.DROPI_PASS ?? '',
+      username: process.env.DROPI_USER ?? "",
+      password: process.env.DROPI_PASS ?? "",
     }),
     pos: createPOSConnector({
-      webhookSecret: process.env.POS_WEBHOOK_SECRET ?? '',
+      webhookSecret: process.env.POS_WEBHOOK_SECRET ?? "",
       csvFallback: true,
     }),
-    pos1: null,    // alias for pos in F1 — same connector
-    pos2: null,    // alias for pos in F1
+    pos1: null, // alias for pos in F1 — same connector
+    pos2: null, // alias for pos in F1
     whatsapp: createWhatsAppConnector({
       phoneNumberId: process.env.META_WA_PHONE_NUMBER_ID,
       accessToken: process.env.META_WA_ACCESS_TOKEN,
@@ -48,7 +48,7 @@ export function buildRegistry(): Registry {
     }),
     falabella: createFalabellaConnector({
       apiKey: process.env.FALABELLA_API_KEY,
-      enabled: process.env.FALABELLA_ENABLED === 'true',
+      enabled: process.env.FALABELLA_ENABLED === "true",
     }),
   };
 }

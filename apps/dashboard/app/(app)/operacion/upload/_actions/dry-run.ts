@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
-import { dryRun } from '@faka/connectors/csv';
-import { requireRole, ForbiddenError } from '@faka/auth';
-import { createClient } from '@/lib/supabase/server';
+import { dryRun } from "@faka/connectors/csv";
+import { requireRole, ForbiddenError } from "@faka/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export interface DryRunInput {
   uploadId: string;
@@ -29,10 +29,10 @@ export async function dryRunAction(input: DryRunInput): Promise<DryRunResult> {
   const supabase = createClient();
 
   try {
-    await requireRole(supabase, ['super_admin', 'admin', 'manager']);
+    await requireRole(supabase, ["super_admin", "admin", "manager"]);
   } catch (err) {
-    if (err instanceof ForbiddenError) return { ok: false, error: 'forbidden' };
-    return { ok: false, error: 'auth_failed' };
+    if (err instanceof ForbiddenError) return { ok: false, error: "forbidden" };
+    return { ok: false, error: "auth_failed" };
   }
 
   try {

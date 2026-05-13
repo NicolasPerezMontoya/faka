@@ -16,49 +16,49 @@ Dos POS físicos = dos exports separados (uno por punto). Identificar cada archi
 
 ## `pos1-products-YYYY-MM-DD.csv` — columnas
 
-| Columna canónica | Origen típico | Tipo | Requerido | Ejemplo |
-|------------------|---------------|------|-----------|---------|
-| `external_id` | `id_producto` o `código_interno` | string/int | ✅ | `LOC-4521` |
-| `sku` | `sku` | string | ⚠️ si existe | `PLN-2026-RJ` |
-| `name` | `nombre_producto` | string | ✅ | `Plancha Pro 2026 Rojo` |
-| `category` | `categoría` | string | opcional | `Belleza` |
-| `price` | `precio_venta` | decimal | ✅ | `89900` |
-| `cost` | `precio_costo` | decimal | ⚠️ muy útil | `45000` |
-| `barcode` | `código_barras` o EAN | string | ⚠️ si existe | `7701234567890` |
-| `supplier_code` | `código_proveedor` | string | ⚠️ si existe | `IMP-A-145` |
-| `stock` | `stock_actual` | int | ✅ | `8` |
-| `status` | `activo` | bool/enum | ✅ | `activo` / `inactivo` |
+| Columna canónica | Origen típico                    | Tipo       | Requerido    | Ejemplo                 |
+| ---------------- | -------------------------------- | ---------- | ------------ | ----------------------- |
+| `external_id`    | `id_producto` o `código_interno` | string/int | ✅           | `LOC-4521`              |
+| `sku`            | `sku`                            | string     | ⚠️ si existe | `PLN-2026-RJ`           |
+| `name`           | `nombre_producto`                | string     | ✅           | `Plancha Pro 2026 Rojo` |
+| `category`       | `categoría`                      | string     | opcional     | `Belleza`               |
+| `price`          | `precio_venta`                   | decimal    | ✅           | `89900`                 |
+| `cost`           | `precio_costo`                   | decimal    | ⚠️ muy útil  | `45000`                 |
+| `barcode`        | `código_barras` o EAN            | string     | ⚠️ si existe | `7701234567890`         |
+| `supplier_code`  | `código_proveedor`               | string     | ⚠️ si existe | `IMP-A-145`             |
+| `stock`          | `stock_actual`                   | int        | ✅           | `8`                     |
+| `status`         | `activo`                         | bool/enum  | ✅           | `activo` / `inactivo`   |
 
 ## `pos1-orders-YYYY-MM-DD.csv` — columnas
 
-| Columna canónica | Origen típico | Tipo | Requerido | Ejemplo |
-|------------------|---------------|------|-----------|---------|
-| `external_order_id` | `# factura` o `id_venta` | string | ✅ | `F-001-23415` |
-| `pos_id` | identificador del punto | string | ✅ | `pos1` |
-| `order_date` | `fecha` | date ISO | ✅ | `2026-05-12` |
-| `order_time` | `hora` | time | ✅ | `15:42:00` |
-| `cashier_id` | `cajero` o `usuario` | string | opcional | `vendedor-3` |
-| `customer_doc` | `cédula_cliente` | string | opcional | `1023456789` |
-| `customer_name` | `nombre_cliente` | string | opcional | `Juan Pérez` |
-| `payment_method` | `forma_pago` | enum | ✅ | `efectivo` / `tarjeta_credito` / `tarjeta_debito` / `nequi` / `transferencia` |
-| `subtotal` | `subtotal` | decimal | ✅ | `89900` |
-| `discount` | `descuento` | decimal | opcional | `5000` |
-| `tax` | `iva` | decimal | opcional | `0` |
-| `total` | `total` | decimal | ✅ | `84900` |
-| `currency` | `COP` | string | ✅ | `COP` |
+| Columna canónica    | Origen típico            | Tipo     | Requerido | Ejemplo                                                                       |
+| ------------------- | ------------------------ | -------- | --------- | ----------------------------------------------------------------------------- |
+| `external_order_id` | `# factura` o `id_venta` | string   | ✅        | `F-001-23415`                                                                 |
+| `pos_id`            | identificador del punto  | string   | ✅        | `pos1`                                                                        |
+| `order_date`        | `fecha`                  | date ISO | ✅        | `2026-05-12`                                                                  |
+| `order_time`        | `hora`                   | time     | ✅        | `15:42:00`                                                                    |
+| `cashier_id`        | `cajero` o `usuario`     | string   | opcional  | `vendedor-3`                                                                  |
+| `customer_doc`      | `cédula_cliente`         | string   | opcional  | `1023456789`                                                                  |
+| `customer_name`     | `nombre_cliente`         | string   | opcional  | `Juan Pérez`                                                                  |
+| `payment_method`    | `forma_pago`             | enum     | ✅        | `efectivo` / `tarjeta_credito` / `tarjeta_debito` / `nequi` / `transferencia` |
+| `subtotal`          | `subtotal`               | decimal  | ✅        | `89900`                                                                       |
+| `discount`          | `descuento`              | decimal  | opcional  | `5000`                                                                        |
+| `tax`               | `iva`                    | decimal  | opcional  | `0`                                                                           |
+| `total`             | `total`                  | decimal  | ✅        | `84900`                                                                       |
+| `currency`          | `COP`                    | string   | ✅        | `COP`                                                                         |
 
 ## `pos1-order-items-YYYY-MM-DD.csv` — columnas
 
-| Columna canónica | Origen típico | Tipo | Requerido | Ejemplo |
-|------------------|---------------|------|-----------|---------|
-| `external_order_id` | `# factura` | string | ✅ | `F-001-23415` |
-| `external_product_id` | `id_producto` | string/int | ✅ | `LOC-4521` |
-| `external_sku` | `sku` | string | ⚠️ si existe | `PLN-2026-RJ` |
-| `product_name` | `nombre_producto` | string | ✅ | `Plancha Pro 2026 Rojo` |
-| `quantity` | `cantidad` | int | ✅ | `1` |
-| `unit_price` | `precio_unitario` | decimal | ✅ | `89900` |
-| `unit_cost` | `costo_unitario` | decimal | ⚠️ muy útil para margen | `45000` |
-| `line_total` | `total_línea` | decimal | ✅ | `89900` |
+| Columna canónica      | Origen típico     | Tipo       | Requerido               | Ejemplo                 |
+| --------------------- | ----------------- | ---------- | ----------------------- | ----------------------- |
+| `external_order_id`   | `# factura`       | string     | ✅                      | `F-001-23415`           |
+| `external_product_id` | `id_producto`     | string/int | ✅                      | `LOC-4521`              |
+| `external_sku`        | `sku`             | string     | ⚠️ si existe            | `PLN-2026-RJ`           |
+| `product_name`        | `nombre_producto` | string     | ✅                      | `Plancha Pro 2026 Rojo` |
+| `quantity`            | `cantidad`        | int        | ✅                      | `1`                     |
+| `unit_price`          | `precio_unitario` | decimal    | ✅                      | `89900`                 |
+| `unit_cost`           | `costo_unitario`  | decimal    | ⚠️ muy útil para margen | `45000`                 |
+| `line_total`          | `total_línea`     | decimal    | ✅                      | `89900`                 |
 
 ---
 

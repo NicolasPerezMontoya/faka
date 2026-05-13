@@ -5,7 +5,7 @@
  * Discretion). Magic link / OAuth can be added in F2+ if cliente requests.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface SignInInput {
   email: string;
@@ -17,10 +17,13 @@ export interface SignInResult {
   error?: string;
 }
 
-export async function signIn(supabase: SupabaseClient, input: SignInInput): Promise<SignInResult> {
+export async function signIn(
+  supabase: SupabaseClient,
+  input: SignInInput,
+): Promise<SignInResult> {
   const email = input.email.trim().toLowerCase();
   if (!email || !input.password) {
-    return { ok: false, error: 'missing_credentials' };
+    return { ok: false, error: "missing_credentials" };
   }
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -30,7 +33,7 @@ export async function signIn(supabase: SupabaseClient, input: SignInInput): Prom
 
   if (error) {
     // Avoid leaking which credential was wrong.
-    return { ok: false, error: 'invalid_credentials' };
+    return { ok: false, error: "invalid_credentials" };
   }
 
   return { ok: true };

@@ -1,5 +1,12 @@
-import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button } from '@faka/ui';
+import Link from "next/link";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Button,
+} from "@faka/ui";
 
 export default function ForbiddenPage() {
   return (
@@ -7,11 +14,14 @@ export default function ForbiddenPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Acceso denegado</CardTitle>
-          <CardDescription>Tu rol no tiene permisos para ver esta página.</CardDescription>
+          <CardDescription>
+            Tu rol no tiene permisos para ver esta página.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Si crees que es un error, contacta a un Super Admin para revisar tus permisos.
+            Si crees que es un error, contacta a un Super Admin para revisar tus
+            permisos.
           </p>
           <Link href="/">
             <Button variant="outline">Volver al inicio</Button>

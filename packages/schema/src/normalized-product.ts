@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ChannelSchema } from './channel.js';
+import { z } from "zod";
+import { ChannelSchema } from "./channel.js";
 
 /**
  * NormalizedProduct — the result of applying a `MappingProfile.column_map`

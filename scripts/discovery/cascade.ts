@@ -1,5 +1,5 @@
-import type { CanonicalProduct, MatchMethod, MatchResult } from './types.js';
-import { normalizeName, jaccard } from './normalize.js';
+import type { CanonicalProduct, MatchMethod, MatchResult } from "./types.js";
+import { normalizeName, jaccard } from "./normalize.js";
 
 interface ChannelIndex {
   byBarcode: Map<string, CanonicalProduct>;
@@ -19,7 +19,8 @@ export function buildIndex(products: CanonicalProduct[]): ChannelIndex {
   };
   for (const p of products) {
     if (p.barcode) idx.byBarcode.set(p.barcode, p);
-    if (p.supplier_code) idx.bySupplierCode.set(p.supplier_code.toUpperCase(), p);
+    if (p.supplier_code)
+      idx.bySupplierCode.set(p.supplier_code.toUpperCase(), p);
     if (p.sku) idx.bySku.set(p.sku.toUpperCase(), p);
     idx.byNormalizedName.set(normalizeName(p.name), p);
   }
@@ -28,7 +29,10 @@ export function buildIndex(products: CanonicalProduct[]): ChannelIndex {
 
 export interface DeterministicResult {
   matched: MatchResult | null;
-  jaccardCandidates: Array<{ candidate: CanonicalProduct; jaccardScore: number }>;
+  jaccardCandidates: Array<{
+    candidate: CanonicalProduct;
+    jaccardScore: number;
+  }>;
 }
 
 const JACCARD_HIGH = 0.7;
@@ -37,33 +41,45 @@ const TOP_K_CANDIDATES = 5;
 
 export function matchDeterministic(
   anchor: CanonicalProduct,
-  index: ChannelIndex
+  index: ChannelIndex,
 ): DeterministicResult {
   if (anchor.barcode) {
     const hit = index.byBarcode.get(anchor.barcode);
     if (hit) {
-      return { matched: emit(anchor, hit, 'barcode_exact', 1.0), jaccardCandidates: [] };
+      return {
+        matched: emit(anchor, hit, "barcode_exact", 1.0),
+        jaccardCandidates: [],
+      };
     }
   }
 
   if (anchor.supplier_code) {
     const hit = index.bySupplierCode.get(anchor.supplier_code.toUpperCase());
     if (hit) {
-      return { matched: emit(anchor, hit, 'supplier_code_exact', 1.0), jaccardCandidates: [] };
+      return {
+        matched: emit(anchor, hit, "supplier_code_exact", 1.0),
+        jaccardCandidates: [],
+      };
     }
   }
 
   if (anchor.sku) {
     const hit = index.bySku.get(anchor.sku.toUpperCase());
     if (hit) {
-      return { matched: emit(anchor, hit, 'sku_exact', 0.95), jaccardCandidates: [] };
+      return {
+        matched: emit(anchor, hit, "sku_exact", 0.95),
+        jaccardCandidates: [],
+      };
     }
   }
 
   const norm = normalizeName(anchor.name);
   const nameHit = index.byNormalizedName.get(norm);
   if (nameHit) {
-    return { matched: emit(anchor, nameHit, 'normalized_name_exact', 0.9), jaccardCandidates: [] };
+    return {
+      matched: emit(anchor, nameHit, "normalized_name_exact", 0.9),
+      jaccardCandidates: [],
+    };
   }
 
   const candidates = index.all
@@ -74,13 +90,25 @@ export function matchDeterministic(
 
   if (candidates.length > 0 && candidates[0]!.jaccardScore >= JACCARD_HIGH) {
     return {
-      matched: emit(anchor, candidates[0]!.candidate, 'embeddings_high', candidates[0]!.jaccardScore, 'jaccard_token_overlap'),
+      matched: emit(
+        anchor,
+        candidates[0]!.candidate,
+        "embeddings_high",
+        candidates[0]!.jaccardScore,
+        "jaccard_token_overlap",
+      ),
       jaccardCandidates: candidates,
     };
   }
   if (candidates.length > 0 && candidates[0]!.jaccardScore >= JACCARD_MID) {
     return {
-      matched: emit(anchor, candidates[0]!.candidate, 'embeddings_mid', candidates[0]!.jaccardScore, 'jaccard_token_overlap'),
+      matched: emit(
+        anchor,
+        candidates[0]!.candidate,
+        "embeddings_mid",
+        candidates[0]!.jaccardScore,
+        "jaccard_token_overlap",
+      ),
       jaccardCandidates: candidates,
     };
   }
@@ -93,7 +121,7 @@ function emit(
   candidate: CanonicalProduct,
   method: MatchMethod,
   score: number,
-  rationale?: string
+  rationale?: string,
 ): MatchResult {
   return { anchor, candidate, method, score, rationale };
 }

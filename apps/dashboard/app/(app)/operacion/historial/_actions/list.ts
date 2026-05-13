@@ -1,6 +1,6 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export interface UploadHistoryRow {
   upload_id: string;
@@ -21,7 +21,7 @@ export interface UploadHistoryRow {
 export async function listUploads(limit = 50): Promise<UploadHistoryRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from('raw_csv_uploads')
+    .from("raw_csv_uploads")
     .select(
       `
         upload_id, canal_declarado, tipo, filename, bytes, row_count,
@@ -29,11 +29,11 @@ export async function listUploads(limit = 50): Promise<UploadHistoryRow[]> {
         csv_mapping_profiles!raw_csv_uploads_mapping_profile_id_fkey ( nombre, version )
       `,
     )
-    .order('uploaded_at', { ascending: false })
+    .order("uploaded_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error('listUploads_failed:', error.message);
+    console.error("listUploads_failed:", error.message);
     return [];
   }
 
@@ -48,10 +48,13 @@ export async function listUploads(limit = 50): Promise<UploadHistoryRow[]> {
     uploaded_at: row.uploaded_at as string,
     uploaded_by: (row.uploaded_by as string | null) ?? null,
     mapping_profile_id: (row.mapping_profile_id as string | null) ?? null,
-    error_log_json: (row.error_log_json as Record<string, unknown> | null) ?? null,
-    mapping_profile_nombre: (row as unknown as { csv_mapping_profiles?: { nombre?: string } })
-      .csv_mapping_profiles?.nombre ?? null,
-    mapping_profile_version: (row as unknown as { csv_mapping_profiles?: { version?: number } })
-      .csv_mapping_profiles?.version ?? null,
+    error_log_json:
+      (row.error_log_json as Record<string, unknown> | null) ?? null,
+    mapping_profile_nombre:
+      (row as unknown as { csv_mapping_profiles?: { nombre?: string } })
+        .csv_mapping_profiles?.nombre ?? null,
+    mapping_profile_version:
+      (row as unknown as { csv_mapping_profiles?: { version?: number } })
+        .csv_mapping_profiles?.version ?? null,
   }));
 }

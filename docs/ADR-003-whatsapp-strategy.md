@@ -10,10 +10,12 @@
 ## Contexto
 
 El PRD original proponía un formulario interno en el dashboard para registrar ventas de WhatsApp. El cliente prefiere **integración real con WhatsApp** porque:
+
 1. El vendedor ya está dentro de WhatsApp Business; cambiar a otra app rompe su flujo.
 2. Los insights IA del Bloque H deben **llegar al WhatsApp del dueño**, lo cual requiere un canal de salida WA de cualquier modo.
 
 WhatsApp Business Cloud API (Meta directo) o un proveedor (Twilio, 360dialog) requieren:
+
 - Meta Business Manager verificado
 - Número de teléfono de negocio dedicado
 - Plantillas de mensaje aprobadas (para mensajes proactivos)
@@ -29,6 +31,7 @@ Volumen estimado: 5–10 pedidos/día × 30 = 150–300 mensajes inbound/mes + 2
 ### Fase 3 — Formulario interno (NO desaparece)
 
 Mantener el formulario interno como entrada secundaria, no eliminarlo:
+
 - Captura ventas WhatsApp registradas a mano (cuando el vendedor no usa el chat directo).
 - Es el fallback si WA Business cae.
 - Sirve como UI de "limpieza" para corregir pedidos mal capturados por la integración automática.
@@ -38,10 +41,12 @@ Form mínimo viable (≤4 clicks, según PRD): cliente · productos · total · 
 ### Fase 5.5 — Integración WhatsApp Business Cloud API (NUEVA)
 
 Se inserta entre F5 (IA) y F6 (Falabella+predicción) porque depende de:
+
 1. Capa de IA ya construida (los insights van por WA además de dashboard).
 2. Mini-CRM existente (los pedidos WA crean/enriquecen `customers`).
 
 **Entregables:**
+
 - Cuenta WhatsApp Business + Meta Business Manager configurada (Nicolás coordina con cliente).
 - Webhook receiver en Railway que valida firma de Meta.
 - Parser de mensajes entrantes → flow conversacional simple:

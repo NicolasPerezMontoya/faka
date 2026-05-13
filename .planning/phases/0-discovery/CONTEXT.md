@@ -15,6 +15,7 @@ Skipping Phase 0 means rebuilding the matching pipeline in 3 weeks when we disco
 ## Scope
 
 **IN scope:**
+
 - Discovery questionnaire for the client covering catalog, volume, channel access, AI preferences, role decisions.
 - CSV templates per channel specifying the exact format the client should export.
 - Local exploratory matching script (no DB, no API required for stages 1–4).
@@ -22,6 +23,7 @@ Skipping Phase 0 means rebuilding the matching pipeline in 3 weeks when we disco
 - Resolution of the 7 PRD §7 open decisions.
 
 **OUT of scope:**
+
 - Any Supabase schema work (Phase 1).
 - Any channel connector implementation (Phase 2+).
 - Dashboard UI (Phase 2+).
@@ -63,6 +65,7 @@ npm run match:dry   # stages 1–4 only, no API required
 ```
 
 When ANTHROPIC_API_KEY or OPENAI_API_KEY is available:
+
 ```bash
 ANTHROPIC_API_KEY=... npm run match
 ```
@@ -70,6 +73,7 @@ ANTHROPIC_API_KEY=... npm run match
 ## Handoff to Phase 1
 
 When Phase 0 closes:
+
 - `docs/discovery-report.md` is the artifact that informs Phase 1 sizing (validation queue capacity, LLM cost projection, schema constraints).
 - `scripts/discovery/profiles/*.json` become seed inserts for `csv_mapping_profiles` in Phase 1.
 - The questionnaire answers populate the 7 LOCKED entries in PROJECT.md Key Decisions.

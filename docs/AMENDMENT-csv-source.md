@@ -64,8 +64,8 @@ csv_mapping_profiles
 
 ```typescript
 class CSVConnector implements ChannelConnector {
-  name = 'csv-upload';
-  type = 'manual';
+  name = "csv-upload";
+  type = "manual";
   // Recibe el upload + mapping profile, emite NormalizedOrder/Product
   async ingestUpload(uploadId: string): Promise<IngestResult>;
 }

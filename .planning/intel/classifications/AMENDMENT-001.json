@@ -20,9 +20,7 @@
     "Mapping profiles versioning",
     "Reprocessing pipeline"
   ],
-  "cross_refs": [
-    "docs/PRD.md"
-  ],
+  "cross_refs": ["docs/PRD.md"],
   "locked": true,
   "precedence": 0,
   "notes": "Manifest declared type=ADR with precedence 0; document self-declares Estado: LOCKED and Decisor: Nicolás. Treated as an Accepted ADR amending docs/PRD.md."

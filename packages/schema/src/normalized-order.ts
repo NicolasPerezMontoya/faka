@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ChannelSchema } from './channel.js';
+import { z } from "zod";
+import { ChannelSchema } from "./channel.js";
 
 /**
  * NormalizedOrder — the result of applying a `MappingProfile.column_map`
@@ -12,7 +12,9 @@ import { ChannelSchema } from './channel.js';
 export const NormalizedOrderSchema = z.object({
   channel: ChannelSchema,
   external_order_id: z.string().min(1),
-  order_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'order_date must be ISO YYYY-MM-DD'),
+  order_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "order_date must be ISO YYYY-MM-DD"),
   order_time: z.string().optional(),
   customer_external_id: z.string().optional(),
   customer_name: z.string().optional(),
@@ -33,7 +35,7 @@ export const NormalizedOrderSchema = z.object({
   commission: z.number().nonnegative().optional(),
   tax: z.number().nonnegative().optional(),
   total: z.number().nonnegative(),
-  currency: z.string().default('COP'),
+  currency: z.string().default("COP"),
   notes: z.string().optional(),
   products_text: z.string().optional(),
 });

@@ -1,28 +1,42 @@
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import type { DiscoveryReport } from './types.js';
+import { writeFileSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
+import type { DiscoveryReport } from "./types.js";
 
 export function writeJSONReport(path: string, report: DiscoveryReport): void {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(report, null, 2), 'utf-8');
+  writeFileSync(path, JSON.stringify(report, null, 2), "utf-8");
 }
 
-export function writeMarkdownReport(path: string, report: DiscoveryReport): void {
+export function writeMarkdownReport(
+  path: string,
+  report: DiscoveryReport,
+): void {
   mkdirSync(dirname(path), { recursive: true });
 
-  const total = Object.values(report.totals_by_channel).reduce((a, b) => a + b, 0);
+  const total = Object.values(report.totals_by_channel).reduce(
+    (a, b) => a + b,
+    0,
+  );
   const auto = report.match_rate_automatic;
   const review = report.match_rate_review_needed;
   const methodRows = Object.entries(report.matches_by_method)
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1])
     .map(([m, n]) => `| \`${m}\` | ${n} | ${pct(n / total)} |`)
-    .join('\n');
+    .join("\n");
 
   const sampleRows = report.unresolved_samples
     .slice(0, 10)
-    .map((s, i) => `${i + 1}. **${s.anchor}**\n   Top candidates: ${s.candidates.slice(0, 3).map((c) => `\`${c}\``).join(', ') || '_none_'}`)
-    .join('\n');
+    .map(
+      (s, i) =>
+        `${i + 1}. **${s.anchor}**\n   Top candidates: ${
+          s.candidates
+            .slice(0, 3)
+            .map((c) => `\`${c}\``)
+            .join(", ") || "_none_"
+        }`,
+    )
+    .join("\n");
 
   const lines = [
     `# Discovery Report — Catálogo Matching Baseline`,
@@ -37,21 +51,25 @@ export function writeMarkdownReport(path: string, report: DiscoveryReport): void
     ``,
     `## Inputs`,
     ``,
-    '| Channel | File | Rows |',
-    '|---------|------|-----:|',
-    ...report.inputs.map((i) => `| \`${i.channel}\` | \`${i.file}\` | ${i.row_count} |`),
+    "| Channel | File | Rows |",
+    "|---------|------|-----:|",
+    ...report.inputs.map(
+      (i) => `| \`${i.channel}\` | \`${i.file}\` | ${i.row_count} |`,
+    ),
     ``,
     `## Totales por canal`,
     ``,
-    '| Channel | Productos cargados |',
-    '|---------|-------------------:|',
-    ...Object.entries(report.totals_by_channel).map(([ch, n]) => `| \`${ch}\` | ${n} |`),
+    "| Channel | Productos cargados |",
+    "|---------|-------------------:|",
+    ...Object.entries(report.totals_by_channel).map(
+      ([ch, n]) => `| \`${ch}\` | ${n} |`,
+    ),
     ``,
     `## Matches contra anchor (\`${report.config.anchorChannel}\`)`,
     ``,
-    '| Método | # matches | % del total no-anchor |',
-    '|--------|----------:|----------------------:|',
-    methodRows || '| _(sin datos)_ | 0 | 0% |',
+    "| Método | # matches | % del total no-anchor |",
+    "|--------|----------:|----------------------:|",
+    methodRows || "| _(sin datos)_ | 0 | 0% |",
     ``,
     `**Tasa automática (sin revisión humana):** ${pct(auto)}`,
     `**Tasa que requiere revisión:** ${pct(review)}`,
@@ -61,7 +79,7 @@ export function writeMarkdownReport(path: string, report: DiscoveryReport): void
     ``,
     `## Casos no resueltos (muestra)`,
     ``,
-    sampleRows || '_No unresolved samples._',
+    sampleRows || "_No unresolved samples._",
     ``,
     `## Recomendación`,
     ``,
@@ -75,7 +93,7 @@ export function writeMarkdownReport(path: string, report: DiscoveryReport): void
     ``,
   ];
 
-  writeFileSync(path, lines.join('\n'), 'utf-8');
+  writeFileSync(path, lines.join("\n"), "utf-8");
 }
 
 function pct(x: number): string {

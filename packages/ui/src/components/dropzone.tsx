@@ -1,9 +1,9 @@
 // Dropzone — design from docs/sketches/csv-upload-wizard.html:170-176
 
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cn } from '../lib/cn.js';
+import * as React from "react";
+import { cn } from "../lib/cn.js";
 
 export interface DropzoneProps {
   onFileSelected: (file: File) => void;
@@ -17,7 +17,7 @@ export interface DropzoneProps {
 
 export function Dropzone({
   onFileSelected,
-  accept = '.csv,text/csv',
+  accept = ".csv,text/csv",
   maxBytes,
   disabled = false,
   className,
@@ -29,7 +29,9 @@ export function Dropzone({
 
   function validateAndEmit(file: File) {
     if (maxBytes && file.size > maxBytes) {
-      setError(`FILE_TOO_LARGE — ${(file.size / 1024 / 1024).toFixed(1)}MB > ${(maxBytes / 1024 / 1024).toFixed(0)}MB`);
+      setError(
+        `FILE_TOO_LARGE — ${(file.size / 1024 / 1024).toFixed(1)}MB > ${(maxBytes / 1024 / 1024).toFixed(0)}MB`,
+      );
       return;
     }
     setError(null);
@@ -56,7 +58,7 @@ export function Dropzone({
         tabIndex={disabled ? -1 : 0}
         onClick={() => !disabled && inputRef.current?.click()}
         onKeyDown={(e) => {
-          if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+          if (!disabled && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault();
             inputRef.current?.click();
           }
@@ -69,14 +71,18 @@ export function Dropzone({
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
         className={cn(
-          'border-2 border-dashed rounded-lg px-6 py-10 text-center cursor-pointer transition-colors',
-          isDragging ? 'border-primary bg-primary/5' : 'border-input',
-          disabled ? 'opacity-50 pointer-events-none' : 'hover:border-primary/50',
+          "border-2 border-dashed rounded-lg px-6 py-10 text-center cursor-pointer transition-colors",
+          isDragging ? "border-primary bg-primary/5" : "border-input",
+          disabled
+            ? "opacity-50 pointer-events-none"
+            : "hover:border-primary/50",
         )}
       >
         <div className="text-foreground font-medium">Arrastra el CSV aquí</div>
         <div className="text-xs text-muted-foreground mt-1">
-          o haz clic para seleccionar — máx {maxBytes ? `${(maxBytes / 1024 / 1024).toFixed(0)}MB` : 'sin tope'}, UTF-8
+          o haz clic para seleccionar — máx{" "}
+          {maxBytes ? `${(maxBytes / 1024 / 1024).toFixed(0)}MB` : "sin tope"},
+          UTF-8
         </div>
         {current && <div className="mt-3 text-xs">{current}</div>}
         <input

@@ -1,19 +1,27 @@
 // Operación landing — list of operational tools available in F1.
 
-import Link from 'next/link';
-import { headers } from 'next/headers';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@faka/ui';
-import type { UserRole } from '@faka/schema';
+import Link from "next/link";
+import { headers } from "next/headers";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Badge,
+} from "@faka/ui";
+import type { UserRole } from "@faka/schema";
 
 export default function OperacionPage() {
-  const role = headers().get('x-user-role') as UserRole | null;
+  const role = headers().get("x-user-role") as UserRole | null;
 
   return (
     <div>
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Operación</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Carga manual, gestión de mapeos, salud de conectores y cola de validación.
+          Carga manual, gestión de mapeos, salud de conectores y cola de
+          validación.
         </p>
       </header>
 
@@ -23,7 +31,8 @@ export default function OperacionPage() {
             <CardHeader>
               <CardTitle>Subir CSV</CardTitle>
               <CardDescription>
-                Wizard de 3 pasos para cargar productos o pedidos desde un archivo. El payload crudo se preserva inmutable.
+                Wizard de 3 pasos para cargar productos o pedidos desde un
+                archivo. El payload crudo se preserva inmutable.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -37,7 +46,8 @@ export default function OperacionPage() {
             <CardHeader>
               <CardTitle>Historial de cargas</CardTitle>
               <CardDescription>
-                Últimas cargas con estado, conteo de filas y opción de reprocesar con una versión más reciente del perfil.
+                Últimas cargas con estado, conteo de filas y opción de
+                reprocesar con una versión más reciente del perfil.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -50,7 +60,8 @@ export default function OperacionPage() {
           <CardHeader>
             <CardTitle>Health de conectores</CardTitle>
             <CardDescription>
-              Estado en vivo por canal: última sincronización, errores recientes, reintentos.
+              Estado en vivo por canal: última sincronización, errores
+              recientes, reintentos.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -71,7 +82,9 @@ export default function OperacionPage() {
         </Card>
       </div>
 
-      <p className="mt-8 text-xs text-muted-foreground">Sesión activa como rol: {role ?? 'desconocido'}.</p>
+      <p className="mt-8 text-xs text-muted-foreground">
+        Sesión activa como rol: {role ?? "desconocido"}.
+      </p>
     </div>
   );
 }

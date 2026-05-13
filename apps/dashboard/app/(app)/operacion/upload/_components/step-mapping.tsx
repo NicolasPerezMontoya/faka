@@ -2,10 +2,10 @@
 // Client Component: parses first ~3 CSV rows locally for preview + auto-detect
 // hints, then submits file to upload-csv Server Action on "Continuar".
 
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Dropzone,
@@ -13,47 +13,62 @@ import {
   Toggle,
   MappingTable,
   type MappingRow,
-} from '@faka/ui';
-import { autoDetectAction } from '../_actions/auto-detect';
-import { uploadCsvAndAdvance } from '../_actions/upload-csv';
-import { saveMappingAction } from '../_actions/save-mapping';
+} from "@faka/ui";
+import { autoDetectAction } from "../_actions/auto-detect";
+import { uploadCsvAndAdvance } from "../_actions/upload-csv";
+import { saveMappingAction } from "../_actions/save-mapping";
 
 const CSV_MAX_BYTES = 20 * 1024 * 1024;
 const PREVIEW_ROWS = 3;
 
 const CANONICAL_FIELDS_PRODUCTS: MappingRow[] = [
-  { field: 'external_id', required: true, sourceColumn: null, confidence: 'none' },
-  { field: 'name', required: true, sourceColumn: null, confidence: 'none' },
-  { field: 'sku', sourceColumn: null, confidence: 'none' },
-  { field: 'price', required: true, sourceColumn: null, confidence: 'none' },
-  { field: 'cost', sourceColumn: null, confidence: 'none' },
-  { field: 'barcode', sourceColumn: null, confidence: 'none' },
-  { field: 'supplier_code', sourceColumn: null, confidence: 'none' },
-  { field: 'category', sourceColumn: null, confidence: 'none' },
-  { field: 'brand', sourceColumn: null, confidence: 'none' },
-  { field: 'image_url', sourceColumn: null, confidence: 'none' },
-  { field: 'status', sourceColumn: null, confidence: 'none' },
+  {
+    field: "external_id",
+    required: true,
+    sourceColumn: null,
+    confidence: "none",
+  },
+  { field: "name", required: true, sourceColumn: null, confidence: "none" },
+  { field: "sku", sourceColumn: null, confidence: "none" },
+  { field: "price", required: true, sourceColumn: null, confidence: "none" },
+  { field: "cost", sourceColumn: null, confidence: "none" },
+  { field: "barcode", sourceColumn: null, confidence: "none" },
+  { field: "supplier_code", sourceColumn: null, confidence: "none" },
+  { field: "category", sourceColumn: null, confidence: "none" },
+  { field: "brand", sourceColumn: null, confidence: "none" },
+  { field: "image_url", sourceColumn: null, confidence: "none" },
+  { field: "status", sourceColumn: null, confidence: "none" },
 ];
 
 const CANONICAL_FIELDS_ORDERS: MappingRow[] = [
-  { field: 'external_order_id', required: true, sourceColumn: null, confidence: 'none' },
-  { field: 'order_date', required: true, sourceColumn: null, confidence: 'none' },
-  { field: 'total', required: true, sourceColumn: null, confidence: 'none' },
-  { field: 'subtotal', sourceColumn: null, confidence: 'none' },
-  { field: 'discount', sourceColumn: null, confidence: 'none' },
-  { field: 'shipping_cost', sourceColumn: null, confidence: 'none' },
-  { field: 'status', sourceColumn: null, confidence: 'none' },
-  { field: 'customer_phone', sourceColumn: null, confidence: 'none' },
-  { field: 'customer_email', sourceColumn: null, confidence: 'none' },
-  { field: 'customer_name', sourceColumn: null, confidence: 'none' },
-  { field: 'payment_method', sourceColumn: null, confidence: 'none' },
+  {
+    field: "external_order_id",
+    required: true,
+    sourceColumn: null,
+    confidence: "none",
+  },
+  {
+    field: "order_date",
+    required: true,
+    sourceColumn: null,
+    confidence: "none",
+  },
+  { field: "total", required: true, sourceColumn: null, confidence: "none" },
+  { field: "subtotal", sourceColumn: null, confidence: "none" },
+  { field: "discount", sourceColumn: null, confidence: "none" },
+  { field: "shipping_cost", sourceColumn: null, confidence: "none" },
+  { field: "status", sourceColumn: null, confidence: "none" },
+  { field: "customer_phone", sourceColumn: null, confidence: "none" },
+  { field: "customer_email", sourceColumn: null, confidence: "none" },
+  { field: "customer_name", sourceColumn: null, confidence: "none" },
+  { field: "payment_method", sourceColumn: null, confidence: "none" },
 ];
 
-function splitCsvLine(line: string, delimiter = ','): string[] {
+function splitCsvLine(line: string, delimiter = ","): string[] {
   // Lightweight CSV split for preview-only. Handles quoted fields with commas.
   // Production parse runs server-side via csv-parse in commit-upload.
   const result: string[] = [];
-  let current = '';
+  let current = "";
   let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]!;
@@ -66,7 +81,7 @@ function splitCsvLine(line: string, delimiter = ','): string[] {
       }
     } else if (ch === delimiter && !inQuotes) {
       result.push(current);
-      current = '';
+      current = "";
     } else {
       current += ch;
     }
@@ -75,7 +90,9 @@ function splitCsvLine(line: string, delimiter = ','): string[] {
   return result.map((c) => c.trim());
 }
 
-async function previewCsv(file: File): Promise<{ headers: string[]; rows: string[][] }> {
+async function previewCsv(
+  file: File,
+): Promise<{ headers: string[]; rows: string[][] }> {
   const text = await file.text();
   const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
   if (lines.length === 0) return { headers: [], rows: [] };
@@ -89,18 +106,33 @@ export interface StepMappingProps {
   tipo: string | null;
   profileId: string | null;
   uploadId: string | null;
-  profiles: Array<{ id: string; nombre: string; canal: string; tipo: string; version: number; is_active: boolean }>;
+  profiles: Array<{
+    id: string;
+    nombre: string;
+    canal: string;
+    tipo: string;
+    version: number;
+    is_active: boolean;
+  }>;
 }
 
-export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingProps) {
+export function StepMapping({
+  channel,
+  tipo,
+  profileId,
+  profiles,
+}: StepMappingProps) {
   const router = useRouter();
   const [file, setFile] = React.useState<File | null>(null);
-  const [preview, setPreview] = React.useState<{ headers: string[]; rows: string[][] } | null>(null);
+  const [preview, setPreview] = React.useState<{
+    headers: string[];
+    rows: string[][];
+  } | null>(null);
   const [mapping, setMapping] = React.useState<MappingRow[]>(
-    tipo === 'orders' ? CANONICAL_FIELDS_ORDERS : CANONICAL_FIELDS_PRODUCTS,
+    tipo === "orders" ? CANONICAL_FIELDS_ORDERS : CANONICAL_FIELDS_PRODUCTS,
   );
   const [saveAsNewVersion, setSaveAsNewVersion] = React.useState(false);
-  const [profileNombre, setProfileNombre] = React.useState('');
+  const [profileNombre, setProfileNombre] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -121,7 +153,9 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
       if (result.ok) {
         setMapping((prevMapping) =>
           prevMapping.map((row) => {
-            const suggested = result.suggestions.find((s) => s.field === row.field);
+            const suggested = result.suggestions.find(
+              (s) => s.field === row.field,
+            );
             if (!suggested) return row;
             return {
               ...row,
@@ -139,15 +173,22 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
       const next = [...prev];
       const row = next[idx];
       if (row) {
-        next[idx] = { ...row, sourceColumn, confidence: sourceColumn ? 'mid' : 'none' };
+        next[idx] = {
+          ...row,
+          sourceColumn,
+          confidence: sourceColumn ? "mid" : "none",
+        };
       }
       return next;
     });
   }
 
-  const autoCount = mapping.filter((m) => m.confidence === 'high').length;
-  const requiredMissing = mapping.filter((m) => m.required && !m.sourceColumn).length;
-  const canSubmit = file !== null && channel !== null && tipo !== null && requiredMissing === 0;
+  const autoCount = mapping.filter((m) => m.confidence === "high").length;
+  const requiredMissing = mapping.filter(
+    (m) => m.required && !m.sourceColumn,
+  ).length;
+  const canSubmit =
+    file !== null && channel !== null && tipo !== null && requiredMissing === 0;
 
   async function onContinue(formData: FormData) {
     if (!canSubmit || !file || !channel || !tipo) return;
@@ -155,7 +196,7 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
     setError(null);
 
     try {
-      let effectiveProfileId = profileId ?? '';
+      let effectiveProfileId = profileId ?? "";
       if (saveAsNewVersion) {
         const columnMap = Object.fromEntries(
           mapping
@@ -163,23 +204,23 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
             .map((m) => [m.field, m.sourceColumn as string]),
         );
         const saveFd = new FormData();
-        saveFd.set('channel', channel);
-        saveFd.set('tipo', tipo);
-        saveFd.set('nombre', profileNombre || `${channel} · ${tipo} · adhoc`);
-        saveFd.set('column_map', JSON.stringify(columnMap));
+        saveFd.set("channel", channel);
+        saveFd.set("tipo", tipo);
+        saveFd.set("nombre", profileNombre || `${channel} · ${tipo} · adhoc`);
+        saveFd.set("column_map", JSON.stringify(columnMap));
         const saved = await saveMappingAction(saveFd);
         if (!saved.ok || !saved.profile_id) {
-          setError(saved.error ?? 'save_mapping_failed');
+          setError(saved.error ?? "save_mapping_failed");
           setSubmitting(false);
           return;
         }
         effectiveProfileId = saved.profile_id;
       }
 
-      formData.set('file', file);
-      formData.set('channel', channel);
-      formData.set('tipo', tipo);
-      if (effectiveProfileId) formData.set('profileId', effectiveProfileId);
+      formData.set("file", file);
+      formData.set("channel", channel);
+      formData.set("tipo", tipo);
+      if (effectiveProfileId) formData.set("profileId", effectiveProfileId);
       await uploadCsvAndAdvance(formData);
     } catch (err) {
       setError((err as Error).message);
@@ -189,7 +230,9 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-1">2 · Sube el archivo y confirma el mapeo de columnas</h2>
+      <h2 className="text-lg font-semibold mb-1">
+        2 · Sube el archivo y confirma el mapeo de columnas
+      </h2>
       <p className="text-sm text-muted-foreground mb-5">
         Canal: <strong>{channel}</strong> · Tipo: <strong>{tipo}</strong>
       </p>
@@ -201,7 +244,8 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
         current={
           file ? (
             <Badge variant="info">
-              {file.name} · {(file.size / 1024).toFixed(1)} KB · {preview?.rows.length ?? 0} filas en vista previa
+              {file.name} · {(file.size / 1024).toFixed(1)} KB ·{" "}
+              {preview?.rows.length ?? 0} filas en vista previa
             </Badge>
           ) : null
         }
@@ -226,7 +270,9 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
                   <tr key={i}>
                     {row.map((cell, j) => (
                       <td key={j} className="px-3 py-2">
-                        {cell || <span className="text-muted-foreground/40">·</span>}
+                        {cell || (
+                          <span className="text-muted-foreground/40">·</span>
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -238,7 +284,9 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
           <div className="flex items-end justify-between mt-6 mb-2">
             <h3 className="text-sm font-semibold">Mapeo de columnas</h3>
             <div className="text-xs">
-              <Badge variant="ok" className="mr-1">{autoCount} auto-detectadas</Badge>
+              <Badge variant="ok" className="mr-1">
+                {autoCount} auto-detectadas
+              </Badge>
               {requiredMissing > 0 && (
                 <Badge variant="err">{requiredMissing} requeridas faltan</Badge>
               )}
@@ -254,9 +302,12 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
           <div className="mt-5 bg-muted/40 border border-border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm">
-                <div className="font-medium">Guardar como nueva versión del perfil</div>
+                <div className="font-medium">
+                  Guardar como nueva versión del perfil
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  El perfil se versiona automáticamente; uploads viejos pueden reprocesarse con la versión nueva.
+                  El perfil se versiona automáticamente; uploads viejos pueden
+                  reprocesarse con la versión nueva.
                 </div>
               </div>
               <Toggle
@@ -279,20 +330,31 @@ export function StepMapping({ channel, tipo, profileId, profiles }: StepMappingP
 
       {error && <p className="text-sm text-destructive mt-4">Error: {error}</p>}
 
-      <form action={onContinue} className="flex justify-between mt-6 pt-6 border-t border-border">
+      <form
+        action={onContinue}
+        className="flex justify-between mt-6 pt-6 border-t border-border"
+      >
         <Button
           variant="ghost"
           type="button"
-          onClick={() => router.push(`/operacion/upload?step=1&channel=${channel ?? ''}&tipo=${tipo ?? ''}`)}
+          onClick={() =>
+            router.push(
+              `/operacion/upload?step=1&channel=${channel ?? ""}&tipo=${tipo ?? ""}`,
+            )
+          }
         >
           ← Atrás
         </Button>
         <div className="flex gap-2">
-          <Button type="button" variant="ghost" onClick={() => router.push('/operacion')}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.push("/operacion")}
+          >
             Cancelar
           </Button>
           <Button type="submit" disabled={!canSubmit || submitting}>
-            {submitting ? 'Subiendo…' : 'Validar →'}
+            {submitting ? "Subiendo…" : "Validar →"}
           </Button>
         </div>
       </form>

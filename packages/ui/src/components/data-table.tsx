@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td } from './table.js';
-import { cn } from '../lib/cn.js';
+import * as React from "react";
+import { Table, Thead, Tbody, Tr, Th, Td } from "./table.js";
+import { cn } from "../lib/cn.js";
 
 export interface DataTableColumn<T> {
   header: React.ReactNode;
@@ -18,14 +18,29 @@ export interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T>({ rows, columns, emptyState, keyFn, className }: DataTableProps<T>): React.JSX.Element {
+export function DataTable<T>({
+  rows,
+  columns,
+  emptyState,
+  keyFn,
+  className,
+}: DataTableProps<T>): React.JSX.Element {
   return (
-    <div className={cn('border border-border rounded-xl bg-card overflow-hidden', className)}>
+    <div
+      className={cn(
+        "border border-border rounded-xl bg-card overflow-hidden",
+        className,
+      )}
+    >
       <Table>
         <Thead>
           <Tr>
             {columns.map((col, i) => (
-              <Th key={i} className={col.thClassName} style={col.width ? { width: col.width } : undefined}>
+              <Th
+                key={i}
+                className={col.thClassName}
+                style={col.width ? { width: col.width } : undefined}
+              >
                 {col.header}
               </Th>
             ))}
@@ -34,8 +49,11 @@ export function DataTable<T>({ rows, columns, emptyState, keyFn, className }: Da
         <Tbody>
           {rows.length === 0 ? (
             <Tr>
-              <Td colSpan={columns.length} className="text-center text-muted-foreground py-12">
-                {emptyState ?? 'Sin datos'}
+              <Td
+                colSpan={columns.length}
+                className="text-center text-muted-foreground py-12"
+              >
+                {emptyState ?? "Sin datos"}
               </Td>
             </Tr>
           ) : (

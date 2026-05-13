@@ -97,72 +97,74 @@ Deferred to future release. Tracked but not in current roadmap.
 
 Explicitly excluded. Documented to prevent scope creep.
 
-| Feature | Reason |
-|---------|--------|
-| WhatsApp Business API integration (v1) | Internal manual form keeps cost at $0 and ships fast; v1 volume is small enough that manual entry is acceptable. |
-| Auto-executing AI actions | v1 chat surfaces suggestions only; humans pull the trigger to avoid trust/safety failures early. |
-| Mobile native app | Web-first dashboard sufficient for 3 internal users. |
-| Cross-channel real-time inventory rebalancing | v1 captures snapshots, not active orchestration. |
-| Multi-tenant SaaS | Single client; RLS is for role isolation, not tenant isolation. |
-| Workloads beyond ~5,000 transactions/month | Schema and indexing tuned for current scale (CONSTR-data-volume). |
-| Generative video / image content | AI is for matching, insights, and chat only. |
-| Stripe / billing / customer-facing checkout | This is an internal operations tool, not a storefront. |
-| OAuth login via Google/social providers (v1) | Supabase Auth email + password (and optional magic link) sufficient for 3 internal users. |
-| Real-time WebSocket chat between users | Out of product scope; team is 3 people. |
+| Feature                                            | Reason                                                                                                                                                                                                                          |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WhatsApp Business API integration (v1)             | Internal manual form keeps cost at $0 and ships fast; v1 volume is small enough that manual entry is acceptable.                                                                                                                |
+| Auto-executing AI actions                          | v1 chat surfaces suggestions only; humans pull the trigger to avoid trust/safety failures early.                                                                                                                                |
+| Mobile native app                                  | Web-first dashboard sufficient for 3 internal users.                                                                                                                                                                            |
+| Cross-channel real-time inventory rebalancing      | v1 captures snapshots, not active orchestration.                                                                                                                                                                                |
+| Multi-tenant SaaS                                  | Single client; RLS is for role isolation, not tenant isolation.                                                                                                                                                                 |
+| Workloads beyond ~5,000 transactions/month         | Schema and indexing tuned for current scale (CONSTR-data-volume).                                                                                                                                                               |
+| Generative video / image content                   | AI is for matching, insights, and chat only.                                                                                                                                                                                    |
+| Stripe / billing / customer-facing checkout        | This is an internal operations tool, not a storefront.                                                                                                                                                                          |
+| OAuth login via Google/social providers (v1)       | Supabase Auth email + password (and optional magic link) sufficient for 3 internal users.                                                                                                                                       |
+| Real-time WebSocket chat between users             | Out of product scope; team is 3 people.                                                                                                                                                                                         |
 | Image-match step (CLIP) in matching cascade for v1 | Mentioned in PRD §3.6 as part of the cascade but deferred until channel images are reliably available; the v1 cascade in WP-03 stops at LLM arbiter. Revisit in v2 once image availability is confirmed across ML + Dropi + WP. |
 
 ## Traceability
 
 Every v1 requirement maps to exactly one phase. Coverage validated below.
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| DISC-01 | Phase 0 | Pending |
-| DISC-02 | Phase 0 | Pending |
-| DISC-03 | Phase 0 | Pending |
-| DISC-04 | Phase 0 | Pending |
-| FND-01 | Phase 1 | Pending |
-| FND-02 | Phase 1 | Pending |
-| FND-03 | Phase 1 | Pending |
-| FND-04 | Phase 1 | Pending |
-| FND-05 | Phase 1 | Pending |
-| FND-06 | Phase 1 | Pending |
-| FND-07 | Phase 1 | Pending |
-| FND-08 | Phase 1 | Pending |
-| WP-01 | Phase 2 | Pending |
-| WP-02 | Phase 2 | Pending |
-| WP-03 | Phase 2 | Pending |
-| WP-04 | Phase 2 | Pending |
-| WP-05 | Phase 2 | Pending |
-| WP-06 | Phase 2 | Pending |
-| PWA-01 | Phase 3 | Pending |
-| PWA-02 | Phase 3 | Pending |
-| PWA-03 | Phase 3 | Pending |
-| PWA-04 | Phase 3 | Pending |
-| PWA-05 | Phase 3 | Pending |
-| PWA-06 | Phase 3 | Pending |
-| MLD-01 | Phase 4 | Pending |
-| MLD-02 | Phase 4 | Pending |
-| MLD-03 | Phase 4 | Pending |
-| MLD-04 | Phase 4 | Pending |
-| MLD-05 | Phase 4 | Pending |
-| MLD-06 | Phase 4 | Pending |
-| AI-01 | Phase 5 | Pending |
-| AI-02 | Phase 5 | Pending |
-| AI-03 | Phase 5 | Pending |
-| AI-04 | Phase 5 | Pending |
-| AI-05 | Phase 5 | Pending |
-| AI-06 | Phase 5 | Pending |
-| FBP-01 | Phase 6 | Pending |
-| FBP-02 | Phase 6 | Pending |
-| FBP-03 | Phase 6 | Pending |
-| FBP-04 | Phase 6 | Pending |
+| Requirement | Phase   | Status  |
+| ----------- | ------- | ------- |
+| DISC-01     | Phase 0 | Pending |
+| DISC-02     | Phase 0 | Pending |
+| DISC-03     | Phase 0 | Pending |
+| DISC-04     | Phase 0 | Pending |
+| FND-01      | Phase 1 | Pending |
+| FND-02      | Phase 1 | Pending |
+| FND-03      | Phase 1 | Pending |
+| FND-04      | Phase 1 | Pending |
+| FND-05      | Phase 1 | Pending |
+| FND-06      | Phase 1 | Pending |
+| FND-07      | Phase 1 | Pending |
+| FND-08      | Phase 1 | Pending |
+| WP-01       | Phase 2 | Pending |
+| WP-02       | Phase 2 | Pending |
+| WP-03       | Phase 2 | Pending |
+| WP-04       | Phase 2 | Pending |
+| WP-05       | Phase 2 | Pending |
+| WP-06       | Phase 2 | Pending |
+| PWA-01      | Phase 3 | Pending |
+| PWA-02      | Phase 3 | Pending |
+| PWA-03      | Phase 3 | Pending |
+| PWA-04      | Phase 3 | Pending |
+| PWA-05      | Phase 3 | Pending |
+| PWA-06      | Phase 3 | Pending |
+| MLD-01      | Phase 4 | Pending |
+| MLD-02      | Phase 4 | Pending |
+| MLD-03      | Phase 4 | Pending |
+| MLD-04      | Phase 4 | Pending |
+| MLD-05      | Phase 4 | Pending |
+| MLD-06      | Phase 4 | Pending |
+| AI-01       | Phase 5 | Pending |
+| AI-02       | Phase 5 | Pending |
+| AI-03       | Phase 5 | Pending |
+| AI-04       | Phase 5 | Pending |
+| AI-05       | Phase 5 | Pending |
+| AI-06       | Phase 5 | Pending |
+| FBP-01      | Phase 6 | Pending |
+| FBP-02      | Phase 6 | Pending |
+| FBP-03      | Phase 6 | Pending |
+| FBP-04      | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 40 total
 - Mapped to phases: 40
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-05-13*
-*Last updated: 2026-05-13 after initial roadmap creation from synthesized intel (PRD + ADR-001 LOCKED).*
+
+_Requirements defined: 2026-05-13_
+_Last updated: 2026-05-13 after initial roadmap creation from synthesized intel (PRD + ADR-001 LOCKED)._

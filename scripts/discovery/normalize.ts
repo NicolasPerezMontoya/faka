@@ -9,4 +9,4 @@ export {
   contentTokens,
   jaccard,
   normalizeBarcode,
-} from '@faka/schema';
+} from "@faka/schema";

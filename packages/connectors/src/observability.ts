@@ -10,15 +10,15 @@
  * that fails on the DB CHECK constraint.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Channel, ConnectorRunKind } from '@faka/schema';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Channel, ConnectorRunKind } from "@faka/schema";
 
 export interface RecordConnectorRunInput {
   kind: ConnectorRunKind;
   canal: Channel | null;
   started_at: string;
   completed_at?: string | null;
-  status: 'succeeded' | 'partial' | 'failed' | 'running';
+  status: "succeeded" | "partial" | "failed" | "running";
   records_processed?: number;
   records_failed?: number;
   retry_count?: number;
@@ -33,12 +33,12 @@ export async function recordConnectorRun(
   input: RecordConnectorRunInput,
 ): Promise<{ id: string }> {
   // W2 fix — coherence rule mirrors the CHECK constraint in migration 0008.
-  if (input.kind === 'channel' && input.canal === null) {
+  if (input.kind === "channel" && input.canal === null) {
     throw new Error(
       "kind_canal_violation: kind='channel' requires canal to be a real channel value, got null",
     );
   }
-  if (input.kind === 'cron-heartbeat' && input.canal !== null) {
+  if (input.kind === "cron-heartbeat" && input.canal !== null) {
     throw new Error(
       `kind_canal_violation: kind='cron-heartbeat' requires canal=null, got '${input.canal}'`,
     );
@@ -60,13 +60,15 @@ export async function recordConnectorRun(
   };
 
   const { data, error } = await supabase
-    .from('connector_runs')
+    .from("connector_runs")
     .insert(row)
-    .select('id')
+    .select("id")
     .single();
 
   if (error || !data) {
-    throw new Error(`connector_runs_insert_failed: ${error?.message ?? 'no data'}`);
+    throw new Error(
+      `connector_runs_insert_failed: ${error?.message ?? "no data"}`,
+    );
   }
 
   return { id: data.id as string };

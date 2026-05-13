@@ -9,10 +9,10 @@
  * in embeddings; the API is stable.
  */
 
-import { normalizeName } from '@faka/schema';
-import type { Channel, MappingProfile } from '@faka/schema';
+import { normalizeName } from "@faka/schema";
+import type { Channel, MappingProfile } from "@faka/schema";
 
-export type Confidence = 'high' | 'mid' | 'none';
+export type Confidence = "high" | "mid" | "none";
 
 export interface AutoDetectSuggestion {
   field: string;
@@ -36,7 +36,12 @@ export interface AutoDetectSuggestion {
 export function autoDetect(
   uploadHeaders: string[],
   channel: Channel,
-  existingProfiles: Array<Pick<MappingProfile, 'channel' | 'column_map'> & { id?: string; is_active?: boolean }>,
+  existingProfiles: Array<
+    Pick<MappingProfile, "channel" | "column_map"> & {
+      id?: string;
+      is_active?: boolean;
+    }
+  >,
 ): AutoDetectSuggestion[] {
   const activeForChannel = existingProfiles.filter(
     (p) => p.channel === channel && (p.is_active ?? true),
@@ -49,7 +54,10 @@ export function autoDetect(
     }
   }
 
-  const headerNormalized = uploadHeaders.map((h) => ({ raw: h, norm: normalizeName(h) }));
+  const headerNormalized = uploadHeaders.map((h) => ({
+    raw: h,
+    norm: normalizeName(h),
+  }));
 
   const suggestions: AutoDetectSuggestion[] = [];
 
@@ -67,16 +75,25 @@ export function autoDetect(
       }
     }
     if (match) {
-      suggestions.push({ field, sourceColumn: match.sourceColumn, confidence: 'high', fromProfileId: match.fromProfileId });
+      suggestions.push({
+        field,
+        sourceColumn: match.sourceColumn,
+        confidence: "high",
+        fromProfileId: match.fromProfileId,
+      });
       continue;
     }
 
     // Step 2: token overlap heuristic — field name vs header tokens.
-    const fieldTokens = new Set(normalizeName(field).split(' ').filter((t) => t.length >= 2));
+    const fieldTokens = new Set(
+      normalizeName(field)
+        .split(" ")
+        .filter((t) => t.length >= 2),
+    );
     let bestHeader: string | null = null;
     let bestOverlap = 0;
     for (const h of headerNormalized) {
-      const hTokens = new Set(h.norm.split(' ').filter((t) => t.length >= 2));
+      const hTokens = new Set(h.norm.split(" ").filter((t) => t.length >= 2));
       let overlap = 0;
       for (const t of fieldTokens) if (hTokens.has(t)) overlap++;
       if (overlap >= 2 && overlap > bestOverlap) {
@@ -87,7 +104,7 @@ export function autoDetect(
     suggestions.push({
       field,
       sourceColumn: bestHeader,
-      confidence: bestHeader ? 'mid' : 'none',
+      confidence: bestHeader ? "mid" : "none",
     });
   }
 

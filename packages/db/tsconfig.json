@@ -6,5 +6,10 @@
     "noEmit": true
   },
   "include": ["index.ts", "types/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist", "supabase/.branches", "supabase/migrations"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "supabase/.branches",
+    "supabase/migrations"
+  ]
 }

@@ -16,12 +16,12 @@
  *  - INITIAL_SUPER_ADMIN_PASSWORD       — required. Rotate after first login.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const INITIAL_SUPER_ADMIN_EMAIL =
-  process.env.INITIAL_SUPER_ADMIN_EMAIL ?? 'nicolasperezmontoya@gmail.com';
+  process.env.INITIAL_SUPER_ADMIN_EMAIL ?? "nicolasperezmontoya@gmail.com";
 const INITIAL_SUPER_ADMIN_PASSWORD = process.env.INITIAL_SUPER_ADMIN_PASSWORD;
 
 function assertEnv(name: string, value: string | undefined): string {
@@ -33,9 +33,12 @@ function assertEnv(name: string, value: string | undefined): string {
 }
 
 async function main(): Promise<void> {
-  const url = assertEnv('SUPABASE_URL', SUPABASE_URL);
-  const key = assertEnv('SUPABASE_SERVICE_ROLE_KEY', SUPABASE_SERVICE_ROLE_KEY);
-  const password = assertEnv('INITIAL_SUPER_ADMIN_PASSWORD', INITIAL_SUPER_ADMIN_PASSWORD);
+  const url = assertEnv("SUPABASE_URL", SUPABASE_URL);
+  const key = assertEnv("SUPABASE_SERVICE_ROLE_KEY", SUPABASE_SERVICE_ROLE_KEY);
+  const password = assertEnv(
+    "INITIAL_SUPER_ADMIN_PASSWORD",
+    INITIAL_SUPER_ADMIN_PASSWORD,
+  );
 
   const supabase = createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -44,60 +47,71 @@ async function main(): Promise<void> {
   console.log(`🔐 Seeding Super Admin: ${INITIAL_SUPER_ADMIN_EMAIL}`);
 
   // Step 1: ensure auth.users row exists.
-  const { data: existingList, error: listErr } = await supabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 100,
-  });
+  const { data: existingList, error: listErr } =
+    await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 100,
+    });
   if (listErr) {
     console.error(`❌ Failed to list users: ${listErr.message}`);
     process.exit(1);
   }
 
   let userId: string | null =
-    existingList.users.find((u) => u.email?.toLowerCase() === INITIAL_SUPER_ADMIN_EMAIL.toLowerCase())
-      ?.id ?? null;
+    existingList.users.find(
+      (u) => u.email?.toLowerCase() === INITIAL_SUPER_ADMIN_EMAIL.toLowerCase(),
+    )?.id ?? null;
 
   if (!userId) {
-    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-      email: INITIAL_SUPER_ADMIN_EMAIL,
-      password,
-      email_confirm: true,
-      app_metadata: { role: 'super_admin' },
-    });
+    const { data: created, error: createErr } =
+      await supabase.auth.admin.createUser({
+        email: INITIAL_SUPER_ADMIN_EMAIL,
+        password,
+        email_confirm: true,
+        app_metadata: { role: "super_admin" },
+      });
     if (createErr || !created.user) {
-      console.error(`❌ Failed to create user: ${createErr?.message ?? 'unknown'}`);
+      console.error(
+        `❌ Failed to create user: ${createErr?.message ?? "unknown"}`,
+      );
       process.exit(1);
     }
     userId = created.user.id;
     console.log(`   ✓ Created auth.users row ${userId}`);
   } else {
-    console.log(`   - auth.users row already exists (${userId}) — skipping create`);
+    console.log(
+      `   - auth.users row already exists (${userId}) — skipping create`,
+    );
   }
 
   // Step 2: upsert profile row with role=super_admin.
-  const { error: upsertErr } = await supabase
-    .from('profiles')
-    .upsert(
-      {
-        user_id: userId,
-        email: INITIAL_SUPER_ADMIN_EMAIL,
-        role: 'super_admin',
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    );
+  const { error: upsertErr } = await supabase.from("profiles").upsert(
+    {
+      user_id: userId,
+      email: INITIAL_SUPER_ADMIN_EMAIL,
+      role: "super_admin",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
 
   if (upsertErr) {
     console.error(`❌ Failed to upsert profile: ${upsertErr.message}`);
     process.exit(1);
   }
-  console.log(`   ✓ profiles.role = 'super_admin' for ${INITIAL_SUPER_ADMIN_EMAIL}`);
+  console.log(
+    `   ✓ profiles.role = 'super_admin' for ${INITIAL_SUPER_ADMIN_EMAIL}`,
+  );
 
-  console.log(`✅ Done. Log in with ${INITIAL_SUPER_ADMIN_EMAIL} / <INITIAL_SUPER_ADMIN_PASSWORD>.`);
-  console.log(`   Reminder: rotate the password from the dashboard after first login.`);
+  console.log(
+    `✅ Done. Log in with ${INITIAL_SUPER_ADMIN_EMAIL} / <INITIAL_SUPER_ADMIN_PASSWORD>.`,
+  );
+  console.log(
+    `   Reminder: rotate the password from the dashboard after first login.`,
+  );
 }
 
 main().catch((err) => {
-  console.error('Fatal:', err);
+  console.error("Fatal:", err);
   process.exit(1);
 });

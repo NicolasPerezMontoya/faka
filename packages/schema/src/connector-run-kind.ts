@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Connector-run categorization (W2 fix). Mirrors the `connector_run_kind`
@@ -9,6 +9,6 @@ import { z } from 'zod';
  *   (kind = 'channel' AND canal IS NOT NULL) OR
  *   (kind = 'cron-heartbeat' AND canal IS NULL)
  */
-export const ConnectorRunKindSchema = z.enum(['channel', 'cron-heartbeat']);
+export const ConnectorRunKindSchema = z.enum(["channel", "cron-heartbeat"]);
 
 export type ConnectorRunKind = z.infer<typeof ConnectorRunKindSchema>;

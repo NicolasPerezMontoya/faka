@@ -1,11 +1,19 @@
 // Reprocess modal — design from docs/sketches/csv-upload-wizard.html
 
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { Button, Card, CardContent, CardHeader, CardTitle, Select, Badge } from '@faka/ui';
-import { reprocessUploadAction } from '../_actions/reprocess';
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Select,
+  Badge,
+} from "@faka/ui";
+import { reprocessUploadAction } from "../_actions/reprocess";
 
 export interface ReprocessModalProps {
   open: boolean;
@@ -15,7 +23,12 @@ export interface ReprocessModalProps {
   tipo: string;
   currentProfileId: string | null;
   currentProfileVersion: number | null;
-  availableProfiles: Array<{ id: string; nombre: string; version: number; is_active: boolean }>;
+  availableProfiles: Array<{
+    id: string;
+    nombre: string;
+    version: number;
+    is_active: boolean;
+  }>;
 }
 
 export function ReprocessModal({
@@ -29,7 +42,9 @@ export function ReprocessModal({
   availableProfiles,
 }: ReprocessModalProps) {
   const router = useRouter();
-  const [selected, setSelected] = React.useState<string>(currentProfileId ?? '');
+  const [selected, setSelected] = React.useState<string>(
+    currentProfileId ?? "",
+  );
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -37,14 +52,17 @@ export function ReprocessModal({
 
   async function onConfirm() {
     if (!selected || selected === currentProfileId) {
-      setError('Selecciona una versión distinta a la actual.');
+      setError("Selecciona una versión distinta a la actual.");
       return;
     }
     setSubmitting(true);
     setError(null);
-    const result = await reprocessUploadAction({ uploadId, newProfileId: selected });
+    const result = await reprocessUploadAction({
+      uploadId,
+      newProfileId: selected,
+    });
     if (!result.ok) {
-      setError(result.error ?? 'reprocess_failed');
+      setError(result.error ?? "reprocess_failed");
       setSubmitting(false);
       return;
     }
@@ -61,7 +79,7 @@ export function ReprocessModal({
             Canal: <strong>{canal}</strong> · Tipo: <strong>{tipo}</strong>
             {currentProfileVersion !== null && (
               <>
-                {' · Versión actual: '}
+                {" · Versión actual: "}
                 <Badge variant="info">v{currentProfileVersion}</Badge>
               </>
             )}
@@ -69,15 +87,22 @@ export function ReprocessModal({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-3">
-            Los bytes del archivo en Storage se mantienen intactos (ADR-001). Las filas previas se
-            marcan como reemplazadas; las nuevas usan el perfil seleccionado.
+            Los bytes del archivo en Storage se mantienen intactos (ADR-001).
+            Las filas previas se marcan como reemplazadas; las nuevas usan el
+            perfil seleccionado.
           </p>
-          <label className="block text-sm font-medium mb-1">Nueva versión del perfil</label>
-          <Select value={selected} onChange={(e) => setSelected(e.target.value)}>
+          <label className="block text-sm font-medium mb-1">
+            Nueva versión del perfil
+          </label>
+          <Select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+          >
             <option value="">— elige una versión —</option>
             {availableProfiles.map((p) => (
               <option key={p.id} value={p.id} disabled={!p.is_active}>
-                {p.nombre} (v{p.version}) {p.id === currentProfileId ? '· actual' : ''}
+                {p.nombre} (v{p.version}){" "}
+                {p.id === currentProfileId ? "· actual" : ""}
               </option>
             ))}
           </Select>
@@ -87,7 +112,7 @@ export function ReprocessModal({
               Cancelar
             </Button>
             <Button onClick={onConfirm} disabled={submitting || !selected}>
-              {submitting ? 'Reprocesando…' : 'Confirmar reprocesado'}
+              {submitting ? "Reprocesando…" : "Confirmar reprocesado"}
             </Button>
           </div>
         </CardContent>

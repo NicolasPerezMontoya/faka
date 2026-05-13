@@ -1,9 +1,9 @@
 // Supabase server-side client (Server Components + Server Actions).
 // Uses @supabase/ssr cookies adapter so auth cookies survive across requests.
 
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import type { Database } from '@faka/db/types';
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import type { Database } from "@faka/db/types";
 
 export function createClient() {
   const cookieStore = cookies();
@@ -39,17 +39,21 @@ export function createClient() {
 export function createServiceRoleClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
   }
 
-  return createServerClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
-    cookies: {
-      getAll() {
-        return [];
-      },
-      setAll() {
-        // Service-role calls never set auth cookies.
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    key,
+    {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {
+          // Service-role calls never set auth cookies.
+        },
       },
     },
-  });
+  );
 }
