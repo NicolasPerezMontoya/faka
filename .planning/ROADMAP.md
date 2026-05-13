@@ -15,9 +15,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 0: Discovery & catalog normalization** - Understand the real catalog before building; produce baseline of automatic-vs-manual matching using CSV ingestion from day one.
 - [ ] **Phase 1: Foundation** - Repo, Supabase 5-layer schema (incl. LOCKED CSV tables), auth+RLS, Railway orchestrator skeleton, end-to-end CSV upload endpoint + Operación wizard.
 - [ ] **Phase 2: Walking skeleton (WordPress)** - First real connector end-to-end + matching cascade + human validation queue + "Hoy" view.
-- [ ] **Phase 3: POS + WhatsApp** - POS webhook connector + internal WhatsApp mini-app + "Productos" view + "Operación" health checks. MVP usable milestone.
-- [ ] **Phase 4: Mercado Libre + Dropi** - ML OAuth connector + Dropi Playwright with automatic CSVConnector fallback + advanced marts + email alerts.
+- [ ] **Phase 3: POS + WhatsApp (form) + Dead Stock** - POS webhook + internal WhatsApp form + "Productos" view + `mart_dead_stock` promoted to MVP + "Operación" health checks. **MVP usable milestone**.
+- [ ] **Phase 4: Mercado Libre + Dropi + Mini-CRM** - ML OAuth + Dropi CSV-primary + advanced marts + email alerts + **Mini-CRM (ADR-004)** with customer matching cascade and "Clientes" view.
 - [ ] **Phase 5: AI layer** - LLMProvider adapter + AM/PM insight jobs + feedback feed + conversational RAG chat + versioned prompts.
+- [ ] **Phase 5.5: WhatsApp Business Cloud API** - Webhook receiver + inbound parser + outbound sender for IA insights to owner + MessagingProvider adapter (per ADR-003). Internal form from F3 stays as fallback.
 - [ ] **Phase 6: Falabella + prediction (optional)** - Falabella Sellercenter connector + Prophet demand prediction + replenishment recommender.
 
 ## Phase Details
@@ -57,8 +58,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 3: POS + WhatsApp
-**Goal**: Bring the second and third channels online — POS via webhooks emitted by the client's POS, and WhatsApp via an internal mini-app form (no WhatsApp Business API). Add the "Productos" view with hot-by-window rankings and a real "Operación" health-check panel surfacing connector runs. This is the **MVP usable milestone** (~5 weeks in): 3 channels reporting, ≥80% master_sku coverage.
+### Phase 3: POS + WhatsApp (form) + Dead Stock
+**Goal**: Bring the second and third channels online — POS via webhooks emitted by the client's POS, and WhatsApp via an **internal mini-app form** (the WhatsApp Business Cloud API integration is split into Phase 5.5 per ADR-003; the form here remains permanent as fallback/correction UI). Add the "Productos" view with hot-by-window rankings, the **`mart_dead_stock` view** promoted to MVP per cliente feedback (Bloque K — 2000+ referencias sin movimiento es el caso de uso #1), and a real "Operación" health-check panel surfacing connector runs. This is the **MVP usable milestone** (~5 weeks in): 3 channels reporting, ≥80% master_sku coverage, stock-muerto visible.
 **Depends on**: Phase 2
 **Requirements**: PWA-01, PWA-02, PWA-03, PWA-04, PWA-05, PWA-06
 **Success Criteria** (what must be TRUE):
@@ -70,8 +71,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 4: Mercado Libre + Dropi
-**Goal**: Expand to all 5 current channels by adding Mercado Libre (OAuth-based official API) and Dropi (Playwright scraper with automatic CSV fallback per ADR-001 — same downstream code path). Stand up the advanced marts (velocity, cannibalization, days-of-inventory) and the reactive email alerting layer. Wire a disabled Falabella connector skeleton ready for Phase 6.
+### Phase 4: Mercado Libre + Dropi + Mini-CRM
+**Goal**: Expand to all 5 current channels by adding Mercado Libre (OAuth-based official API; cliente debe crear developer app antes de empezar) and Dropi (CSV-primary per cliente feedback — Playwright scraper queda como opcional posterior). Stand up the advanced marts (velocity, cannibalization, days-of-inventory) and the reactive email alerting layer. **Construir el Mini-CRM (ADR-004 LOCKED)**: tablas `customers`/`customer_external_links`/`customer_merge_log` + cascada de matching de clientes + vista "Clientes" con `% cobertura por canal`. Wire a disabled Falabella connector skeleton ready for Phase 6.
 **Depends on**: Phase 3
 **Requirements**: MLD-01, MLD-02, MLD-03, MLD-04, MLD-05, MLD-06
 **Success Criteria** (what must be TRUE):
@@ -96,9 +97,22 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 **UI hint**: yes
 
+### Phase 5.5: WhatsApp Business Cloud API integration (INSERTED 2026-05-13)
+**Goal**: Implement the WhatsApp Business Cloud API integration per ADR-003 (LOCKED). Inbound: webhook receiver verifies Meta signature, parses incoming sales messages, resolves products via the matching cascade, creates `sales` rows with `canal=whatsapp_bot`. Outbound: `MessagingProvider` adapter (mirrors `LLMProvider` pattern) sends AM/PM IA insights to the owner's WhatsApp + ad-hoc alerts (stock crítico, anomalías). Internal form from Phase 3 stays as fallback.
+**Depends on**: Phase 5 (AI insights existen para enviar) + Phase 4 (Mini-CRM existe para enriquecer customers desde WA bot)
+**Requirements**: WA-01 webhook receiver, WA-02 inbound parser + matching loop, WA-03 outbound sender with approved templates, WA-04 MessagingProvider adapter, WA-05 Meta Business Manager setup (paralelo durante F4)
+**Success Criteria** (what must be TRUE):
+  1. Meta Business Manager verified; phone number approved; AM/PM message templates approved by Meta.
+  2. A test inbound message "pedido: 2 planchas rojas, total 180k, cliente +57300..." creates a `sales` row with the right items, customer (or new customer row), total, channel = `whatsapp_bot`, with the original payload preserved.
+  3. AM (8:00) and PM (5:30 Colombia) insights are delivered to the owner's WhatsApp; opening rate ≥ 80% in first 2 weeks (Meta reports this).
+  4. `MessagingProvider` adapter compiles with both Meta Cloud API + Twilio implementations; switching is env var only.
+  5. Costos de mensajería en USD reportados en `connector_runs` no excede USD 10/mes en operación normal.
+**Plans**: TBD
+**UI hint**: yes (mensaje de configuración + tabla de mensajes en "Operación")
+
 ### Phase 6: Falabella + prediction (optional)
 **Goal**: Activate the deferred Falabella connector (skeleton from Phase 4) and add the predictive layer — Prophet or equivalent forecasting demand 2 weeks forward per SKU, plus a replenishment recommender that combines velocity + days-of-inventory + prediction to suggest purchase quantities. Optional — runs only when the client signals readiness.
-**Depends on**: Phase 5
+**Depends on**: Phase 5.5
 **Requirements**: FBP-01, FBP-02, FBP-03, FBP-04
 **Success Criteria** (what must be TRUE):
   1. Falabella Sellercenter is live — orders syncing every 30 minutes, products every 1 hour — bringing the channel count to 6.
@@ -111,14 +125,15 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 5.5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Discovery & catalog normalization | 0/TBD | Not started | - |
+| 0. Discovery & catalog normalization | 0/1 | In progress (Claude-side done; client-side blocked) | - |
 | 1. Foundation | 0/TBD | Not started | - |
 | 2. Walking skeleton (WordPress) | 0/TBD | Not started | - |
-| 3. POS + WhatsApp | 0/TBD | Not started | - |
-| 4. Mercado Libre + Dropi | 0/TBD | Not started | - |
+| 3. POS + WhatsApp (form) + Dead Stock | 0/TBD | Not started | - |
+| 4. Mercado Libre + Dropi + Mini-CRM | 0/TBD | Not started | - |
 | 5. AI layer | 0/TBD | Not started | - |
+| 5.5. WhatsApp Business Cloud API | 0/TBD | Not started (inserted 2026-05-13 per ADR-003) | - |
 | 6. Falabella + prediction (optional) | 0/TBD | Not started | - |

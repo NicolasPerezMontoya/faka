@@ -19,46 +19,46 @@
 - [ ] **Código de barras / EAN** (los 13 dígitos del paquete)
 - [ ] **Código interno del proveedor** (el que viene del proveedor importador, distribuidor)
 - [ ] **SKU propio** (un código que ustedes inventaron y se aplica igual en WP/ML/Dropi/POS)
-- [ ] **Nombre exacto** (palabra por palabra, sin variaciones)
-- [ ] **Ninguno** — cada canal nombra/codifica el producto distinto
+- [X] **Nombre exacto** (palabra por palabra, sin variaciones)
+- [X] **Ninguno** — cada canal nombra/codifica el producto distinto
 
 **Si marcaste alguno, ¿qué porcentaje aproximado del catálogo lo tiene?**
-- Catálogo total estimado: ____________ SKUs
-- Con código de barras: ____________ %
-- Con código de proveedor: ____________ %
-- Con SKU propio común: ____________ %
+- Catálogo total estimado: 200 SKUs
+- Con código de barras: 80 %
+- Con código de proveedor: 100 %
+- Con SKU propio común: 70 %
 
 > **Por qué importa:** si tienen barcodes o código de proveedor, el matching automático sube del ~60% al ~95%. Sin ningún identificador común, dependemos 100% de IA para conectar "Plancha de Cabello X" en WordPress con "PLANCHA-CAB-2026" en ML.
 
 ### A.2 Variantes
 
 **¿Manejan productos con variantes (talla, color, capacidad, voltaje)?**
-- [ ] Sí — ¿qué % del catálogo tiene variantes? ______ %
+- [X] Sí — ¿qué % del catálogo tiene variantes? 20 %
 - [ ] No / muy pocos
 
 **Si sí: ¿cada variante tiene su propio identificador o todas las variantes comparten el mismo SKU?**
 - [ ] Cada variante = un SKU distinto
 - [ ] Variantes comparten SKU, diferencian por atributo en el nombre o un campo aparte
-- [ ] Mixto / depende del canal
+- [X] Mixto / depende del canal
 
 ### A.3 Estado del producto
 
 **¿Cómo distinguen un producto "activo" de uno "descontinuado"?**
-- [ ] Por presencia/ausencia en cada plataforma
+- [X] Por presencia/ausencia en cada plataforma
 - [ ] Por un campo "estado" en algún sistema
 - [ ] No lo distinguen formalmente
 - [ ] Otro: ____________
 
-**¿Qué porcentaje del catálogo activo total estiman que NO se ha vendido en los últimos 90 días?** ______ %
+**¿Qué porcentaje del catálogo activo total estiman que NO se ha vendido en los últimos 90 días?** 25 %
 
 ### A.4 Categorías y marcas
 
 **¿Tienen una taxonomía de categorías consistente entre canales?**
 - [ ] Sí, las mismas en todas partes
-- [ ] No, cada canal tiene su propio árbol
+- [X] No, cada canal tiene su propio árbol
 - [ ] No usamos categorías sistemáticamente
 
-**¿Cuántas categorías raíz manejan aproximadamente?** ______
+**¿Cuántas categorías raíz manejan aproximadamente?** 8
 
 **¿Marcas/proveedores principales (top 5)?**
 1. ____________
@@ -96,9 +96,9 @@ ____________
 **¿Cuánto histórico de ventas quieren ver en el dashboard desde el día uno?**
 
 - [ ] Solo desde que arranque (sin histórico)
-- [ ] Últimos 3 meses
-- [ ] Últimos 6 meses
-- [ ] Último año
+- [X] Últimos 3 meses
+- [X] Últimos 6 meses
+- [X] Último año
 - [ ] Más de un año (especificar): ____________
 
 > **Por qué importa:** cargar 3 años de histórico de 5 canales puede ser pesado. Si solo quieren ver tendencias del año en curso, ahorramos trabajo.
@@ -114,47 +114,47 @@ ____________
 ### D.1 WordPress
 
 - **¿Es WooCommerce o algo custom?** ____________
-- **URL del sitio:** ____________
-- **¿Tienen acceso de administrador para crear API keys?** [ ] Sí [ ] No
-- **¿Cuántos productos publicados aproximadamente?** ____________
-- **¿Usan plugin de variantes?** ____________
+- **URL del sitio:** [https://catalogofakastore.com/]
+- **¿Tienen acceso de administrador para crear API keys?** [X] Sí [ ] No
+- **¿Cuántos productos publicados aproximadamente?** no se
+- **¿Usan plugin de variantes?** NO
 - **¿Tienen webhooks ya configurados para algo?** [ ] Sí — para qué: ___________ [ ] No
 
 ### D.2 Mercado Libre Colombia
 
-- **Nombre del seller/tienda:** ____________
-- **¿Tienen ya una app registrada en MercadoLibre Developers?** [ ] Sí [ ] No
+- **Nombre del seller/tienda:** www.mercadolibre.com.co/tienda/letal-shark
+- **¿Tienen ya una app registrada en MercadoLibre Developers?** [ ] Sí [X] No
 - **Si sí, ¿pueden compartirme client_id y client_secret?** [ ] Sí [ ] No / requiere coordinación
-- **¿Cuántas publicaciones activas?** ____________
-- **¿Usan Mercado Envíos o envíos propios?** ____________
+- **¿Cuántas publicaciones activas?** No se
+- **¿Usan Mercado Envíos o envíos propios?** los dos
 
 ### D.3 Dropi (como proveedor)
 
-- **Email/usuario del panel:** ____________
-- **¿Quién accede normalmente al panel?** ____________
-- **¿Cuántos productos ofrecen como proveedor en Dropi?** ____________
-- **¿Han notado que Dropi cambie la interfaz seguido?** [ ] Sí [ ] No [ ] No lo sé
-- **¿Pueden exportar las órdenes desde el panel como CSV manualmente?** [ ] Sí [ ] No [ ] No lo sé
+- **Email/usuario del panel:** no esta claro, buscandolo
+- **¿Quién accede normalmente al panel?** el cliente
+- **¿Cuántos productos ofrecen como proveedor en Dropi?** no sabe
+- **¿Han notado que Dropi cambie la interfaz seguido?** [ ] Sí [X] No [X] No lo sé
+- **¿Pueden exportar las órdenes desde el panel como CSV manualmente?** [X] Sí [ ] No [ ] No lo sé
 
 ### D.4 POS físico
 
-- **¿Marca y modelo del software de POS?** ____________
-- **¿Es un POS comercial (algo conocido) o uno desarrollado a la medida?** ____________
-- **Nombre y contacto del programador que lo mantiene:** ____________
+- **¿Marca y modelo del software de POS?** No
+- **¿Es un POS comercial (algo conocido) o uno desarrollado a la medida?** a la medida
+- **Nombre y contacto del programador que lo mantiene:** Si
 - **¿El POS puede emitir webhooks (notificaciones HTTP) cuando se cierra una venta?**
   - [ ] Sí, ya lo hace
-  - [ ] Probablemente se puede agregar
-  - [ ] No, hay que pollearlo o exportar CSV
+  - [X] Probablemente se puede agregar
+  - [X] No, hay que pollearlo o exportar CSV
   - [ ] No lo sé — necesito preguntar al programador
 - **¿Los dos puntos comparten el mismo POS o son independientes?** ____________
 - **¿Cómo identifican el punto de venta en cada transacción?** ____________
 
 ### D.5 WhatsApp
 
-- **¿Quién vende por WhatsApp? (uno solo, varios?)** ____________
-- **¿Volumen promedio diario de pedidos por WhatsApp?** ____________
-- **¿Tienen alguna plantilla o método actual para registrar la venta?** ____________
-- **Confirmar: ¿están de acuerdo con que el registro sea un formulario interno en el dashboard (no integración WhatsApp Business API)?** [ ] Sí [ ] No, prefiero ___________
+- **¿Quién vende por WhatsApp? (uno solo, varios?)** uno solo
+- **¿Volumen promedio diario de pedidos por WhatsApp?** 5 a 10
+- **¿Tienen alguna plantilla o método actual para registrar la venta?** No
+- **Confirmar: ¿están de acuerdo con que el registro sea un formulario interno en el dashboard (no integración WhatsApp Business API)?** [ ] Sí [X] No, prefiero Integrar_
 
 ---
 
@@ -164,14 +164,14 @@ ____________
 
 - [ ] Siempre
 - [ ] En algunos canales
-- [ ] Casi nunca
+- [X] Casi nunca
 
 **¿En qué canales sí capturan identificador del cliente?**
-- [ ] WordPress (registro/checkout)
+- [X] WordPress (registro/checkout)
 - [ ] Mercado Libre
 - [ ] Dropi
-- [ ] POS
-- [ ] WhatsApp
+- [X] POS
+- [X] WhatsApp
 
 > **Por qué importa:** sin identificador de cliente no podemos detectar canibalización entre canales ni medir recompra. Es OK si no, lo manejamos.
 
@@ -182,26 +182,26 @@ ____________
 **¿Tienen documentado el costo unitario por producto?**
 - [ ] Sí, en alguna planilla o ERP
 - [ ] Sí, pero variable (cambia con cada compra al proveedor)
-- [ ] Más o menos, en la cabeza
-- [ ] No
+- [X] Más o menos, en la cabeza
+- [X] No
 
 **¿Pueden compartir esa información (aunque sea aproximada por categoría)?**
 - [ ] Sí
 - [ ] No por ahora
-- [ ] Lo construimos juntos
+- [X] Lo construimos juntos
 
 **¿Manejan promociones o descuentos? ¿Cómo los aplican?**
-____________
+Si, pero no tengo trazabilidad de esto, descuento directo, cambio el precio o codigo de descuento, depende.
 
 ---
 
 ## Bloque G — Política de devoluciones
 
-**¿Qué porcentaje aproximado de ventas se devuelve?** ______ %
+**¿Qué porcentaje aproximado de ventas se devuelve?** 5% %
 
-**¿En qué canales hay más devoluciones?** ____________
+**¿En qué canales hay más devoluciones?** Dropi y ML
 
-**¿Cómo registran una devolución hoy?** ____________
+**¿Cómo registran una devolución hoy?** lo que digan las plataformas
 
 ---
 
@@ -212,12 +212,12 @@ ____________
 ¿Cuál de estos formatos prefieren para los insights diarios?
 - [ ] Solo cards en el dashboard
 - [ ] Dashboard + resumen por email
-- [ ] Dashboard + mensaje de WhatsApp al teléfono del dueño
+- [X] Dashboard + mensaje de WhatsApp al teléfono del dueño
 - [ ] Las tres anteriores
 
 **¿A qué horas exactamente?**
-- AM: ______ (default propuesto: 8:00 AM Colombia)
-- PM: ______ (default propuesto: 6:00 PM Colombia)
+- AM: Si (default propuesto: 8:00 AM Colombia)
+- PM: podemos bajarlo a 5:30 PM (default propuesto: 6:00 PM Colombia)
 
 **Modo conversacional (chat):**
 
@@ -230,21 +230,21 @@ ____________
 
 El PRD propone arrancar con uno de estos. Recomendación del dev: **Claude Haiku 4.5** por mejor relación precio/calidad para análisis estructurado en español.
 
-- [ ] Aceptamos la recomendación (Claude Haiku 4.5)
-- [ ] Prefieren empezar con Kimi K2 desde el día uno
-- [ ] Prefieren GPT-4o-mini
-- [ ] Nos da igual, el dev decide y compara después
+- [X] Aceptamos la recomendación (Claude Haiku 4.5)
+- [X] Prefieren empezar con Kimi K2 desde el día uno
+- [X] Prefieren GPT-4o-mini
+- [X] Nos da igual, el dev decide y compara después
 
 ---
 
 ## Bloque I — Roles, permisos, accesos
 
 **Confirmar los 3 usuarios definidos:**
-- [ ] Nicolás (dev) — ve todo + logs técnicos
-- [ ] Cliente (dueño) — ve todo, sin logs técnicos
-- [ ] Esposa — ve todo, sin logs técnicos
+- [X] Nicolás (dev) — ve todo + logs técnicos
+- [X] Cliente (dueño) — ve todo, sin logs técnicos
+- [X] Esposa — ve todo, sin logs técnicos
 
-**¿En el futuro vendrían usuarios "staff" (vendedores)? ¿Cuántos potencialmente?** ____________
+**¿En el futuro vendrían usuarios "staff" (vendedores)? ¿Cuántos potencialmente?** Poco tal vez 1 analista
 
 ---
 
@@ -252,13 +252,13 @@ El PRD propone arrancar con uno de estos. Recomendación del dev: **Claude Haiku
 
 **Cuéntame en orden de prioridad: ¿qué 3 cosas te frustran hoy al no tener la visión consolidada?**
 
-1. ____________
-2. ____________
-3. ____________
+1. no tener visualizacion de los datos y lo que sucede
+2. que no tenga todo centralizado
+3. tomar mejores desiciones para comprar mercancia
 
 **¿Qué decisión tomarías diferente si tuvieras esta data esta misma semana?**
 
-____________
+podria pensar en promociones con la mercancia que no se esta vendiendo, estrategias comerciales, ver si esa categoria o tipo de producto se vende o salir rapido de ella, saber que comprar en mis proximas compras
 
 ---
 
@@ -266,11 +266,11 @@ ____________
 
 **¿Hay algún producto que sepan que se vende muy distinto entre canales?** (ejemplo: "la plancha XYZ es bestseller en ML pero invisible en WP")
 
-____________
+no
 
 **¿Algún producto que se llame diferente en cada canal y lo recuerdes?**
 
-____________
+varios
 
 ---
 
