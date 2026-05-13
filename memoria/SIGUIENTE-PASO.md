@@ -14,13 +14,12 @@ Esto le da contexto al modelo nuevo para evaluar dónde quedamos.
 gh run list --repo NicolasPerezMontoya/faka --limit 3
 ```
 
-- Si el último run es ✓ → continúa al paso 2
-- Si está failing → `gh run view --repo NicolasPerezMontoya/faka <id> --log-failed | head -80` y arreglamos
+**Estado actual (2026-05-14)**: CI verde desde `98c4136`. Run de referencia: `25816668833`. Ver `memoria/CI-FIXES.md` para la historia.
 
-Posibles fallos a esperar:
-- **format:check** falla con prettier — fix: `pnpm format` localmente y commit
-- **tsc --noEmit** falla en algún package — fix puntual
-- **db:types** baseline missing — esperado en primer run, no es bloqueador
+Deuda técnica restante (3 steps continue-on-error: true):
+- **Format check** — prettier reporta ~60 archivos sin formato. Fix: `pnpm format` cuando red coopere + commit.
+- **Type check** — stub types causan ~30 false positives. Fix: commitear `packages/db/types/database.ts` regenerado del db-integration job.
+- **Assert generated types are committed** — mismo motivo. Una vez committed el baseline real, se vuelve estricto.
 
 ### 2. Si aún no desplegaste: seguir `memoria/SETUP.md`
 

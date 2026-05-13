@@ -5,6 +5,7 @@ Estos documentos son tu "punto de retomado" si necesitas pausar y volver con con
 1. **`ESTADO.md`** — qué se ha construido (Phase 0 + Phase 1 al 92%), qué decisiones LOCKED rigen el código, qué quedó deferred, y el roadmap completo de las 7 fases.
 2. **`SETUP.md`** — el runbook concreto: tokens de Supabase que tienes, cómo configurar Railway + Vercel, cómo desbloquear CI, primer login como Super Admin.
 3. **`SIGUIENTE-PASO.md`** — exactamente qué hacer en la próxima sesión para arrancar Phase 2 (WordPress walking skeleton).
+4. **`CI-FIXES.md`** — cascada de 14 commits que llevaron al primer CI verde + deuda técnica para F2.
 
 ## Referencias canónicas que NO repetimos aquí
 
