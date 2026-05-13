@@ -38,7 +38,27 @@ jobs:
         run: pnpm -r run lint
 
       - name: Format check
+        id: format-check
         run: pnpm format:check
+
+      # Ergonomic helper: if Format check fails, run prettier --write
+      # and upload the resulting diff as an artifact, so a contributor
+      # without working local pnpm (e.g. flaky network) can download
+      # and `git apply prettier.patch` instead of installing tooling.
+      - name: Generate prettier patch (on Format check failure)
+        if: failure() && steps.format-check.conclusion == 'failure'
+        run: |
+          pnpm format
+          git diff > /tmp/prettier.patch || true
+
+      - name: Upload prettier patch (on Format check failure)
+        if: failure() && steps.format-check.conclusion == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: prettier-patch
+          path: /tmp/prettier.patch
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Type check
         run: pnpm -r exec tsc --noEmit
