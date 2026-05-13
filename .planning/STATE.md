@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1.1.7 of 26 in current phase (Waves 0–1 of 5 complete)
-Status: IN PROGRESS — Waves 0 + 1 complete (10 atomic commits). Wave 2 (connectors interface + skeletons + CSVConnector) next.
-Last activity: 2026-05-13 — Phase 1 Wave 1 executed in 7 atomic commits: supabase init + 13 contiguous SQL migrations covering RAW + MASTER (incl. Mini-CRM stubs ADR-004) + FACTS (with idempotency unique constraint) + MARTS skeleton + INSIGHTS + messaging_log empty (ADR-003) + observability with connector_run_kind enum (W2 fix) + profiles + custom_access_token Auth Hook (ADR-002) + 19 SECURITY INVOKER per-role views + grants + reprocess versioning + seed.sql with 5 mapping profiles + TS Super Admin seeder.
+Plan: 1.2.4 of 26 in current phase (Waves 0–1 + 4/5 of Wave 2 complete)
+Status: IN PROGRESS — 14 atomic commits. Wave 2 plan 1.2.5 (integration tests) deferred until Supabase local is verified. Wave 3 (dashboard) next once Wave 2 closes.
+Last activity: 2026-05-13 — Phase 1 Wave 2 executed in 4 atomic commits: @faka/schema (11 source files w/ Zod) + @faka/connectors interface (ChannelConnector contract + NotImplementedError), 6 channel skeletons (each throws literal NOT_IMPLEMENTED_F<N>), real CSVConnector (ingestUpload streaming + applyColumnMap + Zod safeParse + UPSERT on idempotency keys + auto-detect + dry-run), cross-cutting helpers (idempotency, retry+DLQ via p-retry, recordConnectorRun w/ kind/canal coherence enforcement, auditLog w/ 64KB truncation).
 
 Phase 0: PARTIAL — Claude-side deliverables shipped + ADRs 002/003/004 LOCKED; client-side blocked (questionnaire responses + CSVs). Does NOT block Phase 1 Foundation.
 
-Progress: [████░░░░░░] Phase 1: 10 of 26 plans (38%); Waves 2–4 pending. 1463 LOC of SQL across 13 migrations + seed.
+Progress: [██████░░░░] Phase 1: 14 of 26 plans (54%); 1463 LOC SQL + 1894 LOC TypeScript so far. Wave 2 plan 1.2.5 (tests) + Wave 3 (dashboard) + Wave 4 (orchestrator) pending.
 
 ## Performance Metrics
 
@@ -71,6 +71,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13 (Phase 1 Waves 0 + 1 execution)
-Stopped at: 10 atomic commits landed (1.0.1–1.0.3, 1.1.1–1.1.7). Schema 100% done; runs `pnpm db:reset` once Supabase Docker is up. Next wave: Wave 2 (`@faka/schema` + `ChannelConnector` interface + 6 channel skeletons + real CSVConnector + helpers + integration tests) = 5 plans, ~14h. Resume with `/gsd-execute-phase 1 --wave 2`.
+Last session: 2026-05-13 (Phase 1 Waves 0 + 1 + Wave 2 plans 1.2.1–1.2.4)
+Stopped at: 14 atomic commits landed (1.0.1–1.0.3, 1.1.1–1.1.7, 1.2.1–1.2.4). Code-side of F1 essentially complete: schema + interface + skeletons + CSVConnector + helpers all compile against the contract. Remaining: 1.2.5 integration tests (deferred until local Supabase verified), Wave 3 dashboard (6 plans / 28h), Wave 4 orchestrator (4 plans / 14h). Resume with `/gsd-execute-phase 1 --wave 3` once Wave 2 finalized.
 Resume file: None
