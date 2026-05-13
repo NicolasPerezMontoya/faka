@@ -1,0 +1,39 @@
+{
+  "name": "@faka/orchestrator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "faka orchestrator — Hono server + cron on Railway",
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "start:cron": "node dist/cron.js",
+    "dev": "tsx watch src/server.ts",
+    "lint": "echo '(uses base eslint via app/package configs)'",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "@faka/connectors": "workspace:*",
+    "@faka/db": "workspace:*",
+    "@faka/schema": "workspace:*",
+    "@hono/node-server": "^1.13.7",
+    "@hono/zod-validator": "^0.4.2",
+    "@supabase/supabase-js": "^2.105.1",
+    "hono": "^4.6.14",
+    "p-retry": "^7.0.0",
+    "pino": "^9.5.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@faka/config": "workspace:*",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22.7"
+  }
+}
