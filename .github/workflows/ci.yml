@@ -44,6 +44,25 @@ jobs:
         run: pnpm format:check
         continue-on-error: true
 
+      - name: Generate prettier patch (temp)
+        # Temporary: produces a unified diff of what `pnpm format` would
+        # change. Downloadable as artifact so we can apply it locally
+        # without needing pnpm install on a flaky WSL2 network. Remove
+        # alongside continue-on-error once the baseline is in.
+        run: |
+          pnpm format
+          git diff > /tmp/prettier.patch || true
+          wc -l /tmp/prettier.patch
+        continue-on-error: true
+
+      - name: Upload prettier patch (temp)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prettier-patch
+          path: /tmp/prettier.patch
+          retention-days: 7
+
       - name: Type check
         run: pnpm -r exec tsc --noEmit
 
