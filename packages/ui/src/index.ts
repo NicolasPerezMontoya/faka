@@ -20,3 +20,4 @@ export { Stepper, type StepperStep, type StepperProps } from './components/stepp
 export { Dropzone, type DropzoneProps } from './components/dropzone.js';
 export { MappingTable, type MappingRow, type MappingTableProps } from './components/mapping-table.js';
 export { SignInLink, type SignInLinkProps } from './components/sign-in-link.js';
+export { UserBadge, type UserBadgeProps } from './components/user-badge.js';
