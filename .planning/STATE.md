@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1.2.4 of 26 in current phase (Waves 0–1 + 4/5 of Wave 2 complete)
-Status: IN PROGRESS — 14 atomic commits. Wave 2 plan 1.2.5 (integration tests) deferred until Supabase local is verified. Wave 3 (dashboard) next once Wave 2 closes.
-Last activity: 2026-05-13 — Phase 1 Wave 2 executed in 4 atomic commits: @faka/schema (11 source files w/ Zod) + @faka/connectors interface (ChannelConnector contract + NotImplementedError), 6 channel skeletons (each throws literal NOT_IMPLEMENTED_F<N>), real CSVConnector (ingestUpload streaming + applyColumnMap + Zod safeParse + UPSERT on idempotency keys + auto-detect + dry-run), cross-cutting helpers (idempotency, retry+DLQ via p-retry, recordConnectorRun w/ kind/canal coherence enforcement, auditLog w/ 64KB truncation).
+Plan: 1.3.6 of 26 in current phase (Waves 0–1–2(4/5)–3 complete)
+Status: IN PROGRESS — 20 of 26 plans done (77%). Wave 4 (Hono orchestrator + Railway deploy) is the last remaining wave. Tests deferred (1.2.5) until Supabase local verified.
+Last activity: 2026-05-13 — Phase 1 Wave 3 executed in 6 atomic commits: Next.js dashboard scaffold + @faka/ui (10 primitives + UserBadge), @faka/auth (role matrix + middleware + JWT claims + requireRole + sign-in/out) + login UI + auth-aware topbar (W5), Operación landing + wizard host, Step 1 channel/tipo/profile picker, Step 2 dropzone + preview + mapping table + Storage upload via uploadCsvAction (filename sanitization + 20MB cap), Step 3 dry-run + commit-upload (W1 boundary — applyColumnMap calls = 0), Historial page with DataTable + reprocess modal (idempotent UPSERT preserves dedup).
 
 Phase 0: PARTIAL — Claude-side deliverables shipped + ADRs 002/003/004 LOCKED; client-side blocked (questionnaire responses + CSVs). Does NOT block Phase 1 Foundation.
 
-Progress: [██████░░░░] Phase 1: 14 of 26 plans (54%); 1463 LOC SQL + 1894 LOC TypeScript so far. Wave 2 plan 1.2.5 (tests) + Wave 3 (dashboard) + Wave 4 (orchestrator) pending.
+Progress: [████████░░] Phase 1: 20 of 26 plans (77%); ~6970 total LOC across SQL + TypeScript + CSS + JSON. Wave 4 (orchestrator + deploy) = 4 plans / ~14h pending.
 
 ## Performance Metrics
 
@@ -71,8 +71,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13 (Phase 1 Waves 0 + 1 + Wave 2 plans 1.2.1–1.2.4 + version-pin fixes)
-Stopped at: 15+ atomic commits landed. Code-side of F1 essentially complete. Remaining: 1.2.5 integration tests (deferred until local Supabase verified), Wave 3 dashboard (6 plans / 28h), Wave 4 orchestrator (4 plans / 14h). Resume with `/gsd-execute-phase 1 --wave 3` once Wave 2 finalized.
+Last session: 2026-05-13 (Phase 1 Waves 0 + 1 + 2(4/5) + 3)
+Stopped at: 20 plans landed across 5 waves. Dashboard fully scaffolded — wizard end-to-end with Steps 1/2/3 + historial + reprocess + W5 auth-aware topbar. Wave 4 (orchestrator skeleton + Railway/Vercel deploy config) = 4 plans / ~14h pending. Resume with `/gsd-execute-phase 1 --wave 4`.
 
 **Environment note (2026-05-13)**: tried to run `pnpm install` + `supabase start` + `pnpm db:reset` from this WSL2 environment. Network connectivity to registry.npmjs.org is unstable — curl gets HTTP 200 in 2s but pnpm's parallel fetcher times out on ~95% of requests (both IPv4 and IPv6 routing tried). Only 23 of ~500 dependencies resolved. THREE real version mismatches discovered during the attempt and committed in `2cb0b70`:
   - packageManager pin pnpm@11.1.1 → 10.28.1 (matches installed; was causing corepack hang)
