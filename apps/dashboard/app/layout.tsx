@@ -1,9 +1,12 @@
-// Root layout — W5 fix: AUTH-TOLERANT shell only. No getUser() / getSession()
-// calls live here in Plan 1.3.1. The auth-aware topbar (user email + role
-// badge + sign-out) is added by Plan 1.3.2 AFTER middleware ships.
+// Root layout — W5: auth-aware topbar landed in Plan 1.3.2 (after middleware).
+// Server Component reads role from x-user-role header (set by middleware) so
+// it doesn't re-query Supabase on every render.
 
 import type { Metadata } from 'next';
-import { SignInLink } from '@faka/ui';
+import { headers } from 'next/headers';
+import { SignInLink, UserBadge } from '@faka/ui';
+import { signOutAction } from '@/app/(auth)/login/_actions';
+import type { UserRole } from '@faka/schema';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -20,6 +23,10 @@ const NAV_ITEMS = [
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const hdrs = headers();
+  const role = hdrs.get('x-user-role') as UserRole | null;
+  const email = hdrs.get('x-user-email');
+
   return (
     <html lang="es" className="h-full">
       <body className="min-h-full bg-muted/30 text-foreground antialiased">
@@ -56,8 +63,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 flex flex-col min-w-0">
             <header className="h-14 px-6 flex items-center justify-between bg-card border-b border-border">
               <div className="text-sm text-muted-foreground">faka</div>
-              {/* W5: auth-aware enhancements (UserBadge + sign-out) land in Plan 1.3.2 */}
-              <SignInLink href="/login">Iniciar sesión</SignInLink>
+              {email && role ? (
+                <div className="flex items-center gap-4">
+                  <UserBadge email={email} role={role} />
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Salir
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <SignInLink href="/login">Iniciar sesión</SignInLink>
+              )}
             </header>
             <div className="flex-1 px-6 py-8 max-w-6xl w-full mx-auto">{children}</div>
           </main>
