@@ -9,12 +9,14 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 
 ## Current Position
 
-Phase: 0 of 6 (Discovery & catalog normalization)
-Plan: 0.1 of 1 in current phase
-Status: PARTIAL — Claude-side deliverables shipped; awaiting client input for tasks 0.1.7–0.1.13
-Last activity: 2026-05-13 — Phase 0 Claude-side deliverables produced: discovery questionnaire (11 blocks), 5 channel CSV templates, runnable 5-stage match-explorer TS script with 4 pre-seeded mapping profiles, CONTEXT.md + PLAN.md.
+Phase: 1 of 6 (Foundation)
+Plan: 1.0.3 of 26 in current phase (Wave 0 of 5 complete)
+Status: IN PROGRESS — Wave 0 (monorepo bootstrap) complete; Wave 1 (DB schema + auth + RLS) next
+Last activity: 2026-05-13 — Phase 1 Wave 0 executed in 3 atomic commits: pnpm/Turbo/root config, @faka/config (tsconfig/eslint/prettier), GitHub Actions CI workflow.
 
-Progress: [██████░░░░] 60% — 6 of 13 plan tasks done; remaining 7 blocked on client (questionnaire responses + catalog CSVs + 7 PRD §7 decisions).
+Phase 0: PARTIAL — Claude-side deliverables shipped + ADRs 002/003/004 LOCKED; client-side blocked (questionnaire responses + CSVs). Does NOT block Phase 1 Foundation.
+
+Progress: [██░░░░░░░░] Phase 1: 3 of 26 plans (12%); Waves 1–4 pending.
 
 ## Performance Metrics
 
@@ -69,6 +71,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13 (Phase 0 Claude-side execution)
-Stopped at: Phase 0 deliverables (questionnaire + CSV templates + match-explorer script + mapping profiles + CONTEXT/PLAN) committed. Awaiting client input to close tasks 0.1.7–0.1.13. Phase 1 will not start until DISC-01..04 are complete.
+Last session: 2026-05-13 (Phase 1 Wave 0 execution)
+Stopped at: 3 atomic commits landed (1.0.1, 1.0.2, 1.0.3). Wave 0 done. Next wave: Wave 1 (DB schema + Auth Hook + RLS + role views + seed) = 7 plans, ~20h. Resume with `/gsd-execute-phase 1 --wave 1`.
 Resume file: None
