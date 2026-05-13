@@ -1,0 +1,34 @@
+# Railway config for the faka orchestrator.
+# RESEARCH §1 + §10 — monorepo gotcha: the reference path must be
+# absolute (`/apps/orchestrator/railway.toml`) when configured in the
+# Railway dashboard's "config-as-code" field.
+#
+# Two services: orchestrator-web (HTTP) + orchestrator-cron (scheduled).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/orchestrator/Dockerfile"
+
+# ─── Web service ─────────────────────────────────────────────────
+[[services]]
+name = "orchestrator-web"
+
+[services.deploy]
+startCommand = "node dist/server.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# ─── Cron service ────────────────────────────────────────────────
+[[services]]
+name = "orchestrator-cron"
+
+[services.deploy]
+startCommand = "node dist/cron.js"
+restartPolicyType = "NEVER"
+
+[services.cron]
+# Minimum granularity on Railway is 5 minutes; UTC only.
+# F1: placeholder every 30 minutes. F2+ flips to per-channel sync cron.
+schedule = "*/30 * * * *"
