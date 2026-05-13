@@ -4,7 +4,7 @@
 **De:** Nicolás (dev)
 **Objetivo:** entender el catálogo y la operación real antes de construir.
 **Tiempo estimado:** 45–60 minutos de conversación + envío de 3–5 archivos por email.
-**Fecha:** ********\_********
+**Fecha:** **\*\*\*\***\_**\*\*\*\***
 
 > Este cuestionario tiene una razón concreta: sin saber estas respuestas, **todo lo que construyamos arriba va a ser ruido**. No es burocracia, es lo que evita reescribir el sistema en 2 meses. Si una respuesta es "no sé" o "no lo tenemos", también es información — solo dilo.
 
@@ -51,7 +51,7 @@
 - [x] Por presencia/ausencia en cada plataforma
 - [ ] Por un campo "estado" en algún sistema
 - [ ] No lo distinguen formalmente
-- [ ] Otro: ****\_\_\_\_****
+- [ ] Otro: \***\*\_\_\_\_\*\***
 
 **¿Qué porcentaje del catálogo activo total estiman que NO se ha vendido en los últimos 90 días?** 25 %
 
@@ -105,7 +105,7 @@ Para cada canal, las **ventas del último mes completo** (lo más actual que ten
 - [x] Últimos 3 meses
 - [x] Últimos 6 meses
 - [x] Último año
-- [ ] Más de un año (especificar): ****\_\_\_\_****
+- [ ] Más de un año (especificar): \***\*\_\_\_\_\*\***
 
 > **Por qué importa:** cargar 3 años de histórico de 5 canales puede ser pesado. Si solo quieren ver tendencias del año en curso, ahorramos trabajo.
 
@@ -119,12 +119,12 @@ Para cada canal, las **ventas del último mes completo** (lo más actual que ten
 
 ### D.1 WordPress
 
-- **¿Es WooCommerce o algo custom?** ****\_\_\_\_****
+- **¿Es WooCommerce o algo custom?** \***\*\_\_\_\_\*\***
 - **URL del sitio:** [https://catalogofakastore.com/]
 - **¿Tienen acceso de administrador para crear API keys?** [X] Sí [ ] No
 - **¿Cuántos productos publicados aproximadamente?** no se
 - **¿Usan plugin de variantes?** NO
-- **¿Tienen webhooks ya configurados para algo?** [ ] Sí — para qué: ****\_\_\_**** [ ] No
+- **¿Tienen webhooks ya configurados para algo?** [ ] Sí — para qué: \***\*\_\_\_\*\*** [ ] No
 
 ### D.2 Mercado Libre Colombia
 
@@ -152,8 +152,8 @@ Para cada canal, las **ventas del último mes completo** (lo más actual que ten
   - [x] Probablemente se puede agregar
   - [x] No, hay que pollearlo o exportar CSV
   - [ ] No lo sé — necesito preguntar al programador
-- **¿Los dos puntos comparten el mismo POS o son independientes?** ****\_\_\_\_****
-- **¿Cómo identifican el punto de venta en cada transacción?** ****\_\_\_\_****
+- **¿Los dos puntos comparten el mismo POS o son independientes?** \***\*\_\_\_\_\*\***
+- **¿Cómo identifican el punto de venta en cada transacción?** \***\*\_\_\_\_\*\***
 
 ### D.5 WhatsApp
 
