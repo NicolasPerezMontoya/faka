@@ -40,6 +40,22 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
+      - name: Generate prettier patch (temp)
+        if: failure()
+        run: |
+          pnpm format
+          git diff > /tmp/prettier.patch || true
+          wc -l /tmp/prettier.patch
+
+      - name: Upload prettier patch (temp)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prettier-patch
+          path: /tmp/prettier.patch
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Type check
         run: pnpm -r exec tsc --noEmit
 
