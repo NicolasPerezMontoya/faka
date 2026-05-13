@@ -39,27 +39,69 @@ Each `profiles/<channel>-products.json` maps CSV columns → canonical fields. E
 
 Pre-seeded profiles match the most common export formats. The `_template.json` documents the full set of canonical fields.
 
+## LLM provider configuration (multi-provider, env-driven)
+
+Copy `.env.example` → `.env` and fill **one** of these blocks. The script reads `.env` automatically via Node's `--env-file-if-exists` flag (Node ≥ 22.7 required).
+
+| Provider | API key env var | Default model | Notes |
+|----------|-----------------|---------------|-------|
+| Vercel AI Gateway (recommended) | `AI_GATEWAY_API_KEY` | `anthropic/claude-haiku-4-5` | Unified API, observability, automatic provider fallback. https://vercel.com/docs/ai-gateway |
+| Anthropic Claude | `ANTHROPIC_API_KEY` | `claude-haiku-4-5-20251001` | https://console.anthropic.com |
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` | https://platform.openai.com |
+| Google Gemini | `GOOGLE_GENERATIVE_AI_API_KEY` | `gemini-2.5-flash` | https://aistudio.google.com/apikey |
+| Moonshot (Kimi K2) | `MOONSHOT_API_KEY` | `kimi-k2-0905-preview` | OpenAI-compatible, base URL auto-set |
+| Any OpenAI-compatible | `OPENAI_COMPATIBLE_API_KEY` + `OPENAI_COMPATIBLE_BASE_URL` | depends | Together, Groq, Fireworks, self-hosted |
+
+**Resolution order:**
+1. CLI flag (`--provider X --model Y`) — always wins.
+2. Explicit env (`LLM_PROVIDER=X` + `LLM_MODEL=Y`) — wins over auto-detect.
+3. Auto-detection — picks the first provider whose API key is present, in this order: `gateway → anthropic → openai → google → moonshot → compatible`.
+
+Examples:
+
+```bash
+# .env: AI_GATEWAY_API_KEY=...  → uses gateway, model anthropic/claude-haiku-4-5
+npm run match
+
+# .env: LLM_PROVIDER=openai LLM_MODEL=gpt-4o-mini OPENAI_API_KEY=...
+npm run match
+
+# .env: LLM_PROVIDER=moonshot MOONSHOT_API_KEY=...  → kimi-k2 via OpenAI-compat
+npm run match
+
+# Override at runtime (no .env edit)
+npm run match -- --provider anthropic --model claude-sonnet-4-6
+
+# Self-hosted / Together AI / Groq
+# .env:
+#   LLM_PROVIDER=compatible
+#   LLM_MODEL=llama-3.1-70b-instruct
+#   OPENAI_COMPATIBLE_API_KEY=...
+#   OPENAI_COMPATIBLE_BASE_URL=https://api.together.xyz/v1
+npm run match
+```
+
 ## Running
 
 **Fast pass (no API, deterministic only):**
 ```bash
 npm run match:dry
 ```
-Runs stages 1–4 only (barcode → supplier_code → sku → normalized_name → jaccard token overlap). No LLM calls.
+Runs stages 1–4 only. No LLM calls, no API key required.
 
-**Full pass (with LLM arbiter):**
+**Full pass:**
 ```bash
-ANTHROPIC_API_KEY=sk-ant-... npm run match
+npm run match
 ```
-Adds stage 5 (LLM arbiter on top ~100 hard cases). Default model: `claude-haiku-4-5-20251001`.
+Reads `.env`, detects provider, runs stages 1–4 + LLM arbiter on top ~100 hard cases.
 
-**Flags:**
-- `--anchor <channel>` — channel to use as the anchor (default: `pos`). Pick the channel with the most barcodes/supplier_codes.
-- `--no-llm` — skip stage 5 even with an API key.
-- `--no-embeddings` — skip stage 4 (also disables 5).
-- `--max-llm <n>` — cap LLM calls (default 100).
-- `--provider openai|anthropic` — switch provider.
-- `--model <name>` — override model (e.g. `gpt-4o-mini`, `kimi-k2`).
+**Flags (override env):**
+- `--anchor <channel>` — channel to use as the anchor (default: `pos`).
+- `--no-llm` — skip stage 5 even with an API key set.
+- `--no-embeddings` — skip stage 4 (Jaccard) and stage 5.
+- `--max-llm <n>` — cap LLM calls (default 100; also `LLM_MAX_CALLS=N` in `.env`).
+- `--provider <name>` — `gateway|anthropic|openai|google|moonshot|compatible`.
+- `--model <name>` — override default model for the provider.
 
 ## Output
 

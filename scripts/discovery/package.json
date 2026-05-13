@@ -5,17 +5,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "match": "tsx match-explorer.ts",
-    "match:dry": "tsx match-explorer.ts --no-llm --no-embeddings",
+    "match": "node --env-file-if-exists=.env --import tsx match-explorer.ts",
+    "match:dry": "node --env-file-if-exists=.env --import tsx match-explorer.ts --no-llm --no-embeddings",
     "lint": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.7"
   },
   "dependencies": {
     "csv-parse": "^5.6.0",
-    "@ai-sdk/openai": "^2.0.0",
     "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/google": "^2.0.0",
+    "@ai-sdk/openai": "^2.0.0",
+    "@ai-sdk/openai-compatible": "^1.0.0",
     "ai": "^6.0.0",
     "zod": "^3.24.0"
   },

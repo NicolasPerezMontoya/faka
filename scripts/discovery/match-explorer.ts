@@ -1,59 +1,87 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { CanonicalProduct, Channel, DiscoveryConfig, DiscoveryReport, MatchMethod, MatchResult } from './types.js';
+import type { CanonicalProduct, Channel, DiscoveryReport, MatchMethod, MatchResult } from './types.js';
 import { loadChannel } from './load-csv.js';
 import { buildIndex, matchDeterministic } from './cascade.js';
-import { arbitrateWithLLM, promoteToMatch } from './llm-arbiter.js';
+import {
+  arbitrateWithLLM,
+  promoteToMatch,
+  resolveLLMConfig,
+  summarizeConfig,
+  estimateCallCost,
+  type LLMProvider,
+} from './llm-arbiter.js';
 import { writeJSONReport, writeMarkdownReport } from './report.js';
 
-const DEFAULT_CONFIG: DiscoveryConfig = {
-  inputDir: resolve(process.cwd(), '../../scratch/raw-csvs'),
-  outputDir: resolve(process.cwd(), '../../docs'),
-  profilesDir: resolve(process.cwd(), 'profiles'),
-  anchorChannel: 'pos',
-  enableEmbeddings: true,
-  enableLLMArbiter: true,
-  embeddingThresholdHigh: 0.7,
-  embeddingThresholdMid: 0.45,
-  llmProvider: 'anthropic',
-  llmModelName: 'claude-haiku-4-5-20251001',
-  maxLLMCalls: 100,
-};
+interface RuntimeConfig {
+  inputDir: string;
+  outputDir: string;
+  profilesDir: string;
+  anchorChannel: Channel;
+  enableLLMArbiter: boolean;
+  embeddingThresholdHigh: number;
+  embeddingThresholdMid: number;
+  cliProvider?: LLMProvider;
+  cliModel?: string;
+  maxLLMCalls: number;
+}
 
 const CHANNELS_TO_LOAD: Channel[] = ['wordpress', 'mercadolibre', 'dropi', 'pos', 'whatsapp'];
 
-function parseArgs(argv: string[]): Partial<DiscoveryConfig> {
-  const overrides: Partial<DiscoveryConfig> = {};
+function defaultConfig(): RuntimeConfig {
+  const envMax = parseInt(process.env.LLM_MAX_CALLS ?? '', 10);
+  return {
+    inputDir: resolve(process.cwd(), '../../scratch/raw-csvs'),
+    outputDir: resolve(process.cwd(), '../../docs'),
+    profilesDir: resolve(process.cwd(), 'profiles'),
+    anchorChannel: 'pos',
+    enableLLMArbiter: true,
+    embeddingThresholdHigh: 0.7,
+    embeddingThresholdMid: 0.45,
+    maxLLMCalls: Number.isFinite(envMax) && envMax > 0 ? envMax : 100,
+  };
+}
+
+function parseArgs(argv: string[]): Partial<RuntimeConfig> {
+  const overrides: Partial<RuntimeConfig> = {};
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--no-llm') overrides.enableLLMArbiter = false;
-    else if (arg === '--no-embeddings') overrides.enableEmbeddings = false;
-    else if (arg === '--anchor' && argv[i + 1]) {
+    else if (arg === '--no-embeddings') {
+      overrides.embeddingThresholdHigh = 999;
+      overrides.embeddingThresholdMid = 999;
+    } else if (arg === '--anchor' && argv[i + 1]) {
       overrides.anchorChannel = argv[++i] as Channel;
     } else if (arg === '--input-dir' && argv[i + 1]) {
       overrides.inputDir = resolve(argv[++i]!);
     } else if (arg === '--max-llm' && argv[i + 1]) {
       overrides.maxLLMCalls = parseInt(argv[++i]!, 10);
     } else if (arg === '--provider' && argv[i + 1]) {
-      overrides.llmProvider = argv[++i] as 'openai' | 'anthropic';
+      overrides.cliProvider = argv[++i] as LLMProvider;
     } else if (arg === '--model' && argv[i + 1]) {
-      overrides.llmModelName = argv[++i]!;
+      overrides.cliModel = argv[++i]!;
     }
   }
   return overrides;
 }
 
 async function main(): Promise<void> {
-  const cfg: DiscoveryConfig = { ...DEFAULT_CONFIG, ...parseArgs(process.argv.slice(2)) };
+  const cfg: RuntimeConfig = { ...defaultConfig(), ...parseArgs(process.argv.slice(2)) };
 
-  if (cfg.enableLLMArbiter) {
-    const envKey = cfg.llmProvider === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY';
-    if (!process.env[envKey]) {
-      console.warn(`⚠️  ${envKey} not set — LLM arbiter disabled. Stages 1-4 only.`);
+  let llmCfg = resolveLLMConfig({ cliProvider: cfg.cliProvider, cliModel: cfg.cliModel });
+  if (cfg.enableLLMArbiter && llmCfg.provider !== 'none') {
+    if (!process.env[llmCfg.apiKeyEnv]) {
+      console.warn(`⚠️  ${llmCfg.apiKeyEnv} not set — LLM arbiter disabled.`);
       cfg.enableLLMArbiter = false;
+      llmCfg = { ...llmCfg, provider: 'none' };
     }
+  } else if (llmCfg.provider === 'none' && cfg.enableLLMArbiter) {
+    console.warn(`⚠️  No LLM provider detected (no API keys in env). LLM arbiter disabled.`);
+    cfg.enableLLMArbiter = false;
   }
+
+  console.log(`🧠 LLM: ${summarizeConfig(llmCfg)}`);
 
   if (!existsSync(cfg.inputDir)) {
     console.error(`❌ Input dir not found: ${cfg.inputDir}`);
@@ -118,15 +146,15 @@ async function main(): Promise<void> {
   console.log(`\n📊 Deterministic stages complete: ${matches.length} matches, ${unresolved.length} unresolved.`);
 
   let llmCalls = 0;
-  if (cfg.enableLLMArbiter && unresolved.length > 0) {
+  if (cfg.enableLLMArbiter && unresolved.length > 0 && llmCfg.provider !== 'none') {
     const llmTargets = unresolved.slice(0, Math.min(cfg.maxLLMCalls, unresolved.length));
-    console.log(`\n🤖 LLM arbiter: ${llmTargets.length} hard cases via ${cfg.llmProvider}:${cfg.llmModelName}`);
+    console.log(`\n🤖 LLM arbiter: ${llmTargets.length} hard cases via ${llmCfg.provider}:${llmCfg.model}`);
     for (const u of llmTargets) {
       if (u.topCandidates.length === 0) continue;
       const cand = u.topCandidates[0]!;
       const decision = await arbitrateWithLLM(
         { anchor: u.anchor, candidate: cand },
-        { provider: cfg.llmProvider, model: cfg.llmModelName }
+        llmCfg
       );
       llmCalls++;
       matches.push(promoteToMatch({ anchor: u.anchor, candidate: cand }, decision));
@@ -143,7 +171,10 @@ async function main(): Promise<void> {
   for (const m of matches) {
     matches_by_method[m.method] = (matches_by_method[m.method] ?? 0) + 1;
   }
-  matches_by_method.unresolved = unresolved.length - (matches_by_method.llm_arbiter_match + matches_by_method.llm_arbiter_reject);
+  matches_by_method.unresolved = Math.max(
+    0,
+    unresolved.length - (matches_by_method.llm_arbiter_match + matches_by_method.llm_arbiter_reject)
+  );
 
   const nonAnchorTotal = loaded
     .filter((l) => l.channel !== anchorLoad.channel)
@@ -158,7 +189,7 @@ async function main(): Promise<void> {
     matches_by_method.llm_arbiter_match;
   const reviewNeeded = matches_by_method.embeddings_mid + matches_by_method.unresolved + matches_by_method.llm_arbiter_reject;
 
-  const recommendation = buildRecommendation(matches_by_method, cfg);
+  const recommendation = buildRecommendation(matches_by_method, llmCfg);
 
   const report: DiscoveryReport = {
     generated_at: new Date().toISOString(),
@@ -166,8 +197,8 @@ async function main(): Promise<void> {
       anchorChannel: cfg.anchorChannel,
       embeddingThresholdHigh: cfg.embeddingThresholdHigh,
       embeddingThresholdMid: cfg.embeddingThresholdMid,
-      llmProvider: cfg.llmProvider,
-      llmModelName: cfg.llmModelName,
+      llmProvider: llmCfg.provider === 'none' ? 'openai' : (llmCfg.provider as 'openai' | 'anthropic'),
+      llmModelName: llmCfg.model || '(none)',
     },
     inputs: loaded.flatMap((l) =>
       l.files.map((f) => ({ channel: l.channel, file: f, row_count: l.products.length / l.files.length }))
@@ -182,7 +213,7 @@ async function main(): Promise<void> {
     })),
     hard_cases_for_llm: unresolved.length,
     llm_calls_made: llmCalls,
-    llm_cost_estimate_usd: estimateCost(llmCalls, cfg),
+    llm_cost_estimate_usd: estimateCallCost(llmCalls, llmCfg),
     recommendation,
   };
 
@@ -200,7 +231,7 @@ async function main(): Promise<void> {
 
 function buildRecommendation(
   byMethod: Record<MatchMethod, number>,
-  cfg: DiscoveryConfig
+  llmCfg: { provider: string; model: string }
 ): DiscoveryReport['recommendation'] {
   const reviewQueue = byMethod.embeddings_mid + byMethod.unresolved + byMethod.llm_arbiter_reject;
   const llmContribution = byMethod.llm_arbiter_match;
@@ -212,26 +243,13 @@ function buildRecommendation(
   if (llmRejectRate > 0) {
     rationale += ` (tasa rechazo ${(llmRejectRate * 100).toFixed(0)}%)`;
   }
-  rationale += `. Modelo actual: ${cfg.llmModelName}. Si la tasa de rechazo > 30%, considerar subir a Sonnet/GPT-4o.`;
+  rationale += `. Modelo: ${llmCfg.provider}:${llmCfg.model}. Si la tasa de rechazo > 30%, considerar subir a Sonnet/GPT-4o.`;
 
   return {
-    starting_llm: `${cfg.llmProvider}:${cfg.llmModelName}`,
+    starting_llm: `${llmCfg.provider}:${llmCfg.model}`,
     rationale,
     expected_validation_queue: reviewQueue,
   };
-}
-
-function estimateCost(calls: number, cfg: DiscoveryConfig): number {
-  const TOKENS_PER_CALL_IN = 250;
-  const TOKENS_PER_CALL_OUT = 80;
-  const PRICING: Record<string, { in: number; out: number }> = {
-    'claude-haiku-4-5-20251001': { in: 1.0, out: 5.0 },
-    'claude-haiku-4-5': { in: 1.0, out: 5.0 },
-    'gpt-4o-mini': { in: 0.15, out: 0.6 },
-    'kimi-k2': { in: 0.5, out: 2.0 },
-  };
-  const p = PRICING[cfg.llmModelName] ?? { in: 1.0, out: 5.0 };
-  return (calls * TOKENS_PER_CALL_IN * p.in + calls * TOKENS_PER_CALL_OUT * p.out) / 1_000_000;
 }
 
 main().catch((err) => {

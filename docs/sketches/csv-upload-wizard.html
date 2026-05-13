@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sketch — CSV Upload Wizard | faka</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    color-scheme: light;
+  }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .step-pill { transition: all .25s ease; }
+  .step-pill[data-state="active"] { background: #0f172a; color: #fff; }
+  .step-pill[data-state="done"] { background: #16a34a; color: #fff; }
+  .step-pill[data-state="upcoming"] { background: #e2e8f0; color: #64748b; }
+  .panel { animation: slidein .25s ease; }
+  @keyframes slidein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .drop-zone.is-drag { border-color: #2563eb; background: #eff6ff; }
+  .badge-ok { background: #dcfce7; color: #166534; }
+  .badge-warn { background: #fef3c7; color: #854d0e; }
+  .badge-err { background: #fee2e2; color: #991b1b; }
+  .badge-info { background: #e0e7ff; color: #3730a3; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-full">
+
+<!-- App shell mock (sidebar + topbar to give the wizard real estate context) -->
+<div class="min-h-screen flex">
+  <aside class="hidden md:flex flex-col w-60 bg-slate-900 text-slate-100">
+    <div class="px-5 py-4 border-b border-slate-800">
+      <div class="text-sm uppercase tracking-wider text-slate-400">faka</div>
+      <div class="text-lg font-semibold">Dashboard Omnicanal</div>
+    </div>
+    <nav class="px-2 py-3 space-y-1 text-sm">
+      <a class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">Hoy</a>
+      <a class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">Productos</a>
+      <a class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">Canales</a>
+      <a class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800">Inteligencia</a>
+      <a class="block px-3 py-2 rounded-lg bg-slate-800 text-white">Operación</a>
+    </nav>
+    <div class="mt-auto p-4 text-xs text-slate-500 border-t border-slate-800">v0.1 sketch — solo UI<br/>no conectado a Supabase</div>
+  </aside>
+
+  <main class="flex-1 flex flex-col">
+    <header class="h-14 px-6 flex items-center justify-between bg-white border-b border-slate-200">
+      <div class="flex items-center gap-3 text-sm text-slate-500">
+        <span>Operación</span>
+        <span>›</span>
+        <span class="text-slate-900 font-medium">Subir CSV</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-500">nicolas@faka.co</span>
+        <span class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold">NP</span>
+      </div>
+    </header>
+
+    <div class="flex-1 px-6 py-8 max-w-5xl w-full mx-auto">
+      <div class="flex items-start justify-between gap-6 mb-6">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">Subir CSV de un canal</h1>
+          <p class="text-sm text-slate-600 mt-1 max-w-2xl">
+            Carga manual de productos o pedidos. El archivo crudo se guarda íntegro y reproc esable;
+            las filas se procesan contra el pipeline de matching y aparecen en los marts al finalizar.
+          </p>
+        </div>
+        <button class="text-sm text-slate-500 hover:text-slate-900">Ver historial →</button>
+      </div>
+
+      <!-- Stepper -->
+      <ol class="flex items-center gap-3 mb-8 text-sm">
+        <li class="flex items-center gap-2">
+          <span class="step-pill w-7 h-7 rounded-full grid place-items-center text-xs font-bold" data-state="active" data-step="1">1</span>
+          <span class="font-medium">Fuente</span>
+        </li>
+        <li class="text-slate-300">───────</li>
+        <li class="flex items-center gap-2">
+          <span class="step-pill w-7 h-7 rounded-full grid place-items-center text-xs font-bold" data-state="upcoming" data-step="2">2</span>
+          <span>Mapeo de columnas</span>
+        </li>
+        <li class="text-slate-300">───────</li>
+        <li class="flex items-center gap-2">
+          <span class="step-pill w-7 h-7 rounded-full grid place-items-center text-xs font-bold" data-state="upcoming" data-step="3">3</span>
+          <span>Validar y confirmar</span>
+        </li>
+      </ol>
+
+      <!-- STEP 1: Source -->
+      <section id="step-1" class="panel bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+        <h2 class="text-lg font-semibold mb-4">1 · ¿De qué canal y qué tipo es este CSV?</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium mb-2">Canal</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="channel-btn px-3 py-3 rounded-lg border border-slate-200 text-sm text-left hover:border-slate-900" data-value="wordpress">
+                <div class="font-medium">WordPress</div>
+                <div class="text-xs text-slate-500">Pedidos + productos</div>
+              </button>
+              <button class="channel-btn px-3 py-3 rounded-lg border border-slate-900 ring-2 ring-slate-900/10 text-sm text-left" data-value="mercadolibre">
+                <div class="font-medium">Mercado Libre</div>
+                <div class="text-xs text-slate-500">Pedidos + productos</div>
+              </button>
+              <button class="channel-btn px-3 py-3 rounded-lg border border-slate-200 text-sm text-left hover:border-slate-900" data-value="dropi">
+                <div class="font-medium">Dropi</div>
+                <div class="text-xs text-slate-500">Fallback del scraper</div>
+              </button>
+              <button class="channel-btn px-3 py-3 rounded-lg border border-slate-200 text-sm text-left hover:border-slate-900" data-value="pos">
+                <div class="font-medium">POS físico</div>
+                <div class="text-xs text-slate-500">Punto 1 o Punto 2</div>
+              </button>
+              <button class="channel-btn px-3 py-3 rounded-lg border border-slate-200 text-sm text-left hover:border-slate-900" data-value="whatsapp">
+                <div class="font-medium">WhatsApp</div>
+                <div class="text-xs text-slate-500">Solo pedidos manuales</div>
+              </button>
+              <button class="channel-btn px-3 py-3 rounded-lg border border-slate-200 text-sm text-left hover:border-slate-900" data-value="otro">
+                <div class="font-medium">Otro</div>
+                <div class="text-xs text-slate-500">Falabella, mayorista…</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-medium mb-2">Tipo</label>
+              <div class="flex flex-wrap gap-2">
+                <label class="px-3 py-2 border rounded-lg text-sm cursor-pointer border-slate-900 ring-2 ring-slate-900/10">
+                  <input type="radio" name="type" class="hidden" checked /> Productos
+                </label>
+                <label class="px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-slate-900">
+                  <input type="radio" name="type" class="hidden" /> Pedidos
+                </label>
+                <label class="px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-slate-900">
+                  <input type="radio" name="type" class="hidden" /> Inventario
+                </label>
+                <label class="px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-slate-900">
+                  <input type="radio" name="type" class="hidden" /> Mixto
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Perfil de mapping</label>
+              <select class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white">
+                <option>Mercado Libre · Export publicaciones · v2 (recomendado)</option>
+                <option>Mercado Libre · Export pedidos · v1</option>
+                <option>+ Crear nuevo perfil</option>
+              </select>
+              <p class="text-xs text-slate-500 mt-1">Mapea columnas del CSV → campos canónicos. Se versiona automáticamente.</p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600">
+              <strong>Nota:</strong> El payload crudo del CSV se almacena en <code>raw_csv_uploads</code> con su path en Storage; puedes reprocesarlo con cualquier versión del perfil sin perder datos.
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6 pt-6 border-t border-slate-100">
+          <button class="px-4 py-2 text-sm rounded-lg hover:bg-slate-100">Cancelar</button>
+          <button onclick="goStep(2)" class="px-4 py-2 text-sm bg-slate-900 text-white rounded-lg hover:bg-slate-800">Siguiente →</button>
+        </div>
+      </section>
+
+      <!-- STEP 2: Column mapping -->
+      <section id="step-2" class="panel bg-white border border-slate-200 rounded-xl p-6 shadow-sm hidden">
+        <h2 class="text-lg font-semibold mb-1">2 · Sube el archivo y confirma el mapeo de columnas</h2>
+        <p class="text-sm text-slate-600 mb-5">Canal: <strong>Mercado Libre</strong> · Tipo: <strong>Productos</strong></p>
+
+        <!-- Dropzone -->
+        <div id="dropzone" class="drop-zone border-2 border-dashed border-slate-300 rounded-lg px-6 py-10 text-center cursor-pointer hover:border-slate-500">
+          <div class="text-slate-700 font-medium">Arrastra el CSV aquí</div>
+          <div class="text-xs text-slate-500 mt-1">o haz clic para seleccionar — máx 20 MB, UTF-8</div>
+          <div class="mt-3 inline-flex items-center gap-2 text-xs">
+            <span class="badge-info px-2 py-1 rounded-full font-medium">Archivo cargado: mercadolibre-products-2026-05-13.csv (812 filas, 132 KB)</span>
+          </div>
+        </div>
+
+        <!-- Preview rows -->
+        <div class="mt-6">
+          <h3 class="text-sm font-semibold mb-2">Vista previa (primeras 3 filas detectadas)</h3>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">Item ID</th>
+                  <th class="px-3 py-2 text-left font-medium">Título</th>
+                  <th class="px-3 py-2 text-left font-medium">SKU</th>
+                  <th class="px-3 py-2 text-left font-medium">Precio</th>
+                  <th class="px-3 py-2 text-left font-medium">GTIN</th>
+                  <th class="px-3 py-2 text-left font-medium">Marca</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr><td class="px-3 py-2">MCO123456789</td><td class="px-3 py-2">Plancha De Cabello Pro 2026 Color Rojo Titanio</td><td class="px-3 py-2">PLN-2026-RJ</td><td class="px-3 py-2">89900</td><td class="px-3 py-2">7701234567890</td><td class="px-3 py-2">Remington</td></tr>
+                <tr><td class="px-3 py-2">MCO123456790</td><td class="px-3 py-2">Cepillo Eléctrico Premium Azul</td><td class="px-3 py-2"></td><td class="px-3 py-2">59900</td><td class="px-3 py-2"></td><td class="px-3 py-2">Generic</td></tr>
+                <tr><td class="px-3 py-2">MCO123456791</td><td class="px-3 py-2">Set 3 Toallas Microfibra</td><td class="px-3 py-2">TOA-SET3</td><td class="px-3 py-2">29900</td><td class="px-3 py-2">7701234567906</td><td class="px-3 py-2">faka</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Mapping table -->
+        <div class="mt-6">
+          <div class="flex items-end justify-between mb-2">
+            <h3 class="text-sm font-semibold">Mapeo de columnas</h3>
+            <div class="text-xs text-slate-500">
+              <span class="badge-ok px-2 py-1 rounded-full mr-1">7 auto-detectadas</span>
+              <span class="badge-warn px-2 py-1 rounded-full">1 advertencia</span>
+            </div>
+          </div>
+
+          <div class="border border-slate-200 rounded-lg divide-y divide-slate-100">
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">external_id <span class="text-red-500">*</span></div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>Item ID</option></select></div>
+              <div class="col-span-2"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">auto</span></div>
+            </div>
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">name <span class="text-red-500">*</span></div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>Título</option></select></div>
+              <div class="col-span-2"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">auto</span></div>
+            </div>
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">sku</div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>SKU</option></select></div>
+              <div class="col-span-2"><span class="badge-warn px-2 py-0.5 rounded-full text-xs">68% vacío</span></div>
+            </div>
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">price <span class="text-red-500">*</span></div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>Precio</option></select></div>
+              <div class="col-span-2"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">auto</span></div>
+            </div>
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">barcode</div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>GTIN</option></select></div>
+              <div class="col-span-2"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">auto</span></div>
+            </div>
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">brand</div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>Marca</option></select></div>
+              <div class="col-span-2"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">auto</span></div>
+            </div>
+            <div class="grid grid-cols-12 gap-3 px-3 py-3 items-center text-sm">
+              <div class="col-span-4 font-medium text-slate-700">supplier_code</div>
+              <div class="col-span-1 text-slate-400">←</div>
+              <div class="col-span-5"><select class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs bg-white"><option>— sin mapear —</option></select></div>
+              <div class="col-span-2"><span class="text-xs text-slate-400">opcional</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save profile -->
+        <div class="mt-5 bg-slate-50 border border-slate-200 rounded-lg p-4">
+          <div class="flex items-center justify-between">
+            <div class="text-sm">
+              <div class="font-medium">Guardar como nueva versión del perfil</div>
+              <div class="text-xs text-slate-500">Mercado Libre · Export publicaciones · <strong>v3</strong> (anterior: v2 — 14 días, 3 cargas)</div>
+            </div>
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" checked>
+              <div class="relative w-11 h-6 bg-slate-300 peer-checked:bg-slate-900 rounded-full"></div>
+              <span class="absolute w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 peer-checked:translate-x-5"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-between mt-6 pt-6 border-t border-slate-100">
+          <button onclick="goStep(1)" class="px-4 py-2 text-sm rounded-lg hover:bg-slate-100">← Atrás</button>
+          <div class="space-x-2">
+            <button class="px-4 py-2 text-sm rounded-lg hover:bg-slate-100">Cancelar</button>
+            <button onclick="goStep(3)" class="px-4 py-2 text-sm bg-slate-900 text-white rounded-lg hover:bg-slate-800">Validar →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: Validate & confirm -->
+      <section id="step-3" class="panel bg-white border border-slate-200 rounded-xl p-6 shadow-sm hidden">
+        <h2 class="text-lg font-semibold mb-1">3 · Validación — ¿confirmar la ingesta?</h2>
+        <p class="text-sm text-slate-600 mb-5">Resumen del dry-run. Hasta este punto nada se ha escrito en master/facts.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="border border-slate-200 rounded-lg p-4">
+            <div class="text-xs uppercase tracking-wider text-slate-500">Filas válidas</div>
+            <div class="text-2xl font-semibold mt-1">802</div>
+            <div class="text-xs text-slate-500">98.8% del archivo</div>
+          </div>
+          <div class="border border-slate-200 rounded-lg p-4">
+            <div class="text-xs uppercase tracking-wider text-slate-500">Filas con advertencia</div>
+            <div class="text-2xl font-semibold mt-1 text-amber-600">7</div>
+            <div class="text-xs text-slate-500">precio fuera de rango histórico</div>
+          </div>
+          <div class="border border-slate-200 rounded-lg p-4">
+            <div class="text-xs uppercase tracking-wider text-slate-500">Filas con error</div>
+            <div class="text-2xl font-semibold mt-1 text-red-600">3</div>
+            <div class="text-xs text-slate-500">campo requerido vacío</div>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg overflow-hidden mb-6">
+          <div class="bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-between">
+            <span>Impacto sobre el catálogo maestro</span>
+            <span class="text-slate-400 text-[10px]">cálculo proyectado</span>
+          </div>
+          <div class="divide-y divide-slate-100 text-sm">
+            <div class="px-4 py-2.5 flex items-center justify-between">
+              <span>Productos nuevos que crearán master_sku</span>
+              <span class="badge-info px-2 py-0.5 rounded-full text-xs">42</span>
+            </div>
+            <div class="px-4 py-2.5 flex items-center justify-between">
+              <span>Productos que matchean automáticamente (barcode/supplier/sku)</span>
+              <span class="badge-ok px-2 py-0.5 rounded-full text-xs">623</span>
+            </div>
+            <div class="px-4 py-2.5 flex items-center justify-between">
+              <span>Candidatos a LLM arbiter (matching cascade etapas 4–5)</span>
+              <span class="badge-warn px-2 py-0.5 rounded-full text-xs">98</span>
+            </div>
+            <div class="px-4 py-2.5 flex items-center justify-between">
+              <span>Cola de validación humana esperada</span>
+              <span class="badge-warn px-2 py-0.5 rounded-full text-xs">39</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg overflow-hidden mb-6">
+          <div class="bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-600">Errores que requieren corrección</div>
+          <div class="text-sm divide-y divide-slate-100">
+            <div class="px-4 py-3 flex items-center justify-between">
+              <div>
+                <span class="badge-err px-2 py-0.5 rounded-full text-xs mr-2">fila 217</span>
+                Campo <code class="text-xs bg-slate-100 px-1 rounded">name</code> vacío.
+              </div>
+              <button class="text-xs text-slate-500 hover:text-slate-900">Ver fila →</button>
+            </div>
+            <div class="px-4 py-3 flex items-center justify-between">
+              <div>
+                <span class="badge-err px-2 py-0.5 rounded-full text-xs mr-2">fila 564</span>
+                Precio <code class="text-xs bg-slate-100 px-1 rounded">"$89.900,00"</code> no parseable a número.
+              </div>
+              <button class="text-xs text-slate-500 hover:text-slate-900">Ver fila →</button>
+            </div>
+            <div class="px-4 py-3 flex items-center justify-between">
+              <div>
+                <span class="badge-err px-2 py-0.5 rounded-full text-xs mr-2">fila 612</span>
+                Item ID <code class="text-xs bg-slate-100 px-1 rounded">MCO123456789</code> duplicado en la misma carga.
+              </div>
+              <button class="text-xs text-slate-500 hover:text-slate-900">Ver fila →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm space-y-1 mb-6">
+          <div class="font-medium">Al confirmar:</div>
+          <ul class="text-slate-600 text-sm list-disc pl-5 space-y-0.5">
+            <li>Se almacena el archivo en <code class="text-xs bg-white px-1 rounded">storage://csv-uploads/mercadolibre/2026/05/13/&lt;upload_id&gt;.csv</code>.</li>
+            <li>Se insertan 802 filas en <code class="text-xs bg-white px-1 rounded">raw_csv_rows</code>; el pipeline de matching las procesa de forma asíncrona.</li>
+            <li>Las 3 filas con error <strong>no</strong> se procesan; quedan visibles en historial para corregir y reprocesar.</li>
+            <li>Versión del perfil usada queda inmutable; nuevas correcciones suben a v4.</li>
+          </ul>
+        </div>
+
+        <div class="flex justify-between pt-6 border-t border-slate-100">
+          <button onclick="goStep(2)" class="px-4 py-2 text-sm rounded-lg hover:bg-slate-100">← Ajustar mapeo</button>
+          <div class="space-x-2">
+            <button class="px-4 py-2 text-sm rounded-lg hover:bg-slate-100">Cancelar</button>
+            <button onclick="finish()" class="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">Confirmar e ingestar 802 filas</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DONE confirmation -->
+      <section id="done" class="panel bg-white border border-slate-200 rounded-xl p-8 shadow-sm hidden text-center">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-100 grid place-items-center text-emerald-600 text-xl">✓</div>
+        <h2 class="text-xl font-semibold">Ingesta encolada</h2>
+        <p class="text-sm text-slate-600 mt-2">El pipeline está procesando 802 filas. Las verás aparecer en <strong>Productos</strong> y <strong>Hoy</strong> en los próximos minutos.</p>
+        <div class="mt-6 inline-flex items-center gap-2 text-xs text-slate-500">
+          <span>Upload ID:</span>
+          <code class="bg-slate-100 px-2 py-1 rounded">u_8a2f1e</code>
+          <span class="ml-3">Cola de validación:</span>
+          <span class="badge-warn px-2 py-0.5 rounded-full">39 ítems</span>
+        </div>
+        <div class="mt-8 flex justify-center gap-2">
+          <a href="#" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">Ver historial</a>
+          <button onclick="resetWizard()" class="px-4 py-2 text-sm bg-slate-900 text-white rounded-lg hover:bg-slate-800">Subir otro</button>
+        </div>
+      </section>
+
+      <!-- History preview (collapsed-style hint that this would appear under the wizard on the same view) -->
+      <section class="mt-10">
+        <div class="flex items-end justify-between mb-3">
+          <h3 class="text-base font-semibold">Historial reciente <span class="text-slate-400 font-normal text-xs">(últimas 5 cargas)</span></h3>
+          <a href="#" class="text-xs text-slate-500 hover:text-slate-900">Ver todo →</a>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+              <tr>
+                <th class="px-4 py-2 text-left">Cuándo</th>
+                <th class="px-4 py-2 text-left">Canal</th>
+                <th class="px-4 py-2 text-left">Tipo</th>
+                <th class="px-4 py-2 text-left">Archivo</th>
+                <th class="px-4 py-2 text-right">Filas</th>
+                <th class="px-4 py-2 text-left">Estado</th>
+                <th class="px-4 py-2"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-4 py-2.5 text-slate-500">hace 4 min</td>
+                <td class="px-4 py-2.5">Dropi</td>
+                <td class="px-4 py-2.5">Pedidos</td>
+                <td class="px-4 py-2.5"><code class="text-xs">dropi-orders-2026-05-13.csv</code></td>
+                <td class="px-4 py-2.5 text-right">142</td>
+                <td class="px-4 py-2.5"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">procesado</span></td>
+                <td class="px-4 py-2.5"><button class="text-xs text-slate-500 hover:text-slate-900">Reprocesar</button></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2.5 text-slate-500">ayer 18:02</td>
+                <td class="px-4 py-2.5">WordPress</td>
+                <td class="px-4 py-2.5">Productos</td>
+                <td class="px-4 py-2.5"><code class="text-xs">wordpress-products-2026-05-12.csv</code></td>
+                <td class="px-4 py-2.5 text-right">1,089</td>
+                <td class="px-4 py-2.5"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">procesado</span></td>
+                <td class="px-4 py-2.5"><button class="text-xs text-slate-500 hover:text-slate-900">Reprocesar</button></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2.5 text-slate-500">ayer 14:30</td>
+                <td class="px-4 py-2.5">POS · Punto 1</td>
+                <td class="px-4 py-2.5">Mixto</td>
+                <td class="px-4 py-2.5"><code class="text-xs">pos1-mixto-2026-05-12.csv</code></td>
+                <td class="px-4 py-2.5 text-right">312</td>
+                <td class="px-4 py-2.5"><span class="badge-warn px-2 py-0.5 rounded-full text-xs">parcial · 8 errores</span></td>
+                <td class="px-4 py-2.5"><button class="text-xs text-slate-500 hover:text-slate-900">Reprocesar</button></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2.5 text-slate-500">May 11</td>
+                <td class="px-4 py-2.5">Mercado Libre</td>
+                <td class="px-4 py-2.5">Productos</td>
+                <td class="px-4 py-2.5"><code class="text-xs">ml-products-2026-05-11.csv</code></td>
+                <td class="px-4 py-2.5 text-right">812</td>
+                <td class="px-4 py-2.5"><span class="badge-ok px-2 py-0.5 rounded-full text-xs">procesado</span></td>
+                <td class="px-4 py-2.5"><button class="text-xs text-slate-500 hover:text-slate-900">Reprocesar</button></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2.5 text-slate-500">May 10</td>
+                <td class="px-4 py-2.5">WhatsApp</td>
+                <td class="px-4 py-2.5">Pedidos</td>
+                <td class="px-4 py-2.5"><code class="text-xs">whatsapp-orders-2026-04.csv</code></td>
+                <td class="px-4 py-2.5 text-right">23</td>
+                <td class="px-4 py-2.5"><span class="badge-err px-2 py-0.5 rounded-full text-xs">fallido</span></td>
+                <td class="px-4 py-2.5"><button class="text-xs text-slate-500 hover:text-slate-900">Reintentar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="mt-12 text-center text-xs text-slate-400 pb-8">
+        Sketch v0.1 · ADR-001 LOCKED · este mockup no envía datos a ninguna parte.
+      </footer>
+    </div>
+  </main>
+</div>
+
+<script>
+  function setStepperState(active) {
+    document.querySelectorAll('.step-pill').forEach((p) => {
+      const step = parseInt(p.dataset.step, 10);
+      if (step < active) p.dataset.state = 'done';
+      else if (step === active) p.dataset.state = 'active';
+      else p.dataset.state = 'upcoming';
+    });
+  }
+  function goStep(n) {
+    ['step-1', 'step-2', 'step-3', 'done'].forEach((id) => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('step-' + n).classList.remove('hidden');
+    setStepperState(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function finish() {
+    ['step-1', 'step-2', 'step-3'].forEach((id) => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('done').classList.remove('hidden');
+    setStepperState(4);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function resetWizard() {
+    goStep(1);
+  }
+  // Dropzone visual affordance
+  const dz = document.getElementById('dropzone');
+  if (dz) {
+    ['dragenter', 'dragover'].forEach((e) => dz.addEventListener(e, (ev) => { ev.preventDefault(); dz.classList.add('is-drag'); }));
+    ['dragleave', 'drop'].forEach((e) => dz.addEventListener(e, (ev) => { ev.preventDefault(); dz.classList.remove('is-drag'); }));
+  }
+</script>
+</body>
+</html>
