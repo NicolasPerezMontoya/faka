@@ -71,6 +71,14 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13 (Phase 1 Waves 0 + 1 + Wave 2 plans 1.2.1–1.2.4)
-Stopped at: 14 atomic commits landed (1.0.1–1.0.3, 1.1.1–1.1.7, 1.2.1–1.2.4). Code-side of F1 essentially complete: schema + interface + skeletons + CSVConnector + helpers all compile against the contract. Remaining: 1.2.5 integration tests (deferred until local Supabase verified), Wave 3 dashboard (6 plans / 28h), Wave 4 orchestrator (4 plans / 14h). Resume with `/gsd-execute-phase 1 --wave 3` once Wave 2 finalized.
+Last session: 2026-05-13 (Phase 1 Waves 0 + 1 + Wave 2 plans 1.2.1–1.2.4 + version-pin fixes)
+Stopped at: 15+ atomic commits landed. Code-side of F1 essentially complete. Remaining: 1.2.5 integration tests (deferred until local Supabase verified), Wave 3 dashboard (6 plans / 28h), Wave 4 orchestrator (4 plans / 14h). Resume with `/gsd-execute-phase 1 --wave 3` once Wave 2 finalized.
+
+**Environment note (2026-05-13)**: tried to run `pnpm install` + `supabase start` + `pnpm db:reset` from this WSL2 environment. Network connectivity to registry.npmjs.org is unstable — curl gets HTTP 200 in 2s but pnpm's parallel fetcher times out on ~95% of requests (both IPv4 and IPv6 routing tried). Only 23 of ~500 dependencies resolved. THREE real version mismatches discovered during the attempt and committed in `2cb0b70`:
+  - packageManager pin pnpm@11.1.1 → 10.28.1 (matches installed; was causing corepack hang)
+  - @supabase/supabase-js ^2.105.4 → ^2.105.1 (2.105.4 doesn't exist; latest is 2.105.1)
+  - @typescript-eslint/* ^8.18.0 → 8.18.0 exact (^ resolved to 8.59.3 which has a missing sibling subpackage)
+
+Install will work in GitHub Actions (db-integration job), Vercel preview builds, or any environment with stable npm registry connectivity. Schema verification via `pnpm db:reset` is therefore deferred to first deploy.
+
 Resume file: None
