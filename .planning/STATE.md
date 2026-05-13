@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1.0.3 of 26 in current phase (Wave 0 of 5 complete)
-Status: IN PROGRESS — Wave 0 (monorepo bootstrap) complete; Wave 1 (DB schema + auth + RLS) next
-Last activity: 2026-05-13 — Phase 1 Wave 0 executed in 3 atomic commits: pnpm/Turbo/root config, @faka/config (tsconfig/eslint/prettier), GitHub Actions CI workflow.
+Plan: 1.1.7 of 26 in current phase (Waves 0–1 of 5 complete)
+Status: IN PROGRESS — Waves 0 + 1 complete (10 atomic commits). Wave 2 (connectors interface + skeletons + CSVConnector) next.
+Last activity: 2026-05-13 — Phase 1 Wave 1 executed in 7 atomic commits: supabase init + 13 contiguous SQL migrations covering RAW + MASTER (incl. Mini-CRM stubs ADR-004) + FACTS (with idempotency unique constraint) + MARTS skeleton + INSIGHTS + messaging_log empty (ADR-003) + observability with connector_run_kind enum (W2 fix) + profiles + custom_access_token Auth Hook (ADR-002) + 19 SECURITY INVOKER per-role views + grants + reprocess versioning + seed.sql with 5 mapping profiles + TS Super Admin seeder.
 
 Phase 0: PARTIAL — Claude-side deliverables shipped + ADRs 002/003/004 LOCKED; client-side blocked (questionnaire responses + CSVs). Does NOT block Phase 1 Foundation.
 
-Progress: [██░░░░░░░░] Phase 1: 3 of 26 plans (12%); Waves 1–4 pending.
+Progress: [████░░░░░░] Phase 1: 10 of 26 plans (38%); Waves 2–4 pending. 1463 LOC of SQL across 13 migrations + seed.
 
 ## Performance Metrics
 
@@ -71,6 +71,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13 (Phase 1 Wave 0 execution)
-Stopped at: 3 atomic commits landed (1.0.1, 1.0.2, 1.0.3). Wave 0 done. Next wave: Wave 1 (DB schema + Auth Hook + RLS + role views + seed) = 7 plans, ~20h. Resume with `/gsd-execute-phase 1 --wave 1`.
+Last session: 2026-05-13 (Phase 1 Waves 0 + 1 execution)
+Stopped at: 10 atomic commits landed (1.0.1–1.0.3, 1.1.1–1.1.7). Schema 100% done; runs `pnpm db:reset` once Supabase Docker is up. Next wave: Wave 2 (`@faka/schema` + `ChannelConnector` interface + 6 channel skeletons + real CSVConnector + helpers + integration tests) = 5 plans, ~14h. Resume with `/gsd-execute-phase 1 --wave 2`.
 Resume file: None
