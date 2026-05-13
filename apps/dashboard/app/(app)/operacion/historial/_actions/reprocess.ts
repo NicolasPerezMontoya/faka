@@ -234,7 +234,7 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
         records_processed: recordsProcessed,
         records_failed: recordsFailed,
         retry_count: 0,
-        errors_json: errorsJson,
+        errors_json: errorsJson as Record<string, unknown> | null,
         duration_ms: Date.now() - startedAt.getTime(),
         upload_id: input.uploadId,
         metadata_json: { reprocess_id: reprocessId, source: 'reprocess' },
