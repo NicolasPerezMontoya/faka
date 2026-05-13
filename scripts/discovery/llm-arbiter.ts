@@ -42,7 +42,7 @@ export function resolveLLMConfig(args: {
   cliProvider?: LLMProvider;
   cliModel?: string;
 }): ResolvedLLMConfig {
-  if (args.cliProvider) {
+  if (args.cliProvider && args.cliProvider !== 'none') {
     return finalize(args.cliProvider, args.cliModel, 'cli');
   }
 
@@ -126,7 +126,7 @@ export async function arbitrateWithLLM(
     const model = await buildModel(cfg);
 
     const { text } = await generateText({
-      model,
+      model: model as Parameters<typeof generateText>[0]['model'],
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
       temperature: 0,
