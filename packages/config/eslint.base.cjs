@@ -1,0 +1,81 @@
+/**
+ * Shared ESLint base config for the faka monorepo.
+ *
+ * Per-package configs extend this and add framework-specific rules
+ * (e.g. apps/dashboard adds eslint-config-next).
+ *
+ * Two custom rules enforce project-specific constraints:
+ *   1. ban-any: prevents `any` slipping in (FND-01 quality bar).
+ *   2. ban-public-secret-envs: prevents NEXT_PUBLIC_* env vars whose
+ *      names contain SERVICE | SECRET | PRIVATE (RESEARCH §10
+ *      Pitfall 5 — accidental client-side leak of service-role keys).
+ */
+
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+
+/** @type {import('eslint').Linter.FlatConfig[]} */
+module.exports = [
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        project: true,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      ...tsPlugin.configs['recommended-type-checked'].rules,
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+      ],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          // RESEARCH §10 / Pitfall 5 — prevent SERVICE/SECRET/PRIVATE
+          // env vars from being prefixed NEXT_PUBLIC_* (would expose
+          // them to the client bundle).
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name='env'][property.name=/^NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE).*$/]",
+          message:
+            'NEXT_PUBLIC_* env vars MUST NOT contain SERVICE/SECRET/PRIVATE — those are server-side only.',
+        },
+        {
+          selector:
+            "Literal[value=/^NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE).*$/]",
+          message:
+            'String literal looks like a public-prefixed secret env var name — server-side env vars must NOT have NEXT_PUBLIC_ prefix.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/__tests__/**', '**/*.test.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off',
+    },
+  },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.next/**',
+      '**/.turbo/**',
+      '**/coverage/**',
+      '**/*.config.{js,cjs,mjs}',
+    ],
+  },
+];
