@@ -9,6 +9,10 @@ build/
 .next/
 out/
 *.tsbuildinfo
+.turbo/
+
+# pnpm
+.pnpm-store/
 
 # Environment / secrets
 .env

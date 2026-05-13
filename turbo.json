@@ -1,0 +1,55 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".env",
+    ".env.local",
+    "tsconfig.json",
+    "packages/config/**"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_PROJECT_REF",
+    "PORT",
+    "LOG_LEVEL"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "db:types"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/__tests__/**"]
+    },
+    "lint": {
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", "../../packages/config/**"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build", "db:types"],
+      "outputs": [],
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:types": {
+      "outputs": ["packages/db/types/**"],
+      "inputs": ["packages/db/supabase/migrations/**"]
+    },
+    "db:reset": {
+      "cache": false,
+      "inputs": ["packages/db/supabase/**"]
+    },
+    "db:migrate": {
+      "cache": false,
+      "inputs": ["packages/db/supabase/migrations/**"]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "faka",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Dashboard Omnicanal de Ventas + Capa de IA",
+  "packageManager": "pnpm@11.1.1",
+  "engines": {
+    "node": ">=22.7",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "dev": "turbo run dev",
+    "db:types": "pnpm --filter @faka/db run types",
+    "db:reset": "pnpm --filter @faka/db run db:reset",
+    "db:migrate": "pnpm --filter @faka/db run db:migrate",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.3"
+  }
+}
