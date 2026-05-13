@@ -48,15 +48,15 @@ DB integration:                SUCCESS
 
 Después del primer verde con 3 steps soft, hubo 4 commits adicionales para hacerlo estricto:
 
-| Commit | Qué hizo |
-|---|---|
-| `fa3ef25` | Step temporal `upload-artifact` para subir database.ts generado |
-| `dc928f8` | Bajó el types real (3076 líneas, 30 tablas + 19 views), commiteó como baseline; dropeo continue-on-error de Type check + Assert types committed |
+| Commit                | Qué hizo                                                                                                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fa3ef25`             | Step temporal `upload-artifact` para subir database.ts generado                                                                                                                   |
+| `dc928f8`             | Bajó el types real (3076 líneas, 30 tablas + 19 views), commiteó como baseline; dropeo continue-on-error de Type check + Assert types committed                                   |
 | `3698962` + `5429ce9` | Fixes a 5 type errors reales que destapó el strict tsc: `csv-parse` faltaba en dashboard, `<Button asChild>` no soportado, `errorsJson: Record<string,unknown>` vs `Json` columna |
-| `16b01de` | Step temporal que corre `pnpm format` en CI y sube `git diff` como prettier.patch artifact |
-| `f68ba21` | Aplicación del patch — prettier --write a 129 archivos |
-| `5970da9` + `3739c04` | Cleanup del último archivo (discovery-questionnaire.md) que mangled durante git apply local |
-| `796540e` | `.prettierignore` para excluir `packages/db/types/database.ts` (es generado por supabase gen types, no debe re-formatearse); restauró el archivo a verbatim CLI output |
+| `16b01de`             | Step temporal que corre `pnpm format` en CI y sube `git diff` como prettier.patch artifact                                                                                        |
+| `f68ba21`             | Aplicación del patch — prettier --write a 129 archivos                                                                                                                            |
+| `5970da9` + `3739c04` | Cleanup del último archivo (discovery-questionnaire.md) que mangled durante git apply local                                                                                       |
+| `796540e`             | `.prettierignore` para excluir `packages/db/types/database.ts` (es generado por supabase gen types, no debe re-formatearse); restauró el archivo a verbatim CLI output            |
 
 ## Lo único que NO está estricto
 
