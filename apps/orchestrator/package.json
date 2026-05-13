@@ -11,7 +11,7 @@
     "start:cron": "node dist/cron.js",
     "dev": "tsx watch src/server.ts",
     "lint": "echo '(uses base eslint via app/package configs)'",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {

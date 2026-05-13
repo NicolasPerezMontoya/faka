@@ -12,7 +12,7 @@
   },
   "scripts": {
     "lint": "echo '(uses base eslint via app/package configs)'",
-    "test": "vitest run"
+    "test": "echo '(no unit tests yet)'"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

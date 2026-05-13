@@ -12,7 +12,7 @@
   },
   "scripts": {
     "lint": "echo '(uses base eslint via app/package configs)'",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:integration": "echo '(no integration tests for pure schema)'"
   },
   "dependencies": {

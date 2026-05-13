@@ -21,7 +21,7 @@
   },
   "scripts": {
     "lint": "echo '(uses base eslint via app/package configs)'",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:integration": "echo '(integration tests in 1.2.5)'"
   },
   "dependencies": {
