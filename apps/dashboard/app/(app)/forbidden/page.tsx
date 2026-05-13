@@ -13,9 +13,9 @@ export default function ForbiddenPage() {
           <p className="text-sm text-muted-foreground mb-4">
             Si crees que es un error, contacta a un Super Admin para revisar tus permisos.
           </p>
-          <Button asChild={false} variant="outline">
-            <Link href="/">Volver al inicio</Link>
-          </Button>
+          <Link href="/">
+            <Button variant="outline">Volver al inicio</Button>
+          </Link>
         </CardContent>
       </Card>
     </div>

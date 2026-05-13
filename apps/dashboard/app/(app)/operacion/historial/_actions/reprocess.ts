@@ -20,6 +20,7 @@ import { requireRole, ForbiddenError } from '@faka/auth';
 import { createCSVConnector } from '@faka/connectors/csv';
 import { recordConnectorRun } from '@faka/connectors';
 import { auditLog } from '@faka/db';
+import type { Json } from '@faka/db/types';
 import { createClient } from '@/lib/supabase/server';
 
 const CHUNK_SIZE = 500;
@@ -52,7 +53,7 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
   let runStatus: 'succeeded' | 'partial' | 'failed' = 'succeeded';
   let recordsProcessed = 0;
   let recordsFailed = 0;
-  let errorsJson: Record<string, unknown> | null = null;
+  let errorsJson: Json | null = null;
 
   // History row records the reprocess event regardless of outcome.
   const { data: historyRow, error: historyErr } = await supabase
@@ -156,7 +157,7 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
       const { error: rowsErr } = await supabase.from('raw_csv_rows').insert(batch);
       if (rowsErr) {
         runStatus = 'failed';
-        errorsJson = { phase: 'raw_csv_rows_insert', message: rowsErr.message };
+        errorsJson = { phase: 'raw_csv_rows_insert', message: rowsErr.message } as Json;
         return { ok: false, error: `raw_csv_rows_insert_failed: ${rowsErr.message}` };
       }
     }
@@ -183,7 +184,7 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
     recordsProcessed = ingestResult.rows_processed;
     recordsFailed = ingestResult.rows_skipped;
     if (ingestResult.errors.length > 0) {
-      errorsJson = { errors: ingestResult.errors.slice(0, 100) };
+      errorsJson = { errors: ingestResult.errors.slice(0, 100) } as Json;
       runStatus = ingestResult.rows_processed === 0 ? 'failed' : 'partial';
     }
 
@@ -206,7 +207,7 @@ export async function reprocessUploadAction(input: ReprocessInput): Promise<Repr
     return { ok: true, rows_processed: recordsProcessed, rows_skipped: recordsFailed, reprocess_id: reprocessId };
   } catch (err) {
     runStatus = 'failed';
-    errorsJson = { caught: (err as Error).message };
+    errorsJson = { caught: (err as Error).message } as Json;
     return { ok: false, error: (err as Error).message };
   } finally {
     // Finalize history row.
