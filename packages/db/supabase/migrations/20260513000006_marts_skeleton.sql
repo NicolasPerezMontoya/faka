@@ -60,15 +60,26 @@ create table public.mart_dead_stock (
 
 create index mart_dead_stock_dias_idx on public.mart_dead_stock (dias_sin_venta desc);
 
+-- canal NULL means "consolidated across all channels". Postgres PRIMARY KEY
+-- cannot contain expressions, so the row-uniqueness invariant (one row per
+-- master_sku + canal, plus one consolidated row) is enforced via two partial
+-- unique indexes below.
 create table public.mart_days_of_inventory (
   master_sku           uuid         not null references public.master_products (master_sku) on delete cascade,
-  canal                public.channel null,                         -- null = consolidated
+  canal                public.channel null,
   dias_inventario      numeric(10, 2) not null,
   stock_actual         integer      not null,
   unidades_dia_avg     numeric(10, 2) not null,
-  refreshed_at         timestamptz  not null default now(),
-  primary key (master_sku, coalesce(canal, 'pos'::public.channel))
+  refreshed_at         timestamptz  not null default now()
 );
+
+create unique index mart_doi_per_canal_uq
+  on public.mart_days_of_inventory (master_sku, canal)
+  where canal is not null;
+
+create unique index mart_doi_consolidated_uq
+  on public.mart_days_of_inventory (master_sku)
+  where canal is null;
 
 create table public.mart_cannibalization (
   customer_id      uuid           not null references public.customers (customer_id) on delete cascade,
