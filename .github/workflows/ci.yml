@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-test:
+    name: Lint + unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -r run lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Type check
+        run: pnpm -r exec tsc --noEmit
+
+      - name: Unit tests
+        run: pnpm -r run test
+        env:
+          NODE_ENV: test
+
+  db-integration:
+    name: DB integration (supabase db reset + types diff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: lint-test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local
+        run: pnpm --filter @faka/db exec supabase start
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Apply migrations (db reset)
+        run: pnpm --filter @faka/db run db:reset
+
+      - name: Regenerate types
+        run: pnpm --filter @faka/db run types
+
+      - name: Assert generated types are committed
+        run: |
+          if ! git diff --exit-code packages/db/types/database.ts; then
+            echo "::error::packages/db/types/database.ts is out of date. Run 'pnpm db:types' and commit the result."
+            exit 1
+          fi
+
+      - name: Integration tests
+        run: pnpm -r run test:integration
+        env:
+          NODE_ENV: test
+
+      - name: Stop Supabase
+        if: always()
+        run: pnpm --filter @faka/db exec supabase stop --no-backup
