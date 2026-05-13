@@ -97,6 +97,16 @@ jobs:
       - name: Regenerate types
         run: pnpm --filter @faka/db run types
 
+      - name: Upload generated types as artifact
+        # Temporary: lets us pull the freshly-generated database.ts off
+        # the CI run and commit it as the baseline. Remove after the
+        # baseline lands and continue-on-error drops below.
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: packages/db/types/database.ts
+          retention-days: 7
+
       - name: Assert generated types are committed
         # Non-blocking until the real Supabase-generated baseline is
         # committed. Currently packages/db/types/database.ts holds a
