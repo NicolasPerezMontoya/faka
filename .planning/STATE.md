@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1.3.6 of 26 in current phase (Waves 0–1–2(4/5)–3 complete)
-Status: IN PROGRESS — 20 of 26 plans done (77%). Wave 4 (Hono orchestrator + Railway deploy) is the last remaining wave. Tests deferred (1.2.5) until Supabase local verified.
-Last activity: 2026-05-13 — Phase 1 Wave 3 executed in 6 atomic commits: Next.js dashboard scaffold + @faka/ui (10 primitives + UserBadge), @faka/auth (role matrix + middleware + JWT claims + requireRole + sign-in/out) + login UI + auth-aware topbar (W5), Operación landing + wizard host, Step 1 channel/tipo/profile picker, Step 2 dropzone + preview + mapping table + Storage upload via uploadCsvAction (filename sanitization + 20MB cap), Step 3 dry-run + commit-upload (W1 boundary — applyColumnMap calls = 0), Historial page with DataTable + reprocess modal (idempotent UPSERT preserves dedup).
+Plan: 1.4.4b of 26 in current phase (Waves 0–1–2–3–4 implementation complete)
+Status: CODE COMPLETE — 24 of 26 plans done (92%). The two remaining plans (1.2.5 + 1.4.3) are integration test suites deferred until local Supabase verified. Phase 1 code-side is shippable; CI will verify on first push.
+Last activity: 2026-05-14 — Phase 1 Wave 4 executed in 3 atomic commits: Hono orchestrator (server.ts with /health + /connectors + /webhooks/:canal 501; pino logger + service-role supabase singleton + buildRegistry returning 9-entry connector record), cron entry (writes ONE connector_runs heartbeat with kind='cron-heartbeat'/canal=null per W2 + process.exit(0) per Pitfall 7), deploy infra (multi-stage Dockerfile + railway.toml with 2 services + vercel.json with monorepo build + scripts/smoke.sh + DEPLOY.md operator runbook).
 
 Phase 0: PARTIAL — Claude-side deliverables shipped + ADRs 002/003/004 LOCKED; client-side blocked (questionnaire responses + CSVs). Does NOT block Phase 1 Foundation.
 
-Progress: [████████░░] Phase 1: 20 of 26 plans (77%); ~6970 total LOC across SQL + TypeScript + CSS + JSON. Wave 4 (orchestrator + deploy) = 4 plans / ~14h pending.
+Progress: [█████████░] Phase 1: 24 of 26 plans (92%); ~7400 total LOC. Tests (1.2.5 packages/connectors + 1.4.3 apps/orchestrator) are the only deferred items.
 
 ## Performance Metrics
 
@@ -71,8 +71,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13 (Phase 1 Waves 0 + 1 + 2(4/5) + 3)
-Stopped at: 20 plans landed across 5 waves. Dashboard fully scaffolded — wizard end-to-end with Steps 1/2/3 + historial + reprocess + W5 auth-aware topbar. Wave 4 (orchestrator skeleton + Railway/Vercel deploy config) = 4 plans / ~14h pending. Resume with `/gsd-execute-phase 1 --wave 4`.
+Last session: 2026-05-14 (Phase 1 Wave 4 — implementation complete)
+Stopped at: 24 plans landed across 5 waves. **Phase 1 Foundation is code-complete.** Only deferred work: integration tests 1.2.5 (packages/connectors) + 1.4.3 (apps/orchestrator) — both need local Supabase running. Next: push to GitHub for CI verification, or proceed to `/gsd-verify-work` followed by `/gsd-plan-phase 2` (WordPress walking skeleton).
 
 **Environment note (2026-05-13)**: tried to run `pnpm install` + `supabase start` + `pnpm db:reset` from this WSL2 environment. Network connectivity to registry.npmjs.org is unstable — curl gets HTTP 200 in 2s but pnpm's parallel fetcher times out on ~95% of requests (both IPv4 and IPv6 routing tried). Only 23 of ~500 dependencies resolved. THREE real version mismatches discovered during the attempt and committed in `2cb0b70`:
   - packageManager pin pnpm@11.1.1 → 10.28.1 (matches installed; was causing corepack hang)
