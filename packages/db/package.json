@@ -1,0 +1,35 @@
+{
+  "name": "@faka/db",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Supabase migrations + generated types for the faka monorepo",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/database.ts"
+  },
+  "scripts": {
+    "db:reset": "supabase db reset",
+    "db:migrate": "supabase migration up --local",
+    "db:diff": "supabase db diff --local",
+    "types": "supabase gen types typescript --local > types/database.ts",
+    "types:remote": "supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > types/database.ts",
+    "types:check": "supabase gen types typescript --local > types/database.ts && git diff --exit-code types/database.ts",
+    "seed:super-admin": "node --env-file-if-exists=../../.env --import tsx scripts/seed-super-admin.ts",
+    "lint": "echo '(no lint for SQL yet)'",
+    "test": "echo '(no unit tests for migrations)'",
+    "test:integration": "echo '(integration via supabase db reset in CI)'"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4"
+  },
+  "devDependencies": {
+    "@faka/config": "workspace:*",
+    "@types/node": "^22.10.5",
+    "supabase": "^2.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "@faka/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["index.ts", "types/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist", "supabase/.branches", "supabase/migrations"]
+}
