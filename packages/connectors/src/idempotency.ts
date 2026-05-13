@@ -36,9 +36,12 @@ export async function idempotentUpsert<T extends Record<string, unknown>>(
   options: IdempotentUpsertOptions,
 ): Promise<{ rowsAffected: number; error: string | null }> {
   const payload = Array.isArray(row) ? row : [row];
+  // Cast to Supabase's overload-unfriendly generic shape — payload is
+  // structurally compatible but TS can't prove it against the inferred
+  // RejectExcessProperties wrapper exposed by @supabase/supabase-js.
   const { error, count } = await supabase
     .from(table)
-    .upsert(payload, {
+    .upsert(payload as never, {
       onConflict: options.onConflict,
       ignoreDuplicates: options.ignoreDuplicates ?? false,
       count: 'exact',

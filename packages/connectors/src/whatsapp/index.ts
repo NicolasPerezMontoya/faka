@@ -19,6 +19,7 @@ import {
   type ConnectorContext,
   type ConnectorFactory,
   type HealthStatus,
+  NotImplementedError,
   type RawOrder,
   type RawProduct,
 } from '../types.js';
