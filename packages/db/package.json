@@ -22,6 +22,7 @@
     "test:integration": "echo '(integration via supabase db reset in CI)'"
   },
   "dependencies": {
+    "@faka/schema": "workspace:*",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.1"
   },
