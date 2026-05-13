@@ -1,54 +1,31 @@
-export type Channel = 'wordpress' | 'mercadolibre' | 'dropi' | 'pos' | 'pos1' | 'pos2' | 'whatsapp';
+// scripts/discovery/types.ts
+// Re-export from @faka/schema (PATTERNS §5.2 — MOVE don't copy).
+// The discovery script keeps working; production schema is the single
+// source of truth.
 
-export interface CanonicalProduct {
-  channel: Channel;
-  external_id: string;
-  sku?: string;
-  name: string;
-  description?: string;
-  category?: string;
-  brand?: string;
-  price?: number;
-  cost?: number;
-  barcode?: string;
-  supplier_code?: string;
-  image_url?: string;
-  status?: string;
-  raw_row: Record<string, string>;
-}
+export type {
+  CanonicalProduct,
+  Channel,
+  MatchMethod,
+  MappingProfile,
+} from '@faka/schema';
 
-export type MatchMethod =
-  | 'barcode_exact'
-  | 'supplier_code_exact'
-  | 'sku_exact'
-  | 'normalized_name_exact'
-  | 'embeddings_high'
-  | 'embeddings_mid'
-  | 'llm_arbiter_match'
-  | 'llm_arbiter_reject'
-  | 'unresolved';
+// Match results are discovery-only (no production analog needed).
+// They describe the in-script cascade output for the matching report.
 
 export interface MatchResult {
-  anchor: CanonicalProduct;
-  candidate: CanonicalProduct;
-  method: MatchMethod;
+  anchor: import('@faka/schema').CanonicalProduct;
+  candidate: import('@faka/schema').CanonicalProduct;
+  method: import('@faka/schema').MatchMethod;
   score: number;
   rationale?: string;
-}
-
-export interface MappingProfile {
-  channel: Channel;
-  type: 'products' | 'orders' | 'order_items';
-  delimiter?: string;
-  column_map: Record<string, string>;
-  defaults?: Record<string, string>;
 }
 
 export interface DiscoveryConfig {
   inputDir: string;
   outputDir: string;
   profilesDir: string;
-  anchorChannel: Channel;
+  anchorChannel: import('@faka/schema').Channel;
   enableEmbeddings: boolean;
   enableLLMArbiter: boolean;
   embeddingThresholdHigh: number;
@@ -60,10 +37,13 @@ export interface DiscoveryConfig {
 
 export interface DiscoveryReport {
   generated_at: string;
-  config: Pick<DiscoveryConfig, 'anchorChannel' | 'embeddingThresholdHigh' | 'embeddingThresholdMid' | 'llmProvider' | 'llmModelName'>;
-  inputs: Array<{ channel: Channel; file: string; row_count: number }>;
+  config: Pick<
+    DiscoveryConfig,
+    'anchorChannel' | 'embeddingThresholdHigh' | 'embeddingThresholdMid' | 'llmProvider' | 'llmModelName'
+  >;
+  inputs: Array<{ channel: import('@faka/schema').Channel; file: string; row_count: number }>;
   totals_by_channel: Record<string, number>;
-  matches_by_method: Record<MatchMethod, number>;
+  matches_by_method: Record<import('@faka/schema').MatchMethod, number>;
   match_rate_automatic: number;
   match_rate_review_needed: number;
   unresolved_samples: Array<{ anchor: string; candidates: string[] }>;
