@@ -2,7 +2,5 @@
   "extends": "./packages/config/tsconfig.base.json",
   "files": [],
   "include": [],
-  "references": [
-    { "path": "./packages/config" }
-  ]
+  "references": []
 }
