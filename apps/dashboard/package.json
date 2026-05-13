@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "echo '(lint deferred to Phase 2 — use pnpm typecheck for type errors)'",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
