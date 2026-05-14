@@ -4,7 +4,8 @@
 
 - **Phase 0** (Discovery) — Claude-side completo. Cliente respondió cuestionario; 4 ADRs LOCKED derivados.
 - **Phase 1** (Foundation) — **92% código completo**: 24 de 26 plans en 39 commits. Solo faltan 2 plans de tests de integración (deferred hasta validar Supabase local).
-- **Phase 2–6** — Planificadas en ROADMAP, sin tocar.
+- **Phase 2** (Walking skeleton WordPress) — **EN CURSO**, planeado completo (RESEARCH+PATTERNS+PLAN+PLAN-CHECK), Wave 0 (scaffolding) y Wave 1 (schema) **COMPLETAS**. CI verde con types regenerados. Wave 2 (connectors) pendiente — pausado en `9a4cd28`.
+- **Phase 3–6** — Planificadas en ROADMAP, sin tocar.
 
 ## Stack
 
