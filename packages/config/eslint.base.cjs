@@ -46,15 +46,16 @@ module.exports = [
         {
           // RESEARCH §10 / Pitfall 5 — prevent SERVICE/SECRET/PRIVATE
           // env vars from being prefixed NEXT_PUBLIC_* (would expose
-          // them to the client bundle).
+          // them to the client bundle). F2 extends the deny-list with
+          // channel/provider credentials that must stay server-only.
           selector:
-            "MemberExpression[object.object.name='process'][object.property.name='env'][property.name=/^NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE).*$/]",
+            "MemberExpression[object.object.name='process'][object.property.name='env'][property.name=/^NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE|WORDPRESS|OPENAI|MOONSHOT|ANTHROPIC|GOOGLE_GENERATIVE_AI|AI_GATEWAY).*$/]",
           message:
-            'NEXT_PUBLIC_* env vars MUST NOT contain SERVICE/SECRET/PRIVATE — those are server-side only.',
+            'NEXT_PUBLIC_* env vars MUST NOT contain SERVICE/SECRET/PRIVATE or channel/provider credentials — those are server-side only.',
         },
         {
           selector:
-            "Literal[value=/^NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE).*$/]",
+            "Literal[value=/^NEXT_PUBLIC_.*(SERVICE|SECRET|PRIVATE|WORDPRESS|OPENAI|MOONSHOT|ANTHROPIC|GOOGLE_GENERATIVE_AI|AI_GATEWAY).*$/]",
           message:
             'String literal looks like a public-prefixed secret env var name — server-side env vars must NOT have NEXT_PUBLIC_ prefix.',
         },

@@ -32,3 +32,24 @@ restartPolicyType = "NEVER"
 # Minimum granularity on Railway is 5 minutes; UTC only.
 # F1: placeholder every 30 minutes. F2+ flips to per-channel sync cron.
 schedule = "*/30 * * * *"
+
+# ─── F2 environment surface ──────────────────────────────────────
+# Operator runbook: set these in the Railway service variables tab.
+# Both services (web + cron) read the same list. See DEPLOY.md for the
+# full token-routing table.
+#
+# Required for orchestrator to start:
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, PORT (web only), LOG_LEVEL
+#
+# WordPress (graceful degrade when any is unset — see PLAN §2.0.2):
+#   WORDPRESS_API_URL, WORDPRESS_API_KEY, WORDPRESS_API_SECRET,
+#   WORDPRESS_WEBHOOK_SECRET
+#
+# F2 matching cascade:
+#   MATCH_EMBED_HIGH, MATCH_EMBED_MID, MATCH_ARBITER, MATCH_QUEUE_CUTOFF,
+#   LLM_DAILY_TOKEN_CAP, EMBEDDING_MODEL, EMBEDDING_DIM, OPENAI_API_KEY
+#
+# F2 LLM arbiter (any ONE provider key is sufficient):
+#   AI_GATEWAY_API_KEY | ANTHROPIC_API_KEY | OPENAI_API_KEY |
+#   GOOGLE_GENERATIVE_AI_API_KEY | MOONSHOT_API_KEY
+#   plus optional LLM_PROVIDER + LLM_MODEL overrides.
