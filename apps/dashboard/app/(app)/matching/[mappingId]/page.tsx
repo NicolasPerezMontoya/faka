@@ -12,7 +12,6 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import {
   Badge,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -20,6 +19,7 @@ import {
 } from "@faka/ui";
 import type { UserRole } from "@faka/schema";
 import { getMappingDetail } from "../_actions/get-detail";
+import { DecisionBar } from "../_components/decision-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -84,8 +84,6 @@ export default async function MatchingDetailPage({
   const role = headers().get("x-user-role") as UserRole | null;
   const detail = await getMappingDetail(params.mappingId);
   if (!detail) notFound();
-
-  const alreadyValidated = detail.validado_humano;
 
   return (
     <div>
@@ -163,18 +161,10 @@ export default async function MatchingDetailPage({
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-3">
-        {alreadyValidated ? (
-          <Badge variant="ok">Ya validado</Badge>
-        ) : (
-          <>
-            <Button variant="destructive" disabled title="Pendiente: plan 2.4.3">
-              Rechazar
-            </Button>
-            <Button variant="success" disabled title="Pendiente: plan 2.4.3">
-              Aceptar
-            </Button>
-          </>
-        )}
+        <DecisionBar
+          mappingId={detail.mapping_id}
+          alreadyValidated={detail.validado_humano}
+        />
       </div>
 
       {role && (
