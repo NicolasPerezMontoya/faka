@@ -18,23 +18,23 @@ Seven warnings below describe quality / process concerns that should be addresse
 
 ### ROADMAP Success Criteria → Plans
 
-| SC | ROADMAP claim | Plans that produce it | Verification |
-|----|---------------|-----------------------|--------------|
-| **SC1** | WP orders flow into `sales` + `sale_items` with ≤15 min latency via REST + WC webhooks + 1h scheduled pull | **2.2.1** (REST client + webhook verify/dedupe + degraded mode) · **2.3.1** (webhook route: HMAC verify + dedupe + raw_orders insert + ACK fast) · **2.3.2** (async cron drains `raw_orders WHERE processed=false`, normalizes, UPSERTs, runs cascade) · **2.3.3** (hourly `sync-wp-orders` + `sync-wp-products` REST pulls) · **2.5.3** (webhook integration test) · **2.5.4** (`wp-latency-smoke.ts` end-to-end timer) | F2-CC-10, F2-CC-14, F2-CC-15 |
-| **SC2** | Historical WP backfilled via `CSVConnector` and visible alongside live data | **2.0.3** (WP orders CSV mapping profile seeded) · **2.4.5** (10-row `wp-orders-sample.csv` fixture + wizard callout, reuses F1's `commitUpload`) | F2-CC-16; W1 invariant grep gate on `applyColumnMap` (F2-CC-3) |
-| **SC3** | 5-level cascade (barcode → supplier_code → normalized_name → embeddings → LLM arbiter); items below threshold land in validation queue; humans flip `validado_humano=true` | **2.0.1** (`@faka/llm` extraction) · **2.1.1** (`product_embeddings` table + HNSW) · **2.2.2** (levels 1-3 + thresholds + `normalize_name` function/column) · **2.2.3** (level 4 embeddings + re-embed service) · **2.2.4** (level 5 LLM arbiter + token cap) · **2.2.5** (`runMatchCascade` + `persistMatch`) · **2.3.2** (cascade triggered post-ingest) · **2.3.4** (`re-cascade-unmatched` cron for stuck items) · **2.4.1** (queue list) · **2.4.2** (side-by-side detail + keyboard shortcuts) · **2.4.3** (validate/reject/bulk Server Actions + role gate excluding Analista) · **2.5.2** (cascade integration test — 12 cases) · **2.5.3** (validation test — `validado_humano=true` flip + audit_log + analista 403) | F2-CC-11, F2-CC-12, F2-CC-17 |
-| **SC4** | "Hoy" view: totals + per-channel chart + top 10 + last-hour realtime feed; refreshed within 15-min budget | **2.1.2** (4 `v_hoy_*` views + `v_hoy_per_channel_analista` variant) · **2.4.4** (`/hoy` page with 4 panels + role-aware $ redaction) · **2.4.5** (Realtime live-feed Client Component) · **2.5.3** (`hoy/views.integration.test.ts` — 7 tests including timezone) | F2-CC-7, F2-CC-13, F2-CC-15 |
+| SC      | ROADMAP claim                                                                                                                                                              | Plans that produce it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verification                                                   |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| **SC1** | WP orders flow into `sales` + `sale_items` with ≤15 min latency via REST + WC webhooks + 1h scheduled pull                                                                 | **2.2.1** (REST client + webhook verify/dedupe + degraded mode) · **2.3.1** (webhook route: HMAC verify + dedupe + raw_orders insert + ACK fast) · **2.3.2** (async cron drains `raw_orders WHERE processed=false`, normalizes, UPSERTs, runs cascade) · **2.3.3** (hourly `sync-wp-orders` + `sync-wp-products` REST pulls) · **2.5.3** (webhook integration test) · **2.5.4** (`wp-latency-smoke.ts` end-to-end timer)                                                                                                                                                                                                                                                                                                       | F2-CC-10, F2-CC-14, F2-CC-15                                   |
+| **SC2** | Historical WP backfilled via `CSVConnector` and visible alongside live data                                                                                                | **2.0.3** (WP orders CSV mapping profile seeded) · **2.4.5** (10-row `wp-orders-sample.csv` fixture + wizard callout, reuses F1's `commitUpload`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | F2-CC-16; W1 invariant grep gate on `applyColumnMap` (F2-CC-3) |
+| **SC3** | 5-level cascade (barcode → supplier_code → normalized_name → embeddings → LLM arbiter); items below threshold land in validation queue; humans flip `validado_humano=true` | **2.0.1** (`@faka/llm` extraction) · **2.1.1** (`product_embeddings` table + HNSW) · **2.2.2** (levels 1-3 + thresholds + `normalize_name` function/column) · **2.2.3** (level 4 embeddings + re-embed service) · **2.2.4** (level 5 LLM arbiter + token cap) · **2.2.5** (`runMatchCascade` + `persistMatch`) · **2.3.2** (cascade triggered post-ingest) · **2.3.4** (`re-cascade-unmatched` cron for stuck items) · **2.4.1** (queue list) · **2.4.2** (side-by-side detail + keyboard shortcuts) · **2.4.3** (validate/reject/bulk Server Actions + role gate excluding Analista) · **2.5.2** (cascade integration test — 12 cases) · **2.5.3** (validation test — `validado_humano=true` flip + audit_log + analista 403) | F2-CC-11, F2-CC-12, F2-CC-17                                   |
+| **SC4** | "Hoy" view: totals + per-channel chart + top 10 + last-hour realtime feed; refreshed within 15-min budget                                                                  | **2.1.2** (4 `v_hoy_*` views + `v_hoy_per_channel_analista` variant) · **2.4.4** (`/hoy` page with 4 panels + role-aware $ redaction) · **2.4.5** (Realtime live-feed Client Component) · **2.5.3** (`hoy/views.integration.test.ts` — 7 tests including timezone)                                                                                                                                                                                                                                                                                                                                                                                                                                                             | F2-CC-7, F2-CC-13, F2-CC-15                                    |
 
 ### Requirements → Plans
 
-| Req | Description | Plans | Status |
-|-----|-------------|-------|--------|
-| **WP-01** | WP `ChannelConnector` live (REST + webhooks; 1h pull) | 2.0.2, 2.0.4, 2.2.1, 2.3.1, 2.3.3 | COVERED (degraded mode when creds absent) |
-| **WP-02** | WP historical backfill via `CSVConnector` | 2.0.3, 2.4.5 | COVERED |
-| **WP-03** | 5-level matching cascade end-to-end + queue routing | 2.0.1, 2.1.1, 2.2.2, 2.2.3, 2.2.4, 2.2.5, 2.3.2, 2.3.4 | COVERED |
-| **WP-04** | Validation queue UI + `validado_humano=true` flip | 2.4.1, 2.4.2, 2.4.3, 2.5.3 | COVERED |
-| **WP-05** | "Hoy" view MVP slice (totals + per-canal + top 10 + last-hour) | 2.1.2, 2.4.4, 2.4.5, 2.5.3 | COVERED |
-| **WP-06** | ≤15 min day-sales latency end-to-end | 2.3.1, 2.3.2, 2.4.5, 2.5.4 | COVERED (live verification requires WP creds; CSV path validated regardless) |
+| Req       | Description                                                    | Plans                                                  | Status                                                                       |
+| --------- | -------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| **WP-01** | WP `ChannelConnector` live (REST + webhooks; 1h pull)          | 2.0.2, 2.0.4, 2.2.1, 2.3.1, 2.3.3                      | COVERED (degraded mode when creds absent)                                    |
+| **WP-02** | WP historical backfill via `CSVConnector`                      | 2.0.3, 2.4.5                                           | COVERED                                                                      |
+| **WP-03** | 5-level matching cascade end-to-end + queue routing            | 2.0.1, 2.1.1, 2.2.2, 2.2.3, 2.2.4, 2.2.5, 2.3.2, 2.3.4 | COVERED                                                                      |
+| **WP-04** | Validation queue UI + `validado_humano=true` flip              | 2.4.1, 2.4.2, 2.4.3, 2.5.3                             | COVERED                                                                      |
+| **WP-05** | "Hoy" view MVP slice (totals + per-canal + top 10 + last-hour) | 2.1.2, 2.4.4, 2.4.5, 2.5.3                             | COVERED                                                                      |
+| **WP-06** | ≤15 min day-sales latency end-to-end                           | 2.3.1, 2.3.2, 2.4.5, 2.5.4                             | COVERED (live verification requires WP creds; CSV path validated regardless) |
 
 **Coverage: 6/6 WP-NN requirements + 4/4 ROADMAP success criteria.**
 
@@ -61,7 +61,7 @@ Seven warnings below describe quality / process concerns that should be addresse
 
 ### WARNING-1: Additive migrations in Waves 2/3/4 are not bundled with a types-regen task
 
-**Plans affected:** 2.2.1 (`20260601000003_raw_events_dedup_index.sql` *"if needed"*), 2.2.2 (`...0004_master_products_nombre_normalizado.sql`), 2.2.4 (`...0005_connector_runs_metadata.sql` *"if not present"*), 2.2.5 (`...0006_product_mappings_metadata.sql` *"optionally"*), 2.3.1 (`...0007_raw_orders_processed_flag.sql` *"if needed"*), 2.3.2 (`...0008_sale_items_unique.sql` *"if not present"*), 2.4.2 (`...0009_product_mappings_rationale.sql` *"if not present"*).
+**Plans affected:** 2.2.1 (`20260601000003_raw_events_dedup_index.sql` _"if needed"_), 2.2.2 (`...0004_master_products_nombre_normalizado.sql`), 2.2.4 (`...0005_connector_runs_metadata.sql` _"if not present"_), 2.2.5 (`...0006_product_mappings_metadata.sql` _"optionally"_), 2.3.1 (`...0007_raw_orders_processed_flag.sql` _"if needed"_), 2.3.2 (`...0008_sale_items_unique.sql` _"if not present"_), 2.4.2 (`...0009_product_mappings_rationale.sql` _"if not present"_).
 
 **Issue:** Plan 2.1.3 regenerates `database.ts` only for migrations 14 + 15 (Wave 1). Plans 2.2.x / 2.3.x / 2.4.x that may add migrations 16-19 do not include a `pnpm --filter @faka/db run types && git diff --exit-code` step in their `Verifies:` section. Notes for executors §3 acknowledges the contiguous numbering but does not assign types-regen ownership for late-wave additive migrations. The strict CI types-committed gate will hard-fail on any of those late-wave commits unless the executor remembers manually.
 
@@ -79,7 +79,7 @@ Seven warnings below describe quality / process concerns that should be addresse
 
 **Plan affected:** 2.0.3.
 
-**Issue:** The `Task:` description starts by saying "Scaffold `packages/connectors/src/wordpress/` AND `packages/connectors/src/matching/` directories with empty placeholder files" and then mid-paragraph reverses itself: *"Revision: don't pre-create empty files for matching/wordpress that 2.2.X will overwrite — instead, just confirm the directories don't exist yet, and the plan's 'new files' list is the source of truth for which files to create. **This plan does only the WP CSV mapping profile extension below.**"*
+**Issue:** The `Task:` description starts by saying "Scaffold `packages/connectors/src/wordpress/` AND `packages/connectors/src/matching/` directories with empty placeholder files" and then mid-paragraph reverses itself: _"Revision: don't pre-create empty files for matching/wordpress that 2.2.X will overwrite — instead, just confirm the directories don't exist yet, and the plan's 'new files' list is the source of truth for which files to create. **This plan does only the WP CSV mapping profile extension below.**"_
 
 **Fix:** During execution kick-off, rewrite 2.0.3 so the `Task:` block describes only the WP orders CSV profile insert (the actual scope). The scaffold-vs-not-scaffold debate should be removed. The intent is clear from the final sentence, but a fresh executor reading the plan top-to-bottom will be confused.
 
@@ -104,6 +104,7 @@ Seven warnings below describe quality / process concerns that should be addresse
 **Plan affected:** 2.4.4.
 
 **Issue:** Plan 2.4.4 introduces two patterns for analista $ redaction:
+
 - For `v_hoy_per_channel`: a SQL view variant `v_hoy_per_channel_analista` (with `null::numeric as ingresos`) is queried conditionally.
 - For `v_hoy_totals`: NO view variant; the page applies `if (role === 'analista') totalsRow.ingresos_hoy = null;` in TS code.
 
@@ -123,28 +124,28 @@ This dual mechanism makes the column-redaction contract ambiguous. If a future c
 
 ## 4. Coverage summary
 
-| Requirement | Covered? | By plans |
-|-------------|----------|----------|
-| WP-01 | YES | 2.0.2, 2.0.4, 2.2.1, 2.3.1, 2.3.3 |
-| WP-02 | YES | 2.0.3, 2.4.5 |
-| WP-03 | YES | 2.0.1, 2.1.1, 2.2.2, 2.2.3, 2.2.4, 2.2.5, 2.3.2, 2.3.4 |
-| WP-04 | YES | 2.4.1, 2.4.2, 2.4.3, 2.5.3 |
-| WP-05 | YES | 2.1.2, 2.4.4, 2.4.5, 2.5.3 |
-| WP-06 | YES | 2.3.1, 2.3.2, 2.4.5, 2.5.4 (live verification needs WP creds; CSV path proves the pipeline end-to-end regardless) |
+| Requirement | Covered? | By plans                                                                                                          |
+| ----------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| WP-01       | YES      | 2.0.2, 2.0.4, 2.2.1, 2.3.1, 2.3.3                                                                                 |
+| WP-02       | YES      | 2.0.3, 2.4.5                                                                                                      |
+| WP-03       | YES      | 2.0.1, 2.1.1, 2.2.2, 2.2.3, 2.2.4, 2.2.5, 2.3.2, 2.3.4                                                            |
+| WP-04       | YES      | 2.4.1, 2.4.2, 2.4.3, 2.5.3                                                                                        |
+| WP-05       | YES      | 2.1.2, 2.4.4, 2.4.5, 2.5.3                                                                                        |
+| WP-06       | YES      | 2.3.1, 2.3.2, 2.4.5, 2.5.4 (live verification needs WP creds; CSV path proves the pipeline end-to-end regardless) |
 
 **No WP-NN requirement is unmapped.**
 
 ### Invariant gates (verified present in PLAN.md)
 
-| Invariant | Check | Where enforced |
-|-----------|-------|----------------|
-| **W1** | `applyColumnMap` is CSV-only | 2.2.1 anti-duplication note + grep gate; F2-CC-3 phase-boundary check |
-| **W2** | `cron-heartbeat` stays out of channel enum | 2.3.2/2.3.3/2.3.4 anti-duplication notes + grep gates; F2-CC-4 phase-boundary check |
-| **W5** | Pages read `x-user-role` header, never `getUser()` | 2.4.1/2.4.2/2.4.4 anti-duplication notes; F2-CC-5 phase-boundary check |
-| **CC-11** | No `NEXT_PUBLIC_*SECRET/SERVICE/PRIVATE/WORDPRESS/OPENAI/...` | 2.0.2 eslint regex extension + 2.4.5 grep gate; F2-CC-6 phase-boundary check |
-| **CC-12** | Every new view declares `security_invoker = true` | 2.1.2 count-equality lint; F2-CC-7 phase-boundary check |
-| **CC-13** | Storage payloads immutable | F2-CC-8 phase-boundary check (relies on F1 invariant; no F2 plan overwrites Storage objects) |
-| **CC-14** | `messaging_log` stays empty in F2 | 2.3.1 webhook test (g) + 2.5.3 webhook test 8 + F2-CC-9 phase-boundary check |
+| Invariant | Check                                                         | Where enforced                                                                               |
+| --------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **W1**    | `applyColumnMap` is CSV-only                                  | 2.2.1 anti-duplication note + grep gate; F2-CC-3 phase-boundary check                        |
+| **W2**    | `cron-heartbeat` stays out of channel enum                    | 2.3.2/2.3.3/2.3.4 anti-duplication notes + grep gates; F2-CC-4 phase-boundary check          |
+| **W5**    | Pages read `x-user-role` header, never `getUser()`            | 2.4.1/2.4.2/2.4.4 anti-duplication notes; F2-CC-5 phase-boundary check                       |
+| **CC-11** | No `NEXT_PUBLIC_*SECRET/SERVICE/PRIVATE/WORDPRESS/OPENAI/...` | 2.0.2 eslint regex extension + 2.4.5 grep gate; F2-CC-6 phase-boundary check                 |
+| **CC-12** | Every new view declares `security_invoker = true`             | 2.1.2 count-equality lint; F2-CC-7 phase-boundary check                                      |
+| **CC-13** | Storage payloads immutable                                    | F2-CC-8 phase-boundary check (relies on F1 invariant; no F2 plan overwrites Storage objects) |
+| **CC-14** | `messaging_log` stays empty in F2                             | 2.3.1 webhook test (g) + 2.5.3 webhook test 8 + F2-CC-9 phase-boundary check                 |
 
 All seven invariants have at least one grep gate, lint, or integration test.
 

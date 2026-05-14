@@ -14,60 +14,61 @@ The work splits into five tight slices: (1) WordPress connector — REST pull ev
 
 ## Architectural Responsibility Map
 
-| Capability | Primary Tier | Secondary Tier | Rationale |
-|------------|-------------|----------------|-----------|
-| WC webhook receipt + signature verify | Orchestrator (Hono on Railway) | — | Webhook needs a public stable URL; Vercel functions are fine but Railway already hosts cron + retry + DLQ infra |
-| WC REST pull (orders 1h, products 1h) | Orchestrator cron | — | Railway cron is the F1 sync host; min granularity 5min suits 1h cadence |
-| Idempotent UPSERT into `raw_orders` / `sales` / `sale_items` | Orchestrator (service-role Supabase client) | — | RLS bypass needed; service-role only exists server-side |
-| CSV historical backfill (WP profile) | Dashboard `commit-upload` action → `CSVConnector` | Orchestrator (reprocess) | W1 boundary: `applyColumnMap` lives ONLY in CSVConnector |
-| Matching cascade (5 levels) | Orchestrator (post-ingest job) | — | Calls OpenAI embeddings + LLM; needs retry; runs out-of-band of webhook ACK |
-| Embedding generation + pgvector write | Orchestrator | — | Long-lived process can batch + backoff; Vercel functions have 60s timeout |
-| Validation queue UI | Dashboard (App Router Server Component + Server Action) | — | Auth + role check + role-gated views live here |
-| "Hoy" view query | Dashboard (Server Component) | DB view | View hides per-channel join complexity from React |
-| Realtime last-hour feed | Dashboard (client component) | Supabase Realtime | Direct WebSocket subscription on `sales` filtered by `fecha=today` |
-| `audit_log` write on validation | Dashboard server action | — | App-layer rule per F1 |
-| `connector_runs` write per WP sync | Orchestrator | — | `recordConnectorRun` is the only writer |
+| Capability                                                   | Primary Tier                                            | Secondary Tier           | Rationale                                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| WC webhook receipt + signature verify                        | Orchestrator (Hono on Railway)                          | —                        | Webhook needs a public stable URL; Vercel functions are fine but Railway already hosts cron + retry + DLQ infra |
+| WC REST pull (orders 1h, products 1h)                        | Orchestrator cron                                       | —                        | Railway cron is the F1 sync host; min granularity 5min suits 1h cadence                                         |
+| Idempotent UPSERT into `raw_orders` / `sales` / `sale_items` | Orchestrator (service-role Supabase client)             | —                        | RLS bypass needed; service-role only exists server-side                                                         |
+| CSV historical backfill (WP profile)                         | Dashboard `commit-upload` action → `CSVConnector`       | Orchestrator (reprocess) | W1 boundary: `applyColumnMap` lives ONLY in CSVConnector                                                        |
+| Matching cascade (5 levels)                                  | Orchestrator (post-ingest job)                          | —                        | Calls OpenAI embeddings + LLM; needs retry; runs out-of-band of webhook ACK                                     |
+| Embedding generation + pgvector write                        | Orchestrator                                            | —                        | Long-lived process can batch + backoff; Vercel functions have 60s timeout                                       |
+| Validation queue UI                                          | Dashboard (App Router Server Component + Server Action) | —                        | Auth + role check + role-gated views live here                                                                  |
+| "Hoy" view query                                             | Dashboard (Server Component)                            | DB view                  | View hides per-channel join complexity from React                                                               |
+| Realtime last-hour feed                                      | Dashboard (client component)                            | Supabase Realtime        | Direct WebSocket subscription on `sales` filtered by `fecha=today`                                              |
+| `audit_log` write on validation                              | Dashboard server action                                 | —                        | App-layer rule per F1                                                                                           |
+| `connector_runs` write per WP sync                           | Orchestrator                                            | —                        | `recordConnectorRun` is the only writer                                                                         |
 
 ## Standard Stack
 
 ### Core
 
-| Library | Version (verified target) | Purpose | Why Standard |
-|---------|---------|---------|--------------|
-| `@woocommerce/woocommerce-rest-api` | `^1.0.2` `[CITED: woocommerce.github.io REST docs]` | WC REST v3 client (OAuth1.0a over HTTPS, pagination helpers) | Official SDK from WooCommerce; uses correct WC v3 contract |
-| `openai` | `^4.x` (or reuse `@ai-sdk/openai` already in F1) `[VERIFIED: F1 lockfile uses @ai-sdk/openai]` | Embeddings (`text-embedding-3-small`) | Already in stack via AI SDK; one less new dep |
-| `ai` + `@ai-sdk/*` | `^4.x` `[VERIFIED: scripts/discovery/llm-arbiter.ts imports]` | LLM arbiter (Kimi K2 / Claude Haiku / OpenAI / Gemini) | Already the F1 adapter pattern; reuse, do NOT replace |
-| `@supabase/supabase-js` | `^2.105.1` `[VERIFIED: apps/orchestrator/package.json]` | Service-role client | F1 default |
-| `@supabase/ssr` | `^0.10.3` `[VERIFIED: apps/dashboard/package.json]` | Dashboard auth + Realtime client init | F1 default |
-| `hono` | `^4.6.14` `[VERIFIED: orchestrator package.json]` | Webhook receiver | F1 default |
-| `@hono/zod-validator` | `^0.4.2` `[VERIFIED: orchestrator package.json]` | Webhook body validation | F1 default |
-| `zod` | `^3.24.0` `[VERIFIED]` | Shared schema validation | F1 default |
-| `p-retry` | `^7.0.0` `[VERIFIED: orchestrator package.json]` | Exponential backoff on REST + OpenAI calls | F1 default |
-| `csv-parse` | `^6.2.1` `[VERIFIED: dashboard package.json]` | WP historical CSV parsing in `CSVConnector` | F1 default |
-| `pgvector` Postgres extension | enabled in migration 0001 `[VERIFIED]` | Vector storage + ANN search | Already on |
-| `pg_trgm` Postgres extension | enabled in migration 0001 `[VERIFIED]` | Trigram similarity (fallback for normalized name fuzzy) | Already on |
+| Library                             | Version (verified target)                                                                      | Purpose                                                      | Why Standard                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| `@woocommerce/woocommerce-rest-api` | `^1.0.2` `[CITED: woocommerce.github.io REST docs]`                                            | WC REST v3 client (OAuth1.0a over HTTPS, pagination helpers) | Official SDK from WooCommerce; uses correct WC v3 contract |
+| `openai`                            | `^4.x` (or reuse `@ai-sdk/openai` already in F1) `[VERIFIED: F1 lockfile uses @ai-sdk/openai]` | Embeddings (`text-embedding-3-small`)                        | Already in stack via AI SDK; one less new dep              |
+| `ai` + `@ai-sdk/*`                  | `^4.x` `[VERIFIED: scripts/discovery/llm-arbiter.ts imports]`                                  | LLM arbiter (Kimi K2 / Claude Haiku / OpenAI / Gemini)       | Already the F1 adapter pattern; reuse, do NOT replace      |
+| `@supabase/supabase-js`             | `^2.105.1` `[VERIFIED: apps/orchestrator/package.json]`                                        | Service-role client                                          | F1 default                                                 |
+| `@supabase/ssr`                     | `^0.10.3` `[VERIFIED: apps/dashboard/package.json]`                                            | Dashboard auth + Realtime client init                        | F1 default                                                 |
+| `hono`                              | `^4.6.14` `[VERIFIED: orchestrator package.json]`                                              | Webhook receiver                                             | F1 default                                                 |
+| `@hono/zod-validator`               | `^0.4.2` `[VERIFIED: orchestrator package.json]`                                               | Webhook body validation                                      | F1 default                                                 |
+| `zod`                               | `^3.24.0` `[VERIFIED]`                                                                         | Shared schema validation                                     | F1 default                                                 |
+| `p-retry`                           | `^7.0.0` `[VERIFIED: orchestrator package.json]`                                               | Exponential backoff on REST + OpenAI calls                   | F1 default                                                 |
+| `csv-parse`                         | `^6.2.1` `[VERIFIED: dashboard package.json]`                                                  | WP historical CSV parsing in `CSVConnector`                  | F1 default                                                 |
+| `pgvector` Postgres extension       | enabled in migration 0001 `[VERIFIED]`                                                         | Vector storage + ANN search                                  | Already on                                                 |
+| `pg_trgm` Postgres extension        | enabled in migration 0001 `[VERIFIED]`                                                         | Trigram similarity (fallback for normalized name fuzzy)      | Already on                                                 |
 
 ### Supporting
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| `p-limit` | `^6.x` `[ASSUMED]` | Concurrency cap for embedding batches | When backfilling 5–20k product embeddings — cap to 5 concurrent requests |
-| `unorm` or built-in `String.normalize('NFD')` | built-in | Accent stripping for normalized-name level | Use built-in; no extra dep needed |
-| `dayjs` or `date-fns` | — | Timezone math (America/Bogota for "Hoy") | Use Intl + `toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })` — no extra dep |
+| Library                                       | Version            | Purpose                                    | When to Use                                                                             |
+| --------------------------------------------- | ------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `p-limit`                                     | `^6.x` `[ASSUMED]` | Concurrency cap for embedding batches      | When backfilling 5–20k product embeddings — cap to 5 concurrent requests                |
+| `unorm` or built-in `String.normalize('NFD')` | built-in           | Accent stripping for normalized-name level | Use built-in; no extra dep needed                                                       |
+| `dayjs` or `date-fns`                         | —                  | Timezone math (America/Bogota for "Hoy")   | Use Intl + `toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })` — no extra dep |
 
 ### Alternatives Considered
 
-| Instead of | Could Use | Tradeoff |
-|------------|-----------|----------|
+| Instead of                                                 | Could Use                                                                   | Tradeoff                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `text-embedding-3-small` (OpenAI, 1536 dim, ~$0.02/1M tok) | Voyage `voyage-3-lite` (512 dim, $0.02/1M tok) `[CITED: blog.voyageai.com]` | Voyage halves vector storage. Skip in v1 because (a) it adds a 2nd vendor, (b) OpenAI key likely already provisioned for arbiter fallback, (c) ~5–20k products × 1536 × 4B ≈ 30–120 MB — negligible on Supabase Pro. Revisit if embedding bills exceed $5/mo. |
-| `text-embedding-3-small` | `multilingual-e5-large` self-hosted | Self-host adds Railway compute + cold-start latency; the ~$0.02/1M tok OpenAI cost is dominated by the LLM arbiter bill |
-| `text-embedding-3-small` | `text-embedding-3-large` (3072 dim) | 6.5× cost ($0.13/1M tok) for ~3 MRR-points; not worth it for ~5–20k Spanish product names where lexical matching already covers most cases |
-| WC official SDK | hand-rolled `fetch` | SDK handles OAuth1.0a query-string signing over HTTPS (auth_method=`query_string` for HTTPS endpoints); save time |
-| WC REST pull | WPGraphQL | Not core to WC; orders endpoint less stable |
-| TypeScript cascade module | Postgres function `match_product()` | SQL function can't call OpenAI/LLM. Keeping cascade in TS lets levels 1–3 use SQL queries while levels 4–5 use external calls in the same flow. |
-| HNSW index | IVFFlat | `[VERIFIED: supabase.com docs]` Supabase explicitly recommends HNSW; ~1.5ms vs 2.4ms at our scale, better recall, handles write churn (we'll re-embed when names change) |
+| `text-embedding-3-small`                                   | `multilingual-e5-large` self-hosted                                         | Self-host adds Railway compute + cold-start latency; the ~$0.02/1M tok OpenAI cost is dominated by the LLM arbiter bill                                                                                                                                       |
+| `text-embedding-3-small`                                   | `text-embedding-3-large` (3072 dim)                                         | 6.5× cost ($0.13/1M tok) for ~3 MRR-points; not worth it for ~5–20k Spanish product names where lexical matching already covers most cases                                                                                                                    |
+| WC official SDK                                            | hand-rolled `fetch`                                                         | SDK handles OAuth1.0a query-string signing over HTTPS (auth_method=`query_string` for HTTPS endpoints); save time                                                                                                                                             |
+| WC REST pull                                               | WPGraphQL                                                                   | Not core to WC; orders endpoint less stable                                                                                                                                                                                                                   |
+| TypeScript cascade module                                  | Postgres function `match_product()`                                         | SQL function can't call OpenAI/LLM. Keeping cascade in TS lets levels 1–3 use SQL queries while levels 4–5 use external calls in the same flow.                                                                                                               |
+| HNSW index                                                 | IVFFlat                                                                     | `[VERIFIED: supabase.com docs]` Supabase explicitly recommends HNSW; ~1.5ms vs 2.4ms at our scale, better recall, handles write churn (we'll re-embed when names change)                                                                                      |
 
 **Installation (add to packages/connectors):**
+
 ```bash
 pnpm --filter @faka/connectors add @woocommerce/woocommerce-rest-api p-limit
 # AI SDK + OpenAI already present via F1 llm-arbiter
@@ -203,14 +204,21 @@ packages/db/supabase/migrations/
 **When to use:** All push WordPress events. Order.created, order.updated, product.updated.
 
 **Example:**
+
 ```typescript
 // packages/connectors/src/wordpress/webhook-verify.ts
 // Source: https://hookdeck.com/webhooks/platforms/guide-to-woocommerce-webhooks-features-and-best-practices
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export function verifyWooSignature(rawBody: Buffer, signatureHeader: string | undefined, secret: string): boolean {
+export function verifyWooSignature(
+  rawBody: Buffer,
+  signatureHeader: string | undefined,
+  secret: string,
+): boolean {
   if (!signatureHeader) return false;
-  const expected = createHmac("sha256", secret).update(rawBody).digest("base64");
+  const expected = createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("base64");
   // timing-safe compare on equal-length buffers
   const a = Buffer.from(expected);
   const b = Buffer.from(signatureHeader);
@@ -222,18 +230,20 @@ export function verifyWooSignature(rawBody: Buffer, signatureHeader: string | un
 ```typescript
 // apps/orchestrator/src/server.ts (replaces 501 stub)
 app.post("/webhooks/wordpress", async (c) => {
-  const rawBody = Buffer.from(await c.req.arrayBuffer());      // CRITICAL — do not parse first
+  const rawBody = Buffer.from(await c.req.arrayBuffer()); // CRITICAL — do not parse first
   const sig = c.req.header("x-wc-webhook-signature");
   const deliveryId = c.req.header("x-wc-webhook-delivery-id");
-  const topic = c.req.header("x-wc-webhook-topic");            // e.g. "order.created"
+  const topic = c.req.header("x-wc-webhook-topic"); // e.g. "order.created"
 
-  if (!verifyWooSignature(rawBody, sig, process.env.WORDPRESS_WEBHOOK_SECRET!)) {
+  if (
+    !verifyWooSignature(rawBody, sig, process.env.WORDPRESS_WEBHOOK_SECRET!)
+  ) {
     return c.json({ error: "invalid_signature" }, 401);
   }
 
   // Dedupe via raw_events on (canal='wordpress', tipo_evento=delivery_id)
   const existed = await checkDeliverySeen(supabase, deliveryId);
-  if (existed) return c.json({ ok: true, dedup: true });       // ACK 200 — at-least-once delivery handled
+  if (existed) return c.json({ ok: true, dedup: true }); // ACK 200 — at-least-once delivery handled
 
   const payload = JSON.parse(rawBody.toString("utf8"));
   await supabase.from("raw_orders").insert({
@@ -254,17 +264,21 @@ app.post("/webhooks/wordpress", async (c) => {
 **When to use:** Hourly catch-up sweep; insurance against missed webhooks.
 
 **Example:**
+
 ```typescript
 // packages/connectors/src/wordpress/fetch-orders.ts
 import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
 
-export async function fetchOrders(since: Date, cfg: { url: string; key: string; secret: string }) {
+export async function fetchOrders(
+  since: Date,
+  cfg: { url: string; key: string; secret: string },
+) {
   const api = new WooCommerceRestApi({
     url: cfg.url,
     consumerKey: cfg.key,
     consumerSecret: cfg.secret,
     version: "wc/v3",
-    queryStringAuth: true,   // OAuth1.0a-over-query-string on HTTPS endpoints
+    queryStringAuth: true, // OAuth1.0a-over-query-string on HTTPS endpoints
   });
   const out: WC_Order[] = [];
   let page = 1;
@@ -291,15 +305,33 @@ export async function fetchOrders(since: Date, cfg: { url: string; key: string; 
 **What:** Single function `runMatchCascade(item, ctx)` that tries each level in order and stops at the first method whose score meets the level cutoff. Below all cutoffs → unresolved → flagged for queue.
 
 **Example:**
+
 ```typescript
 // packages/connectors/src/matching/cascade.ts
-import type { SaleItemCandidate, MatchResult, CascadeContext } from "./types.js";
+import type {
+  SaleItemCandidate,
+  MatchResult,
+  CascadeContext,
+} from "./types.js";
 import { thresholds } from "./thresholds.js";
 
-export async function runMatchCascade(item: SaleItemCandidate, ctx: CascadeContext): Promise<MatchResult> {
+export async function runMatchCascade(
+  item: SaleItemCandidate,
+  ctx: CascadeContext,
+): Promise<MatchResult> {
   // Short-circuit if a prior human-validated mapping exists
-  const prior = await findValidatedMapping(ctx.supabase, item.canal, item.external_product_id);
-  if (prior) return { method: prior.match_method, score: 1.0, master_sku: prior.master_sku, source: "cache" };
+  const prior = await findValidatedMapping(
+    ctx.supabase,
+    item.canal,
+    item.external_product_id,
+  );
+  if (prior)
+    return {
+      method: prior.match_method,
+      score: 1.0,
+      master_sku: prior.master_sku,
+      source: "cache",
+    };
 
   // Level 1 — barcode exact
   if (item.barcode) {
@@ -312,19 +344,40 @@ export async function runMatchCascade(item: SaleItemCandidate, ctx: CascadeConte
     if (r) return { method: "supplier_code_exact", score: 1.0, master_sku: r };
   }
   // Level 3 — normalized name exact (NFD strip + lowercase + remove non-alphanum)
-  const r3 = await matchByNormalizedName(ctx.supabase, normalize(item.product_name));
-  if (r3) return { method: "normalized_name_exact", score: 0.9, master_sku: r3 };
+  const r3 = await matchByNormalizedName(
+    ctx.supabase,
+    normalize(item.product_name),
+  );
+  if (r3)
+    return { method: "normalized_name_exact", score: 0.9, master_sku: r3 };
 
   // Level 4 — embeddings ANN
-  const r4 = await matchByEmbedding(ctx.supabase, ctx.openai, item.product_name);
-  if (r4 && r4.score >= thresholds.embeddingsHigh) return { method: "embeddings_high", score: r4.score, master_sku: r4.master_sku };
-  if (r4 && r4.score >= thresholds.embeddingsMid)  {
+  const r4 = await matchByEmbedding(
+    ctx.supabase,
+    ctx.openai,
+    item.product_name,
+  );
+  if (r4 && r4.score >= thresholds.embeddingsHigh)
+    return {
+      method: "embeddings_high",
+      score: r4.score,
+      master_sku: r4.master_sku,
+    };
+  if (r4 && r4.score >= thresholds.embeddingsMid) {
     // Level 5 — arbiter on this top-K candidate
     const decision = await arbitrate(ctx.llmConfig, item, r4.candidate);
     if (decision.isMatch && decision.confidence >= thresholds.arbiterAccept) {
-      return { method: "llm_arbiter_match", score: decision.confidence, master_sku: r4.master_sku };
+      return {
+        method: "llm_arbiter_match",
+        score: decision.confidence,
+        master_sku: r4.master_sku,
+      };
     }
-    return { method: "llm_arbiter_reject", score: decision.confidence, master_sku: null };
+    return {
+      method: "llm_arbiter_reject",
+      score: decision.confidence,
+      master_sku: null,
+    };
   }
   return { method: "unresolved", score: r4?.score ?? 0, master_sku: null };
 }
@@ -333,10 +386,10 @@ export async function runMatchCascade(item: SaleItemCandidate, ctx: CascadeConte
 ```typescript
 // packages/connectors/src/matching/thresholds.ts — single source of truth
 export const thresholds = {
-  embeddingsHigh:  Number(process.env.MATCH_EMBED_HIGH  ?? 0.92),
-  embeddingsMid:   Number(process.env.MATCH_EMBED_MID   ?? 0.78),
-  arbiterAccept:   Number(process.env.MATCH_ARBITER     ?? 0.80),
-  queueCutoff:     Number(process.env.MATCH_QUEUE_CUTOFF ?? 0.78), // anything below → queue
+  embeddingsHigh: Number(process.env.MATCH_EMBED_HIGH ?? 0.92),
+  embeddingsMid: Number(process.env.MATCH_EMBED_MID ?? 0.78),
+  arbiterAccept: Number(process.env.MATCH_ARBITER ?? 0.8),
+  queueCutoff: Number(process.env.MATCH_QUEUE_CUTOFF ?? 0.78), // anything below → queue
 };
 ```
 
@@ -353,18 +406,18 @@ export const thresholds = {
 
 ## Don't Hand-Roll
 
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| WC OAuth1.0a signing over HTTP/HTTPS | Custom signer | `@woocommerce/woocommerce-rest-api` | Auth method differs between HTTP (Authorization header signing) and HTTPS (`queryStringAuth`); SDK handles both |
-| LLM provider routing (Kimi/Claude/OpenAI/Gemini) | Per-provider client | Existing `scripts/discovery/llm-arbiter.ts` adapter (lifted into `@faka/llm`) | F1 LOCKED pattern; second implementation would diverge |
-| Embedding generation retry/backoff | `try/catch` loop | `p-retry` (already in stack) + `p-limit` for concurrency | Battle-tested, exponential backoff with jitter |
-| Vector ANN search | brute-force in app | pgvector HNSW index | Database-native, single round-trip |
-| Spanish accent normalization | Hand regex | `String.prototype.normalize('NFD').replace(/\p{Diacritic}/gu, '')` | Built-in; correct for ñ/á/é/í/ó/ú |
-| Side-by-side comparison UI | Custom DOM diff | Tailwind grid + existing `@faka/ui` `Card` primitives | UI package shipped in F1 |
-| Realtime WebSocket | Custom WS server | `@supabase/supabase-js` `.channel().on('postgres_changes', …)` | Supabase Realtime 2026 supports row filters on INSERTs at <12ms p90 latency |
-| CSV parsing for WP historical | DIY split-on-comma | `csv-parse` (already in dashboard) + `applyColumnMap` in `CSVConnector` | W1 boundary is locked |
-| Idempotency key composition | Per-connector | `idempotencyKey(canal, externalOrderId)` helper | F1 already defines it |
-| Audit log row writes | Direct insert | `auditLog()` helper | F1 enforces `role_at_time` snapshot + payload truncation |
+| Problem                                          | Don't Build         | Use Instead                                                                   | Why                                                                                                             |
+| ------------------------------------------------ | ------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| WC OAuth1.0a signing over HTTP/HTTPS             | Custom signer       | `@woocommerce/woocommerce-rest-api`                                           | Auth method differs between HTTP (Authorization header signing) and HTTPS (`queryStringAuth`); SDK handles both |
+| LLM provider routing (Kimi/Claude/OpenAI/Gemini) | Per-provider client | Existing `scripts/discovery/llm-arbiter.ts` adapter (lifted into `@faka/llm`) | F1 LOCKED pattern; second implementation would diverge                                                          |
+| Embedding generation retry/backoff               | `try/catch` loop    | `p-retry` (already in stack) + `p-limit` for concurrency                      | Battle-tested, exponential backoff with jitter                                                                  |
+| Vector ANN search                                | brute-force in app  | pgvector HNSW index                                                           | Database-native, single round-trip                                                                              |
+| Spanish accent normalization                     | Hand regex          | `String.prototype.normalize('NFD').replace(/\p{Diacritic}/gu, '')`            | Built-in; correct for ñ/á/é/í/ó/ú                                                                               |
+| Side-by-side comparison UI                       | Custom DOM diff     | Tailwind grid + existing `@faka/ui` `Card` primitives                         | UI package shipped in F1                                                                                        |
+| Realtime WebSocket                               | Custom WS server    | `@supabase/supabase-js` `.channel().on('postgres_changes', …)`                | Supabase Realtime 2026 supports row filters on INSERTs at <12ms p90 latency                                     |
+| CSV parsing for WP historical                    | DIY split-on-comma  | `csv-parse` (already in dashboard) + `applyColumnMap` in `CSVConnector`       | W1 boundary is locked                                                                                           |
+| Idempotency key composition                      | Per-connector       | `idempotencyKey(canal, externalOrderId)` helper                               | F1 already defines it                                                                                           |
+| Audit log row writes                             | Direct insert       | `auditLog()` helper                                                           | F1 enforces `role_at_time` snapshot + payload truncation                                                        |
 
 **Key insight:** This phase has zero greenfield infrastructure — every helper exists. The work is composing them correctly. The biggest risk is duplicating the LLM adapter; lift the F1 one into a package.
 
@@ -381,6 +434,7 @@ export const thresholds = {
 **Why it happens:** WC retries on non-2xx **and** on timeout (5s). Two records of the same delivery_id can land seconds apart.
 
 **How to avoid:**
+
 1. `(canal, external_order_id)` UNIQUE on `sales` already makes the UPSERT idempotent for orders.
 2. ALSO dedupe at the webhook layer using `X-WC-Webhook-Delivery-ID` written to `raw_events` so we don't even enqueue work twice. INSERT with `ON CONFLICT (canal, tipo_evento, payload_json->>'delivery_id') DO NOTHING`.
 3. ACK the webhook within 2s — do the cascade async.
@@ -432,6 +486,7 @@ export const thresholds = {
 **What goes wrong:** Cascade level 5 fires on every item below `embeddingsHigh` threshold; arbiter charges per call; 500 daily orders × 3 items × $0.001 = $45/mo (Claude Haiku) or worse.
 
 **How to avoid:**
+
 1. `validado_humano=true` is sticky — same item never re-arbitrates.
 2. Cache `(canal, external_product_id) → master_sku` permanently in `product_mappings`.
 3. Use Kimi K2 (existing F1 default) — cheaper than Haiku for this kind of binary classification.
@@ -624,15 +679,26 @@ import { createBrowserClient } from "@supabase/ssr";
 export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
   const [rows, setRows] = useState(initialRows);
   useEffect(() => {
-    const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
     const ch = supabase
       .channel("sales-today")
-      .on("postgres_changes",
-          { event: "INSERT", schema: "public", table: "sales",
-            filter: `fecha=eq.${new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" })}` },
-          (payload) => setRows((r) => [payload.new as Row, ...r].slice(0, 50)))
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "sales",
+          filter: `fecha=eq.${new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" })}`,
+        },
+        (payload) => setRows((r) => [payload.new as Row, ...r].slice(0, 50)),
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, []);
   return /* table render */;
 }
@@ -640,15 +706,16 @@ export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
 
 ## State of the Art
 
-| Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|--------------|--------|
-| OAuth1.0a header signing for WC over HTTPS | `queryStringAuth: true` (consumer key/secret as URL params over HTTPS) | WC 3.x+ | Simpler client; works behind some proxies that strip Authorization headers |
-| pgvector IVFFlat | pgvector HNSW | pgvector 0.5.0+ | Supabase recommends HNSW as default; better recall, no `lists` tuning |
-| Custom LLM API wrappers | Vercel AI SDK `ai` + `@ai-sdk/*` | 2024–2025 | Single interface, provider swap by env var (F1 LOCKED pattern) |
-| Supabase Realtime via triggers | Logical replication (pg_replication_slot) | Supabase 2026 | <12ms p90 e2e; row-level filters at publication layer; <1% write overhead |
-| OpenAI `text-embedding-ada-002` (1536d) | `text-embedding-3-small` (1536d, default) or 3-large (3072d) | 2024 | Same dimension as ada-002 but better quality; ~6× cheaper |
+| Old Approach                               | Current Approach                                                       | When Changed    | Impact                                                                     |
+| ------------------------------------------ | ---------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
+| OAuth1.0a header signing for WC over HTTPS | `queryStringAuth: true` (consumer key/secret as URL params over HTTPS) | WC 3.x+         | Simpler client; works behind some proxies that strip Authorization headers |
+| pgvector IVFFlat                           | pgvector HNSW                                                          | pgvector 0.5.0+ | Supabase recommends HNSW as default; better recall, no `lists` tuning      |
+| Custom LLM API wrappers                    | Vercel AI SDK `ai` + `@ai-sdk/*`                                       | 2024–2025       | Single interface, provider swap by env var (F1 LOCKED pattern)             |
+| Supabase Realtime via triggers             | Logical replication (pg_replication_slot)                              | Supabase 2026   | <12ms p90 e2e; row-level filters at publication layer; <1% write overhead  |
+| OpenAI `text-embedding-ada-002` (1536d)    | `text-embedding-3-small` (1536d, default) or 3-large (3072d)           | 2024            | Same dimension as ada-002 but better quality; ~6× cheaper                  |
 
 **Deprecated/outdated:**
+
 - WC REST v1/v2 — use v3.
 - `?after=` for modified-date filtering — use `?modified_after=`.
 - pgvector IVFFlat for <50k vectors — HNSW dominates at our scale.
@@ -656,18 +723,18 @@ export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
 
 ## Assumptions Log
 
-| # | Claim | Section | Risk if Wrong |
-|---|-------|---------|---------------|
-| A1 | Client uses WC Order Export Lite / similar plugin for historical CSV (column names in the mapping profile) | CSV mapping profile | If column names differ, the profile insert is wrong — but it's a versioned row, easy to add v2. The `CSVConnector` mapping flow already supports per-upload profile selection. |
-| A2 | Daily order volume <500/day | Pitfall 7 (LLM cost) | If 5k/day, arbiter cost balloons 10× — mitigation: tighter `embeddingsHigh` threshold to bypass arbiter more often |
-| A3 | Catalog size 5–20k products | Embeddings sizing | If 200k+, HNSW build time and memory become real; revisit with `m`/`ef_construction` tuning |
-| A4 | Client's WC store serves HTTPS (not HTTP) | Auth pattern | If HTTP, must use OAuth1.0a header signing — change SDK config `queryStringAuth: false` |
-| A5 | Webhook secret is configured in WC admin (not the same as consumer secret) | Webhook verify | WC requires explicit `secret` field on the webhook; if absent, signature header is missing and verify must short-circuit on unconfigured-mode |
-| A6 | Spanish-language product names (no translation cascade needed) | Embeddings + arbiter prompt | If catalog is mixed ES/EN, `text-embedding-3-small` still handles both well (MIRACL multilingual gain documented) |
-| A7 | Kimi K2 remains the F1 LLM default | Cascade level 5 | If F1 was switched, the F1 env-driven adapter picks up the new provider automatically — no code change needed |
-| A8 | Existing F1 indexes on `sales(canal, fecha desc)` + `sale_items(sale_id)` are sufficient for "Hoy" view performance at v1 scale | Hoy view query plan | Verified to exist in migration 0005; should give sub-100ms responses at 5k tx/mo |
-| A9 | Webhook receiver returns 200 within 5s (WC retry cliff) | Pitfall 1 | Hono on Railway easily meets this with async waitUntil; no measured risk |
-| A10 | `c.executionCtx?.waitUntil` is available on the Hono Node adapter | Async post-ACK work | The Node adapter is Cloudflare-Workers-like; if `executionCtx` is undefined, fall back to fire-and-forget Promise + structured logging |
+| #   | Claim                                                                                                                           | Section                     | Risk if Wrong                                                                                                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1  | Client uses WC Order Export Lite / similar plugin for historical CSV (column names in the mapping profile)                      | CSV mapping profile         | If column names differ, the profile insert is wrong — but it's a versioned row, easy to add v2. The `CSVConnector` mapping flow already supports per-upload profile selection. |
+| A2  | Daily order volume <500/day                                                                                                     | Pitfall 7 (LLM cost)        | If 5k/day, arbiter cost balloons 10× — mitigation: tighter `embeddingsHigh` threshold to bypass arbiter more often                                                             |
+| A3  | Catalog size 5–20k products                                                                                                     | Embeddings sizing           | If 200k+, HNSW build time and memory become real; revisit with `m`/`ef_construction` tuning                                                                                    |
+| A4  | Client's WC store serves HTTPS (not HTTP)                                                                                       | Auth pattern                | If HTTP, must use OAuth1.0a header signing — change SDK config `queryStringAuth: false`                                                                                        |
+| A5  | Webhook secret is configured in WC admin (not the same as consumer secret)                                                      | Webhook verify              | WC requires explicit `secret` field on the webhook; if absent, signature header is missing and verify must short-circuit on unconfigured-mode                                  |
+| A6  | Spanish-language product names (no translation cascade needed)                                                                  | Embeddings + arbiter prompt | If catalog is mixed ES/EN, `text-embedding-3-small` still handles both well (MIRACL multilingual gain documented)                                                              |
+| A7  | Kimi K2 remains the F1 LLM default                                                                                              | Cascade level 5             | If F1 was switched, the F1 env-driven adapter picks up the new provider automatically — no code change needed                                                                  |
+| A8  | Existing F1 indexes on `sales(canal, fecha desc)` + `sale_items(sale_id)` are sufficient for "Hoy" view performance at v1 scale | Hoy view query plan         | Verified to exist in migration 0005; should give sub-100ms responses at 5k tx/mo                                                                                               |
+| A9  | Webhook receiver returns 200 within 5s (WC retry cliff)                                                                         | Pitfall 1                   | Hono on Railway easily meets this with async waitUntil; no measured risk                                                                                                       |
+| A10 | `c.executionCtx?.waitUntil` is available on the Hono Node adapter                                                               | Async post-ACK work         | The Node adapter is Cloudflare-Workers-like; if `executionCtx` is undefined, fall back to fire-and-forget Promise + structured logging                                         |
 
 ## Open Questions
 
@@ -698,24 +765,26 @@ export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
 
 ## Environment Availability
 
-| Dependency | Required By | Available | Version | Fallback |
-|------------|------------|-----------|---------|----------|
-| Node.js ≥22 | Orchestrator + dashboard | ✓ | per F1 lockfile | — |
-| Supabase Postgres + pgvector + pg_trgm | Embeddings + matching | ✓ | enabled in migration 0001 | — |
-| Supabase Storage (csv-uploads bucket) | WP CSV historical | ✓ | created in migration 0003 | — |
-| Supabase Realtime | Live-feed component | ✓ (enabled per F1 schema) | — | Polling at 60s |
-| Hono webhook endpoint (Railway public URL) | WC webhook receipt | ✓ | F1 server.ts has placeholder | — |
-| Railway cron | Hourly WP pull | ✓ | F1 cron.ts has heartbeat | — |
-| WordPress REST API credentials (`WORDPRESS_API_URL`, `WORDPRESS_API_KEY`, `WORDPRESS_API_SECRET`) | WP-01 live | ✗ | — | **Degraded mode: connector reports `ok:false, last_error:'not configured'`**; rest of phase ships without WP credentials |
-| WordPress webhook secret (`WORDPRESS_WEBHOOK_SECRET`) | Signature verify | ✗ | — | Same degraded mode |
-| OpenAI API key (`OPENAI_API_KEY`) | Embeddings + optional arbiter | ✓ (assumed from F1) | — | If absent → cascade short-circuits at level 3, items go to queue; the cascade must NOT throw |
-| LLM provider key (any of the F1 adapter set) | Arbiter | ✓ | — | If `LLM_PROVIDER=none` → arbiter returns reject; level 4 mid items go to queue |
-| WP historical CSV from client | WP-02 backfill | ⚠ depends on client | — | Phase can ship CSV mapping profile + upload UI without the file; client uploads when ready |
+| Dependency                                                                                        | Required By                   | Available                 | Version                      | Fallback                                                                                                                 |
+| ------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Node.js ≥22                                                                                       | Orchestrator + dashboard      | ✓                         | per F1 lockfile              | —                                                                                                                        |
+| Supabase Postgres + pgvector + pg_trgm                                                            | Embeddings + matching         | ✓                         | enabled in migration 0001    | —                                                                                                                        |
+| Supabase Storage (csv-uploads bucket)                                                             | WP CSV historical             | ✓                         | created in migration 0003    | —                                                                                                                        |
+| Supabase Realtime                                                                                 | Live-feed component           | ✓ (enabled per F1 schema) | —                            | Polling at 60s                                                                                                           |
+| Hono webhook endpoint (Railway public URL)                                                        | WC webhook receipt            | ✓                         | F1 server.ts has placeholder | —                                                                                                                        |
+| Railway cron                                                                                      | Hourly WP pull                | ✓                         | F1 cron.ts has heartbeat     | —                                                                                                                        |
+| WordPress REST API credentials (`WORDPRESS_API_URL`, `WORDPRESS_API_KEY`, `WORDPRESS_API_SECRET`) | WP-01 live                    | ✗                         | —                            | **Degraded mode: connector reports `ok:false, last_error:'not configured'`**; rest of phase ships without WP credentials |
+| WordPress webhook secret (`WORDPRESS_WEBHOOK_SECRET`)                                             | Signature verify              | ✗                         | —                            | Same degraded mode                                                                                                       |
+| OpenAI API key (`OPENAI_API_KEY`)                                                                 | Embeddings + optional arbiter | ✓ (assumed from F1)       | —                            | If absent → cascade short-circuits at level 3, items go to queue; the cascade must NOT throw                             |
+| LLM provider key (any of the F1 adapter set)                                                      | Arbiter                       | ✓                         | —                            | If `LLM_PROVIDER=none` → arbiter returns reject; level 4 mid items go to queue                                           |
+| WP historical CSV from client                                                                     | WP-02 backfill                | ⚠ depends on client       | —                            | Phase can ship CSV mapping profile + upload UI without the file; client uploads when ready                               |
 
 **Missing dependencies with no fallback:**
+
 - (None — all WP-01–WP-05 paths ship with explicit fallbacks)
 
 **Missing dependencies with fallback:**
+
 - WordPress API credentials → degraded health + skip pulls; WP-02..WP-06 ship via CSV path
 - LLM provider → level 5 disabled, increases queue volume but doesn't block ingestion
 
@@ -723,35 +792,35 @@ export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
 
 ### Test Framework
 
-| Property | Value |
-|----------|-------|
-| Framework | Vitest ^2.1.8 (F1 standard) |
-| Config file | `vitest.config.ts` at repo root |
-| Quick run command | `pnpm --filter @faka/connectors test` |
-| Full suite command | `pnpm test` (all workspaces) |
+| Property           | Value                                 |
+| ------------------ | ------------------------------------- |
+| Framework          | Vitest ^2.1.8 (F1 standard)           |
+| Config file        | `vitest.config.ts` at repo root       |
+| Quick run command  | `pnpm --filter @faka/connectors test` |
+| Full suite command | `pnpm test` (all workspaces)          |
 
 ### Phase Requirements → Test Map
 
-| Req ID | Behavior | Test Type | Automated Command | File Exists? |
-|--------|----------|-----------|-------------------|-------------|
-| WP-01 | WC webhook HMAC verify accepts valid sig, rejects tampered | unit | `pnpm -F @faka/connectors test wordpress/webhook-verify` | ❌ Wave 0 |
-| WP-01 | WC webhook handler dedupes by delivery_id | unit | `pnpm -F @faka/orchestrator test webhooks/wordpress` | ❌ Wave 0 |
-| WP-01 | `fetchOrders(since)` paginates correctly | unit (msw mock) | `pnpm -F @faka/connectors test wordpress/fetch-orders` | ❌ Wave 0 |
-| WP-01 | `normalizeOrder` maps WC→NormalizedOrder | unit (golden) | `pnpm -F @faka/connectors test wordpress/normalize-order` | ❌ Wave 0 |
-| WP-01 | Degraded mode: connector returns `ok:false` when env unset | unit | `pnpm -F @faka/connectors test wordpress/health` | ❌ Wave 0 |
-| WP-02 | WP CSV mapping profile seed inserts cleanly | sql test | `pnpm -F @faka/db test:sql` | ❌ Wave 0 |
-| WP-02 | Upload via dashboard + commit-upload writes `sales` rows | integration | `pnpm -F dashboard test:integration` (Supabase local) | ❌ Wave 0 |
-| WP-03 | Cascade level 1 barcode → score 1.0 | unit | `pnpm -F @faka/connectors test matching/cascade` | ❌ Wave 0 |
-| WP-03 | Cascade short-circuits on validated mapping | unit | same | ❌ Wave 0 |
-| WP-03 | Cascade level 4 embeddings calls OpenAI mock + pgvector | integration | `pnpm -F @faka/connectors test:integration` | ❌ Wave 0 |
-| WP-03 | Cascade below `queueCutoff` writes nothing to `product_mappings` | unit | same | ❌ Wave 0 |
-| WP-04 | Validation queue Server Action flips `validado_humano=true` | integration | `pnpm -F dashboard test:integration matching` | ❌ Wave 0 |
-| WP-04 | Analista cannot fetch customer columns via queue route | integration | `pnpm -F dashboard test:rls` | ❌ Wave 0 |
-| WP-04 | Validation writes `audit_log` row with `role_at_time` | integration | same | ❌ Wave 0 |
-| WP-05 | `v_hoy_totals` returns correct number across mixed channels | sql test | `pnpm -F @faka/db test:sql hoy-views` | ❌ Wave 0 |
-| WP-05 | "Hoy" page renders <500ms with 5k tx | manual (Lighthouse / smoke) | `pnpm -F dashboard build && pnpm -F dashboard test:smoke` | ❌ Wave 0 |
-| WP-05 | Realtime live-feed receives new INSERT within 30s | manual-only (needs live ws) | manual smoke | — |
-| WP-06 | E2E latency: simulate WC webhook → assert `sales` row + view contains it ≤2 min | integration | `pnpm -F @faka/orchestrator test:e2e wp-latency` | ❌ Wave 0 |
+| Req ID | Behavior                                                                        | Test Type                   | Automated Command                                         | File Exists? |
+| ------ | ------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------- | ------------ |
+| WP-01  | WC webhook HMAC verify accepts valid sig, rejects tampered                      | unit                        | `pnpm -F @faka/connectors test wordpress/webhook-verify`  | ❌ Wave 0    |
+| WP-01  | WC webhook handler dedupes by delivery_id                                       | unit                        | `pnpm -F @faka/orchestrator test webhooks/wordpress`      | ❌ Wave 0    |
+| WP-01  | `fetchOrders(since)` paginates correctly                                        | unit (msw mock)             | `pnpm -F @faka/connectors test wordpress/fetch-orders`    | ❌ Wave 0    |
+| WP-01  | `normalizeOrder` maps WC→NormalizedOrder                                        | unit (golden)               | `pnpm -F @faka/connectors test wordpress/normalize-order` | ❌ Wave 0    |
+| WP-01  | Degraded mode: connector returns `ok:false` when env unset                      | unit                        | `pnpm -F @faka/connectors test wordpress/health`          | ❌ Wave 0    |
+| WP-02  | WP CSV mapping profile seed inserts cleanly                                     | sql test                    | `pnpm -F @faka/db test:sql`                               | ❌ Wave 0    |
+| WP-02  | Upload via dashboard + commit-upload writes `sales` rows                        | integration                 | `pnpm -F dashboard test:integration` (Supabase local)     | ❌ Wave 0    |
+| WP-03  | Cascade level 1 barcode → score 1.0                                             | unit                        | `pnpm -F @faka/connectors test matching/cascade`          | ❌ Wave 0    |
+| WP-03  | Cascade short-circuits on validated mapping                                     | unit                        | same                                                      | ❌ Wave 0    |
+| WP-03  | Cascade level 4 embeddings calls OpenAI mock + pgvector                         | integration                 | `pnpm -F @faka/connectors test:integration`               | ❌ Wave 0    |
+| WP-03  | Cascade below `queueCutoff` writes nothing to `product_mappings`                | unit                        | same                                                      | ❌ Wave 0    |
+| WP-04  | Validation queue Server Action flips `validado_humano=true`                     | integration                 | `pnpm -F dashboard test:integration matching`             | ❌ Wave 0    |
+| WP-04  | Analista cannot fetch customer columns via queue route                          | integration                 | `pnpm -F dashboard test:rls`                              | ❌ Wave 0    |
+| WP-04  | Validation writes `audit_log` row with `role_at_time`                           | integration                 | same                                                      | ❌ Wave 0    |
+| WP-05  | `v_hoy_totals` returns correct number across mixed channels                     | sql test                    | `pnpm -F @faka/db test:sql hoy-views`                     | ❌ Wave 0    |
+| WP-05  | "Hoy" page renders <500ms with 5k tx                                            | manual (Lighthouse / smoke) | `pnpm -F dashboard build && pnpm -F dashboard test:smoke` | ❌ Wave 0    |
+| WP-05  | Realtime live-feed receives new INSERT within 30s                               | manual-only (needs live ws) | manual smoke                                              | —            |
+| WP-06  | E2E latency: simulate WC webhook → assert `sales` row + view contains it ≤2 min | integration                 | `pnpm -F @faka/orchestrator test:e2e wp-latency`          | ❌ Wave 0    |
 
 ### Sampling Rate
 
@@ -778,34 +847,34 @@ export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
 
 ### Applicable ASVS Categories
 
-| ASVS Category | Applies | Standard Control |
-|---------------|---------|-----------------|
-| V2 Authentication | yes | Supabase Auth (F1); WC consumer-key + secret stored Railway env only |
-| V3 Session Management | yes | Supabase SSR cookies (F1); no new session surface in F2 |
-| V4 Access Control | yes | RLS on all base tables; per-role `SECURITY INVOKER` views; F2 must read role-specific view in validation queue |
-| V5 Input Validation | yes | `zod` schemas for WC payloads + Server Action inputs; webhook body validated AFTER signature verify |
-| V6 Cryptography | yes | `node:crypto` `createHmac('sha256')` + `timingSafeEqual` for webhook verify — never custom |
-| V7 Errors & Logging | yes | `pino` structured logs (F1); `connector_runs.errors_json` for sync failures; `audit_log` for validations |
-| V9 Communications | yes | HTTPS-only for WC (enforced by `queryStringAuth` SDK option requiring https URL) |
-| V10 Malicious Code | yes | Pin all deps; SDK from official `@woocommerce` org only |
-| V13 API & Web Service | yes | Hono validates `:canal` route param; webhook endpoint has dedicated route, not generic catchall |
+| ASVS Category         | Applies | Standard Control                                                                                               |
+| --------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| V2 Authentication     | yes     | Supabase Auth (F1); WC consumer-key + secret stored Railway env only                                           |
+| V3 Session Management | yes     | Supabase SSR cookies (F1); no new session surface in F2                                                        |
+| V4 Access Control     | yes     | RLS on all base tables; per-role `SECURITY INVOKER` views; F2 must read role-specific view in validation queue |
+| V5 Input Validation   | yes     | `zod` schemas for WC payloads + Server Action inputs; webhook body validated AFTER signature verify            |
+| V6 Cryptography       | yes     | `node:crypto` `createHmac('sha256')` + `timingSafeEqual` for webhook verify — never custom                     |
+| V7 Errors & Logging   | yes     | `pino` structured logs (F1); `connector_runs.errors_json` for sync failures; `audit_log` for validations       |
+| V9 Communications     | yes     | HTTPS-only for WC (enforced by `queryStringAuth` SDK option requiring https URL)                               |
+| V10 Malicious Code    | yes     | Pin all deps; SDK from official `@woocommerce` org only                                                        |
+| V13 API & Web Service | yes     | Hono validates `:canal` route param; webhook endpoint has dedicated route, not generic catchall                |
 
 ### Known Threat Patterns for {Hono webhook receiver + Supabase orchestrator}
 
-| Pattern | STRIDE | Standard Mitigation |
-|---------|--------|---------------------|
-| Forged WC webhook (no signature) | Spoofing | Mandatory HMAC verify; 401 on missing/invalid header |
-| Signature replay | Tampering / Repudiation | Dedupe by `X-WC-Webhook-Delivery-ID` + timestamp window check (reject deliveries > 24h old) |
-| Webhook body tampering | Tampering | HMAC verify over raw body bytes; constant-time compare |
-| Customer PII leak via validation queue | Information disclosure | Queue reads via `*_view_analista` for analista role; integration test asserts no email/phone in response |
-| OpenAI prompt injection from product name | Tampering | Arbiter prompt uses structured JSON output; reject any non-JSON; strip control chars before send |
-| Embedding cost runaway from attacker-controlled product names | DoS / Cost | Daily token cap env; rate-limit per-canal sync; max source_text length 512 chars before embedding |
-| LLM key leak via error responses | Information disclosure | `pino` redact rules on `LLM_*` / `OPENAI_*` / `WORDPRESS_API_SECRET` env vars |
-| WC consumer secret in browser bundle | Information disclosure | All WC keys server-side only; dashboard never imports `@faka/connectors/wordpress` |
-| RLS bypass via service-role in dashboard | Elevation of privilege | Dashboard uses anon key + user JWT (RLS enforced); service-role exclusively in orchestrator |
-| Validation queue mass-flip without audit | Repudiation | Every accept/reject writes `audit_log` with `role_at_time`; bulk operation = N audit rows, not one |
-| WC API key rotation | Operational | Key resolution at boot only; on rotation, restart Railway service; document in runbook |
-| Webhook replay across environments (staging hits prod) | Tampering | Separate webhook secrets per env; orchestrator binds to env-specific secret |
+| Pattern                                                       | STRIDE                  | Standard Mitigation                                                                                      |
+| ------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| Forged WC webhook (no signature)                              | Spoofing                | Mandatory HMAC verify; 401 on missing/invalid header                                                     |
+| Signature replay                                              | Tampering / Repudiation | Dedupe by `X-WC-Webhook-Delivery-ID` + timestamp window check (reject deliveries > 24h old)              |
+| Webhook body tampering                                        | Tampering               | HMAC verify over raw body bytes; constant-time compare                                                   |
+| Customer PII leak via validation queue                        | Information disclosure  | Queue reads via `*_view_analista` for analista role; integration test asserts no email/phone in response |
+| OpenAI prompt injection from product name                     | Tampering               | Arbiter prompt uses structured JSON output; reject any non-JSON; strip control chars before send         |
+| Embedding cost runaway from attacker-controlled product names | DoS / Cost              | Daily token cap env; rate-limit per-canal sync; max source_text length 512 chars before embedding        |
+| LLM key leak via error responses                              | Information disclosure  | `pino` redact rules on `LLM_*` / `OPENAI_*` / `WORDPRESS_API_SECRET` env vars                            |
+| WC consumer secret in browser bundle                          | Information disclosure  | All WC keys server-side only; dashboard never imports `@faka/connectors/wordpress`                       |
+| RLS bypass via service-role in dashboard                      | Elevation of privilege  | Dashboard uses anon key + user JWT (RLS enforced); service-role exclusively in orchestrator              |
+| Validation queue mass-flip without audit                      | Repudiation             | Every accept/reject writes `audit_log` with `role_at_time`; bulk operation = N audit rows, not one       |
+| WC API key rotation                                           | Operational             | Key resolution at boot only; on rotation, restart Railway service; document in runbook                   |
+| Webhook replay across environments (staging hits prod)        | Tampering               | Separate webhook secrets per env; orchestrator binds to env-specific secret                              |
 
 ## Sources
 
@@ -841,6 +910,7 @@ export function LiveFeed({ initialRows }: { initialRows: Row[] }) {
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH — most libs already in F1; new additions (WC SDK, p-limit) are industry standard
 - Architecture: HIGH — composes F1 primitives (ChannelConnector, idempotentUpsert, recordConnectorRun, auditLog, SECURITY INVOKER views) without new infrastructure
 - Pitfalls: HIGH — webhook + WC pitfalls verified against WC docs + GitHub issues; cascade pitfalls derived from F1 discovery code

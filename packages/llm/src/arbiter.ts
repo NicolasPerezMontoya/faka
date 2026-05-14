@@ -67,9 +67,8 @@ async function buildModel(cfg: ResolvedLLMConfig): Promise<unknown> {
     }
     case "moonshot":
     case "compatible": {
-      const { createOpenAICompatible } = await import(
-        "@ai-sdk/openai-compatible"
-      );
+      const { createOpenAICompatible } =
+        await import("@ai-sdk/openai-compatible");
       const apiKey = process.env[cfg.apiKeyEnv];
       const baseURL = cfg.baseURL;
       if (!apiKey) throw new Error(`Missing ${cfg.apiKeyEnv}`);

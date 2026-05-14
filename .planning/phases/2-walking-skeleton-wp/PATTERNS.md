@@ -10,24 +10,24 @@ This document maps every new file Phase 2 will create to its closest existing an
 
 ## File Classification
 
-| New file / module | Role | Data Flow | Closest Analog | Match |
-|-------------------|------|-----------|----------------|-------|
-| `packages/connectors/src/wordpress/index.ts` (rewrite skeleton) | connector | pull + push | `packages/connectors/src/csv/index.ts` | exact (role) |
-| `packages/connectors/src/wordpress/{client,fetch-orders,fetch-products,normalize-order,normalize-product,webhook-verify,webhook-dedupe,config}.ts` | service modules | request-response + transform | `packages/connectors/src/csv/{column-map,dry-run,auto-detect}.ts` | role-match |
-| `apps/orchestrator/src/routes/webhooks-wordpress.ts` | controller (Hono handler) | event-driven (webhook) | `apps/orchestrator/src/server.ts:52-54` (stub) + full file pattern | partial |
-| `apps/orchestrator/src/jobs/sync-wp-{orders,products}.ts`, `re-cascade-unmatched.ts`, `reembed-products.ts` | cron job | batch | `apps/orchestrator/src/cron.ts:1-55` | role-match (heartbeat only) |
-| `packages/connectors/src/matching/{cascade,level-1..5,thresholds,types}.ts` | service | transform + CRUD | **NO ANALOG** — `scripts/discovery/cascade.ts` is the only reference, but in scripts/ not packages/ | none |
-| `packages/llm/src/{resolve-config,arbiter,prompts}.ts` (new workspace pkg) | service (LLM adapter) | request-response | `scripts/discovery/llm-arbiter.ts:1-247` | exact (lift verbatim) |
-| `packages/db/supabase/migrations/20260601000001_product_embeddings.sql` | migration | DDL | `20260513000004_master_layer.sql:17-45` (table+index style) | exact |
-| `packages/db/supabase/migrations/20260601000002_hoy_views.sql` | migration | DDL (views) | `20260513000011_role_views.sql:20-66` (security_invoker views) | exact |
-| `packages/db/supabase/migrations/20260601000003_wp_csv_profiles.sql` OR seed.sql extension | seed | INSERT | `packages/db/supabase/seed.sql:15-42` (WP products profile already there!) | exact |
-| `apps/dashboard/app/(app)/matching/page.tsx` | page (Server Component) | CRUD list | `apps/dashboard/app/(app)/operacion/historial/page.tsx:44-183` | exact |
-| `apps/dashboard/app/(app)/matching/[mappingId]/page.tsx` | page (detail) | request-response | `apps/dashboard/app/(app)/operacion/upload/page.tsx:25-82` | role-match |
-| `apps/dashboard/app/(app)/matching/_actions/{validate-mapping,reject-mapping,bulk-validate}.ts` | Server Action | CRUD | `apps/dashboard/app/(app)/operacion/upload/_actions/commit-upload.ts:41-228` | exact (auth+audit+errors+finally pattern) |
-| `apps/dashboard/app/(app)/matching/_components/*.tsx` (row actions, modal) | client component | event-driven | `apps/dashboard/app/(app)/operacion/historial/_components/history-row-actions.tsx:1-48` | exact |
-| `apps/dashboard/app/(app)/hoy/page.tsx` | page (Server Component) | CRUD read | `apps/dashboard/app/(app)/operacion/page.tsx:1-90` + historial page for fetch+render | role-match |
-| `apps/dashboard/app/(app)/hoy/_components/{totals-card,per-channel-chart,top-products-table}.tsx` | server components | request-response | historial page data-fetch+render pattern | role-match |
-| `apps/dashboard/app/(app)/hoy/_components/live-feed.tsx` | client component (Realtime) | streaming (WS) | **NO ANALOG** — RESEARCH §3.5 code example is the spec | none |
+| New file / module                                                                                                                                  | Role                        | Data Flow                    | Closest Analog                                                                                      | Match                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `packages/connectors/src/wordpress/index.ts` (rewrite skeleton)                                                                                    | connector                   | pull + push                  | `packages/connectors/src/csv/index.ts`                                                              | exact (role)                              |
+| `packages/connectors/src/wordpress/{client,fetch-orders,fetch-products,normalize-order,normalize-product,webhook-verify,webhook-dedupe,config}.ts` | service modules             | request-response + transform | `packages/connectors/src/csv/{column-map,dry-run,auto-detect}.ts`                                   | role-match                                |
+| `apps/orchestrator/src/routes/webhooks-wordpress.ts`                                                                                               | controller (Hono handler)   | event-driven (webhook)       | `apps/orchestrator/src/server.ts:52-54` (stub) + full file pattern                                  | partial                                   |
+| `apps/orchestrator/src/jobs/sync-wp-{orders,products}.ts`, `re-cascade-unmatched.ts`, `reembed-products.ts`                                        | cron job                    | batch                        | `apps/orchestrator/src/cron.ts:1-55`                                                                | role-match (heartbeat only)               |
+| `packages/connectors/src/matching/{cascade,level-1..5,thresholds,types}.ts`                                                                        | service                     | transform + CRUD             | **NO ANALOG** — `scripts/discovery/cascade.ts` is the only reference, but in scripts/ not packages/ | none                                      |
+| `packages/llm/src/{resolve-config,arbiter,prompts}.ts` (new workspace pkg)                                                                         | service (LLM adapter)       | request-response             | `scripts/discovery/llm-arbiter.ts:1-247`                                                            | exact (lift verbatim)                     |
+| `packages/db/supabase/migrations/20260601000001_product_embeddings.sql`                                                                            | migration                   | DDL                          | `20260513000004_master_layer.sql:17-45` (table+index style)                                         | exact                                     |
+| `packages/db/supabase/migrations/20260601000002_hoy_views.sql`                                                                                     | migration                   | DDL (views)                  | `20260513000011_role_views.sql:20-66` (security_invoker views)                                      | exact                                     |
+| `packages/db/supabase/migrations/20260601000003_wp_csv_profiles.sql` OR seed.sql extension                                                         | seed                        | INSERT                       | `packages/db/supabase/seed.sql:15-42` (WP products profile already there!)                          | exact                                     |
+| `apps/dashboard/app/(app)/matching/page.tsx`                                                                                                       | page (Server Component)     | CRUD list                    | `apps/dashboard/app/(app)/operacion/historial/page.tsx:44-183`                                      | exact                                     |
+| `apps/dashboard/app/(app)/matching/[mappingId]/page.tsx`                                                                                           | page (detail)               | request-response             | `apps/dashboard/app/(app)/operacion/upload/page.tsx:25-82`                                          | role-match                                |
+| `apps/dashboard/app/(app)/matching/_actions/{validate-mapping,reject-mapping,bulk-validate}.ts`                                                    | Server Action               | CRUD                         | `apps/dashboard/app/(app)/operacion/upload/_actions/commit-upload.ts:41-228`                        | exact (auth+audit+errors+finally pattern) |
+| `apps/dashboard/app/(app)/matching/_components/*.tsx` (row actions, modal)                                                                         | client component            | event-driven                 | `apps/dashboard/app/(app)/operacion/historial/_components/history-row-actions.tsx:1-48`             | exact                                     |
+| `apps/dashboard/app/(app)/hoy/page.tsx`                                                                                                            | page (Server Component)     | CRUD read                    | `apps/dashboard/app/(app)/operacion/page.tsx:1-90` + historial page for fetch+render                | role-match                                |
+| `apps/dashboard/app/(app)/hoy/_components/{totals-card,per-channel-chart,top-products-table}.tsx`                                                  | server components           | request-response             | historial page data-fetch+render pattern                                                            | role-match                                |
+| `apps/dashboard/app/(app)/hoy/_components/live-feed.tsx`                                                                                           | client component (Realtime) | streaming (WS)               | **NO ANALOG** — RESEARCH §3.5 code example is the spec                                              | none                                      |
 
 ---
 
@@ -91,7 +91,7 @@ This document maps every new file Phase 2 will create to its closest existing an
 
 ### 4. Embeddings migration — `packages/db/supabase/migrations/20260601000001_product_embeddings.sql`
 
-**Analog:** `packages/db/supabase/migrations/20260513000004_master_layer.sql:17-45` (master_products table style); `20260513000003_raw_layer.sql:22-50` (raw_* tables, btree index style)
+**Analog:** `packages/db/supabase/migrations/20260513000004_master_layer.sql:17-45` (master*products table style); `20260513000003_raw_layer.sql:22-50` (raw*\* tables, btree index style)
 
 **What to copy:**
 
@@ -129,6 +129,7 @@ This document maps every new file Phase 2 will create to its closest existing an
 ### 6. Validation queue UI — `apps/dashboard/app/(app)/matching/`
 
 **Analogs:**
+
 - List page: `apps/dashboard/app/(app)/operacion/historial/page.tsx:1-183` (list view with row actions)
 - Detail page wrapper: `apps/dashboard/app/(app)/operacion/upload/page.tsx:25-82` (URL-driven step pattern; matching detail uses `[mappingId]/page.tsx` instead of `?step=`)
 - Server Action: `apps/dashboard/app/(app)/operacion/upload/_actions/commit-upload.ts:1-228` (auth + try/catch/finally + audit + connector_runs)
@@ -138,7 +139,7 @@ This document maps every new file Phase 2 will create to its closest existing an
 
 - **Page header pattern** (historial/page.tsx:67-84): `<header className="mb-6 flex items-center justify-between">` with `<h1>` + descriptor `<p>` + right-aligned action link. Validation queue uses the same.
 - **DataTable usage** (historial/page.tsx:104-180): `DataTable<Row>` from `@faka/ui` with `rows`, `keyFn`, `columns`. Each column has `header`, `cell: (row) => ReactNode`, optional `className`/`thClassName`. Validation queue columns: candidate name, master candidate name, score, method, channel, side-by-side button, accept/reject. Use the same `Badge` variants for match_method (info/warn/err).
-- **List Server Action** (historial/_actions/list.ts:21-60): pattern is `"use server"; export async function listX(limit=50): Promise<Row[]>` reading from a `view_*` (when role-restricted) or base table. For validation queue read `product_mappings` JOIN `master_products` JOIN `sales`-via-`sale_items` for context; PLUS the role-gated view per RESEARCH §Pitfall 9 (`*_view_analista` returns nulled customer columns from migration 0011:49-66).
+- **List Server Action** (historial/_actions/list.ts:21-60): pattern is `"use server"; export async function listX(limit=50): Promise<Row[]>` reading from a `view__`(when role-restricted) or base table. For validation queue read`product_mappings`JOIN`master_products`JOIN`sales`-via-`sale_items` for context; PLUS the role-gated view per RESEARCH §Pitfall 9 (`_\_view_analista` returns nulled customer columns from migration 0011:49-66).
 - **Server Action skeleton** (commit-upload.ts:41-228): the canonical 7-step shape for every new Server Action — (1) `createClient()`, (2) `requireRole(supabase, [...])` in a `try/catch ForbiddenError`, (3) the work, (4) `auditLog(supabase, {user_id, role_at_time, action, target_table, target_id, payload_json})` (commit-upload.ts:185-196), (5) `return { ok, ... }` or `{ ok: false, error }`, (6) `finally` that writes `recordConnectorRun` IF the action represents a connector run, (7) `revalidatePath` (reprocess.ts:291). For `validate-mapping.ts`, skip step 6 (validation is not a "run"). For `bulk-validate.ts`, write ONE audit row per mapping (RESEARCH §Security: "bulk operation = N audit rows, not one").
 - **Role-gating** (commit-upload.ts:48): `requireRole(supabase, ["super_admin", "admin", "manager"])` — Analista is excluded from validating mappings (queue is read-only for them per ADR-002, F1 role matrix).
 - **Row actions client component** (history-row-actions.tsx:1-48): same `"use client"` + Button + modal-open state pattern for "Accept", "Reject", "Open side-by-side" buttons. The row-actions component should accept a callback to a Server Action; on click it calls the action and `router.refresh()` or relies on `revalidatePath`.
@@ -154,6 +155,7 @@ This document maps every new file Phase 2 will create to its closest existing an
 ### 7. "Hoy" view — `apps/dashboard/app/(app)/hoy/`
 
 **Analogs:**
+
 - Page shell + role-header read: `apps/dashboard/app/(app)/operacion/page.tsx:15-90`
 - Server data fetch + render: `apps/dashboard/app/(app)/operacion/historial/page.tsx:44-77`
 - Layout/role flow: `apps/dashboard/app/layout.tsx:25-96` (READS `headers().get("x-user-role")` — invariant W5)
@@ -211,6 +213,7 @@ This document maps every new file Phase 2 will create to its closest existing an
 ### 10. Roles — every new UI page + Server Action
 
 **Analog:** every existing dashboard page reads `x-user-role` header (W5 invariant):
+
 - Layout: `apps/dashboard/app/layout.tsx:30-32`
 - Operacion page: `apps/dashboard/app/(app)/operacion/page.tsx:15-16`
 - Server Action role gate: `apps/dashboard/app/(app)/operacion/upload/_actions/commit-upload.ts:46-52`
@@ -235,51 +238,61 @@ This document maps every new file Phase 2 will create to its closest existing an
 ## Shared Patterns
 
 ### Authentication & Role-gating
+
 **Source:** `packages/auth/src/require-role.ts:35-49` + `apps/dashboard/middleware.ts:1-13`
 **Apply to:** every new Server Action in `apps/dashboard/app/(app)/matching/_actions/*.ts` and any data action in `hoy/`.
 Pattern: `await requireRole(supabase, [...allowed])` inside `try/catch (ForbiddenError)`; return `{ ok:false, error:"forbidden" }` on mismatch. Layout reads `x-user-role` header (W5) — pages do the same.
 
 ### Error Handling Envelope (Server Actions)
+
 **Source:** `apps/dashboard/app/(app)/operacion/upload/_actions/commit-upload.ts:41-228`
 **Apply to:** every new Server Action.
 Pattern: `Promise<{ ok: true, ...data } | { ok: false, error: string }>` return type. Outer `try/catch` wraps the whole body. `finally` writes `recordConnectorRun` IF the action represents a connector run. `revalidatePath(...)` in `finally` for list pages (reprocess.ts:291).
 
 ### Idempotent UPSERT
+
 **Source:** `packages/connectors/src/idempotency.ts:35-55` + usage in `csv/index.ts:211-214, 259-263`
 **Apply to:** every WP order write, every cascade `product_mappings` write.
 Pattern: `supabase.from("sales").upsert(rows, { onConflict: "canal,external_order_id" })` for orders; `{ onConflict: "canal,external_id" }` for product_mappings. Composite keys are the F1 invariant.
 
 ### Audit Logging
+
 **Source:** `packages/db/helpers/audit.ts:37-55` + usage in `commit-upload.ts:185-196`
 **Apply to:** every validation action (accept, reject, bulk).
 Pattern: `await auditLog(supabase, { user_id: ctx.user.id, role_at_time: ctx.role, action, target_table, target_id, payload_json })`. Bulk = N audit rows (RESEARCH §Security). Audit failures NEVER throw (audit.ts:50-54).
 
 ### connector_runs Write
+
 **Source:** `packages/connectors/src/observability.ts:31-75` + cron.ts:30-44 + commit-upload.ts:209-227
 **Apply to:** every WP sync (orders/products cron + webhook batch), every cascade run.
 Pattern: write ONCE at end of run in `finally`. `kind:"channel", canal:"wordpress"` for syncs; `kind:"cron-heartbeat", canal:null` ONLY for the existing heartbeat (W2 invariant — never use `cron-heartbeat` for the WP cron jobs). Cron sync jobs use `kind:"channel"`.
 
 ### Hono Handler Shape
+
 **Source:** `apps/orchestrator/src/server.ts:18-50` + the existing 501 stub at :52-54
 **Apply to:** the new webhook route.
 Pattern: build `ctx` inline from `getSupabase()` + `log.*` adapters; wrap handler body in `try/catch`; return `c.json({error}, status)` envelope on failure; `c.json({ok:true})` on success.
 
 ### Migration File Header
+
 **Source:** every existing migration's leading comment block (e.g. master_layer.sql:1-11, role_views.sql:1-14)
 **Apply to:** all three new migrations (`product_embeddings`, `hoy_views`, `wp_csv_profiles`).
 Pattern: `-- Migration NNNN — <Name>. -- Phase 2 / Plan W.X.Y. -- -- <3-5 lines of purpose + invariants this file maintains>`.
 
 ### View security_invoker
+
 **Source:** `packages/db/supabase/migrations/20260513000011_role_views.sql:20-21` (and every other view in that file)
 **Apply to:** all 4 new `v_hoy_*` views.
 Pattern: every `create view` clause includes `with (security_invoker = true)` BEFORE the `as select`. Invariant CC-12.
 
 ### Channel enum boundary
+
 **Source:** `packages/db/supabase/migrations/20260513000002_enums.sql:15-25`, `observability.ts:36-45`
 **Apply to:** every new WP sync entry-point.
 Pattern: `cron-heartbeat` is in `connector_run_kind` ONLY (not `channel`). The WP cron jobs use `kind:"channel", canal:"wordpress"` — never `kind:"cron-heartbeat"`. Invariant W2.
 
 ### Server vs Browser Supabase Client
+
 **Source:** `commit-upload.ts:25` (`createClient` from `@/lib/supabase/server`) vs RESEARCH §Code Examples live-feed.tsx (`createBrowserClient` from `@supabase/ssr`)
 **Apply to:** every new dashboard file.
 Pattern: Server Components + Server Actions → `@/lib/supabase/server`. Client Components needing Realtime → `@supabase/ssr` `createBrowserClient` with `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (never `*_SERVICE_ROLE_KEY` in browser — invariant CC-11).
@@ -288,13 +301,13 @@ Pattern: Server Components + Server Actions → `@/lib/supabase/server`. Client 
 
 ## No Analog Found
 
-| File | Role | Data Flow | Reason |
-|------|------|-----------|--------|
-| `packages/connectors/src/matching/cascade.ts` + level files | service | transform+CRUD | Matching cascade is new infra in F2 (F1 has only `scripts/discovery/cascade.ts` outside the runtime); design from RESEARCH §Pattern 3 |
-| `apps/dashboard/app/(app)/hoy/_components/live-feed.tsx` | client component | streaming (WS) | F1 has no Realtime client; design from RESEARCH §Code Examples |
-| `apps/orchestrator/src/routes/webhooks-wordpress.ts` | controller | event-driven | F1 has only the 501 stub; design from RESEARCH §Pattern 1 — but Hono+ctx+error envelope from `server.ts` is the style guide |
-| `packages/db/supabase/migrations/20260601000001_product_embeddings.sql` (pgvector + HNSW parts) | migration | DDL | F1 has no vector tables yet; table/index/FK style copied from master_layer.sql but the HNSW syntax has no analog |
-| `packages/llm/` workspace package | package | — | Adapter exists in `scripts/discovery/llm-arbiter.ts`; the WORKSPACE PACKAGING is new — copy `packages/connectors/package.json` layout when creating |
+| File                                                                                            | Role             | Data Flow      | Reason                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------- | ---------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/connectors/src/matching/cascade.ts` + level files                                     | service          | transform+CRUD | Matching cascade is new infra in F2 (F1 has only `scripts/discovery/cascade.ts` outside the runtime); design from RESEARCH §Pattern 3               |
+| `apps/dashboard/app/(app)/hoy/_components/live-feed.tsx`                                        | client component | streaming (WS) | F1 has no Realtime client; design from RESEARCH §Code Examples                                                                                      |
+| `apps/orchestrator/src/routes/webhooks-wordpress.ts`                                            | controller       | event-driven   | F1 has only the 501 stub; design from RESEARCH §Pattern 1 — but Hono+ctx+error envelope from `server.ts` is the style guide                         |
+| `packages/db/supabase/migrations/20260601000001_product_embeddings.sql` (pgvector + HNSW parts) | migration        | DDL            | F1 has no vector tables yet; table/index/FK style copied from master_layer.sql but the HNSW syntax has no analog                                    |
+| `packages/llm/` workspace package                                                               | package          | —              | Adapter exists in `scripts/discovery/llm-arbiter.ts`; the WORKSPACE PACKAGING is new — copy `packages/connectors/package.json` layout when creating |
 
 ---
 

@@ -106,7 +106,5 @@ export function estimateCallCost(
     "kimi-k2-0905-preview": { in: 0.6, out: 2.5 },
   };
   const p = PRICING[cfg.model] ?? { in: 1.0, out: 5.0 };
-  return (
-    (calls * TOKENS_IN * p.in + calls * TOKENS_OUT * p.out) / 1_000_000
-  );
+  return (calls * TOKENS_IN * p.in + calls * TOKENS_OUT * p.out) / 1_000_000;
 }
