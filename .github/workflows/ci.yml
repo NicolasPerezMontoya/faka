@@ -104,7 +104,20 @@ jobs:
         run: pnpm --filter @faka/db run db:reset
 
       - name: Regenerate types
+        id: regen-types
         run: pnpm --filter @faka/db run types
+
+      # Ergonomic helper: always upload the freshly-generated types so
+      # contributors without local Supabase running can `gh run download`
+      # and commit them as the new baseline. Especially useful right
+      # after adding a migration.
+      - name: Upload generated types
+        if: always() && steps.regen-types.conclusion == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: packages/db/types/database.ts
+          retention-days: 7
 
       - name: Assert generated types are committed
         run: |
