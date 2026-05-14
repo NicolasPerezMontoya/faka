@@ -25,6 +25,12 @@ export {
   type EmbeddingsClient,
   type EmbeddingMatchResult,
 } from "./level-4-embeddings.js";
+export {
+  arbitrateCandidate,
+  ESTIMATED_TOKENS_PER_ARBITRATION,
+  type MatchVerdict,
+} from "./level-5-llm-arbiter.js";
+export { TokenBudgetTracker, bogotaTodayUtcRange } from "./token-budget.js";
 export { loadThresholds } from "./thresholds.js";
 export type {
   MatchResult,
