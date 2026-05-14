@@ -17,6 +17,7 @@
   "dependencies": {
     "@faka/connectors": "workspace:*",
     "@faka/db": "workspace:*",
+    "@faka/llm": "workspace:*",
     "@faka/schema": "workspace:*",
     "@hono/node-server": "^1.13.7",
     "@hono/zod-validator": "^0.4.2",

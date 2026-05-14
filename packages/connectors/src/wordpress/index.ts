@@ -224,6 +224,13 @@ export type {
   WordPressConfigMissing,
 } from "./config.js";
 export { createWooClient } from "./client.js";
+export {
+  WCOrderSchema,
+  WCProductSchema,
+  type WCOrder,
+  type WCProduct,
+  type WCOrderLineItem,
+} from "./client.js";
 export { fetchOrders } from "./fetch-orders.js";
 export { fetchProducts } from "./fetch-products.js";
 export { normalizeOrder } from "./normalize-order.js";

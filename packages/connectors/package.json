@@ -17,7 +17,9 @@
     "./falabella": "./src/falabella/index.ts",
     "./idempotency": "./src/idempotency.ts",
     "./retry": "./src/retry.ts",
-    "./observability": "./src/observability.ts"
+    "./observability": "./src/observability.ts",
+    "./embeddings": "./src/embeddings/index.ts",
+    "./matching": "./src/matching/index.ts"
   },
   "scripts": {
     "lint": "echo '(uses base eslint via app/package configs)'",

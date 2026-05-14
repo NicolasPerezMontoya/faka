@@ -3,7 +3,9 @@
 # absolute (`/apps/orchestrator/railway.toml`) when configured in the
 # Railway dashboard's "config-as-code" field.
 #
-# Two services: orchestrator-web (HTTP) + orchestrator-cron (scheduled).
+# Services: orchestrator-web (HTTP) + multiple orchestrator-cron entries.
+# Each cron service shares the same image; the argv dispatcher in
+# `src/cron.ts` selects the job by argv[2].
 
 [build]
 builder = "DOCKERFILE"
@@ -20,18 +22,114 @@ healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-# ─── Cron service ────────────────────────────────────────────────
+# ─── Cron service: heartbeat ─────────────────────────────────────
+# `node dist/cron.js heartbeat` writes kind='cron-heartbeat'. F2 (Plan 2.3.2)
+# made cron.js argv-driven so a single binary handles every scheduled job.
 [[services]]
 name = "orchestrator-cron"
 
 [services.deploy]
-startCommand = "node dist/cron.js"
+startCommand = "node dist/cron.js heartbeat"
 restartPolicyType = "NEVER"
 
 [services.cron]
 # Minimum granularity on Railway is 5 minutes; UTC only.
-# F1: placeholder every 30 minutes. F2+ flips to per-channel sync cron.
 schedule = "*/30 * * * *"
+
+# ─── Cron service: process-wp-events (Plan 2.3.2) ────────────────
+# Drains `raw_orders WHERE canal='wordpress' AND processed=false`. Writes ONE
+# `connector_runs` row per tick with kind='channel' + canal='wordpress'.
+# Plan spec asked for `* * * * *` but Railway's 5-minute minimum granularity
+# (RESEARCH §Pitfall 7 / F1 PLAN 1.4.2) is the floor — documented deviation.
+# Five-minute cadence still drains a healthy webhook stream well under
+# operator-perceptible latency, and the batch fetches up to 100 rows so the
+# steady state remains tight.
+[[services]]
+name = "orchestrator-cron-process-wp-events"
+
+[services.deploy]
+startCommand = "node dist/cron.js process-wp-events"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "*/5 * * * *"
+
+# ─── Cron service: sync-wp-orders (Plan 2.3.3) ───────────────────
+# Hourly REST pull of `/orders?modified_after=...` — insurance against missed
+# webhooks (RESEARCH §Pattern 2). Degrades to a no-op when WORDPRESS_API_*
+# is unset (records `status='succeeded', errors_json.reason='not_configured'`).
+# Uses `modified_after` (not `after`) per RESEARCH §Pitfall 3 so order status
+# changes (cancellations, refunds) are captured. `since` is computed from the
+# last successful run's `completed_at` (metadata_json.tipo='orders') with a
+# 25h fallback that overlaps the hourly cadence — safe given the UPSERT on
+# (canal, external_order_id) makes the webhook + cron paths commutative
+# (Pitfall 4). Per-item cascade runs in-line via runMatchCascade + persistMatch.
+# Stagger: orders at :00, products at :30 to avoid simultaneous WC API load.
+[[services]]
+name = "orchestrator-cron-sync-wp-orders"
+
+[services.deploy]
+startCommand = "node dist/cron.js sync-wp-orders"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "0 * * * *"
+
+# ─── Cron service: sync-wp-products (Plan 2.3.3) ─────────────────
+# Hourly REST pull of `/products?modified_after=...` — keeps master_products
+# + product_mappings current so cascade levels 1-2 (barcode + supplier_code)
+# have data to match against. Embedding regeneration is deferred to the
+# `reembed-products` cron below, which uses the source_hash short-circuit
+# (RESEARCH §Pitfall 5) — DO NOT inline an embeddings call here.
+# Degraded path identical to sync-wp-orders.
+[[services]]
+name = "orchestrator-cron-sync-wp-products"
+
+[services.deploy]
+startCommand = "node dist/cron.js sync-wp-products"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "30 * * * *"
+
+# ─── Cron service: reembed-products (Plan 2.3.4) ─────────────────
+# Daily refresh of `product_embeddings` for the master_products catalog.
+# The embeddings service short-circuits via sha256(source_text) so
+# unchanged rows skip the OpenAI API entirely (RESEARCH §Pitfall 5).
+#
+# Schedule rationale: 04:00 UTC = 23:00 Bogotá — off-peak so a slow
+# OpenAI tick doesn't compete with daytime WP traffic or the per-hour
+# sync-wp-products pull. Cap defaults to 500 products / run
+# (REEMBED_BATCH_SIZE env override).
+#
+# Degraded: OPENAI_API_KEY unset → records status=succeeded,
+# errors_json.reason='no_embedding_provider' and exits 0.
+[[services]]
+name = "reembed-products"
+
+[services.deploy]
+startCommand = "node dist/cron.js reembed-products"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "0 4 * * *"
+
+# ─── Cron service: re-cascade-unmatched (Plan 2.3.4) ─────────────
+# Every 6h: retry the matching cascade on `sale_items` rows still in the
+# queue (`master_sku IS NULL AND created_at > now() - 7d`). Capped at
+# RECASCADE_BATCH_SIZE rows per run (default 200) and gated by
+# LLM_DAILY_TOKEN_CAP via TokenBudgetTracker (RESEARCH §Pitfall 7) so the
+# cron can't blow the daily LLM budget. Idempotent: persistMatch UPSERTs
+# on (canal, external_id) and only writes sale_items.master_sku when NULL.
+[[services]]
+name = "re-cascade-unmatched"
+
+[services.deploy]
+startCommand = "node dist/cron.js re-cascade-unmatched"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "0 */6 * * *"
 
 # ─── F2 environment surface ──────────────────────────────────────
 # Operator runbook: set these in the Railway service variables tab.
