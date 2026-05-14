@@ -635,6 +635,13 @@ export type Database = {
             referencedRelation: "master_products"
             referencedColumns: ["master_sku"]
           },
+          {
+            foreignKeyName: "inventory_snapshots_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
         ]
       }
       mart_cannibalization: {
@@ -696,6 +703,13 @@ export type Database = {
             columns: ["master_sku"]
             isOneToOne: false
             referencedRelation: "master_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
+            foreignKeyName: "mart_cannibalization_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
             referencedColumns: ["master_sku"]
           },
         ]
@@ -766,6 +780,13 @@ export type Database = {
             referencedRelation: "master_products"
             referencedColumns: ["master_sku"]
           },
+          {
+            foreignKeyName: "mart_days_of_inventory_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
         ]
       }
       mart_dead_stock: {
@@ -804,6 +825,13 @@ export type Database = {
             referencedRelation: "master_products"
             referencedColumns: ["master_sku"]
           },
+          {
+            foreignKeyName: "mart_dead_stock_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: true
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
         ]
       }
       mart_product_velocity: {
@@ -837,6 +865,13 @@ export type Database = {
             columns: ["master_sku"]
             isOneToOne: false
             referencedRelation: "master_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
+            foreignKeyName: "mart_product_velocity_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
             referencedColumns: ["master_sku"]
           },
         ]
@@ -878,6 +913,13 @@ export type Database = {
             columns: ["master_sku"]
             isOneToOne: false
             referencedRelation: "master_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
+            foreignKeyName: "mart_top_products_by_window_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
             referencedColumns: ["master_sku"]
           },
         ]
@@ -1039,6 +1081,48 @@ export type Database = {
         }
         Relationships: []
       }
+      product_embeddings: {
+        Row: {
+          embedding: string
+          master_sku: string
+          model: string
+          source_hash: string
+          source_text: string
+          updated_at: string
+        }
+        Insert: {
+          embedding: string
+          master_sku: string
+          model?: string
+          source_hash: string
+          source_text: string
+          updated_at?: string
+        }
+        Update: {
+          embedding?: string
+          master_sku?: string
+          model?: string
+          source_hash?: string
+          source_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_embeddings_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: true
+            referencedRelation: "master_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
+            foreignKeyName: "product_embeddings_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: true
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
+        ]
+      }
       product_mappings: {
         Row: {
           canal: Database["public"]["Enums"]["channel"]
@@ -1093,6 +1177,13 @@ export type Database = {
             referencedRelation: "master_products"
             referencedColumns: ["master_sku"]
           },
+          {
+            foreignKeyName: "product_mappings_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
         ]
       }
       product_variants: {
@@ -1123,6 +1214,13 @@ export type Database = {
             columns: ["master_sku"]
             isOneToOne: false
             referencedRelation: "master_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
+            foreignKeyName: "product_variants_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
             referencedColumns: ["master_sku"]
           },
         ]
@@ -1401,6 +1499,13 @@ export type Database = {
             referencedColumns: ["master_sku"]
           },
           {
+            foreignKeyName: "sale_items_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
             foreignKeyName: "sale_items_master_variant_sku_fkey"
             columns: ["master_variant_sku"]
             isOneToOne: false
@@ -1433,6 +1538,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales_view_manager"
+            referencedColumns: ["sale_id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_last_hour"
             referencedColumns: ["sale_id"]
           },
         ]
@@ -2241,6 +2353,13 @@ export type Database = {
             referencedRelation: "master_products"
             referencedColumns: ["master_sku"]
           },
+          {
+            foreignKeyName: "mart_cannibalization_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
         ]
       }
       mart_cannibalization_view_analista: {
@@ -2276,6 +2395,13 @@ export type Database = {
             referencedRelation: "master_products"
             referencedColumns: ["master_sku"]
           },
+          {
+            foreignKeyName: "mart_cannibalization_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
         ]
       }
       mart_cannibalization_view_manager: {
@@ -2309,6 +2435,13 @@ export type Database = {
             columns: ["master_sku"]
             isOneToOne: false
             referencedRelation: "master_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
+            foreignKeyName: "mart_cannibalization_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
             referencedColumns: ["master_sku"]
           },
         ]
@@ -2368,6 +2501,13 @@ export type Database = {
             referencedColumns: ["master_sku"]
           },
           {
+            foreignKeyName: "sale_items_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
             foreignKeyName: "sale_items_master_variant_sku_fkey"
             columns: ["master_variant_sku"]
             isOneToOne: false
@@ -2400,6 +2540,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales_view_manager"
+            referencedColumns: ["sale_id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_last_hour"
             referencedColumns: ["sale_id"]
           },
         ]
@@ -2459,6 +2606,13 @@ export type Database = {
             referencedColumns: ["master_sku"]
           },
           {
+            foreignKeyName: "sale_items_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
             foreignKeyName: "sale_items_master_variant_sku_fkey"
             columns: ["master_variant_sku"]
             isOneToOne: false
@@ -2491,6 +2645,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales_view_manager"
+            referencedColumns: ["sale_id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_last_hour"
             referencedColumns: ["sale_id"]
           },
         ]
@@ -2550,6 +2711,13 @@ export type Database = {
             referencedColumns: ["master_sku"]
           },
           {
+            foreignKeyName: "sale_items_master_sku_fkey"
+            columns: ["master_sku"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_top_products"
+            referencedColumns: ["master_sku"]
+          },
+          {
             foreignKeyName: "sale_items_master_variant_sku_fkey"
             columns: ["master_variant_sku"]
             isOneToOne: false
@@ -2582,6 +2750,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales_view_manager"
+            referencedColumns: ["sale_id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "v_hoy_last_hour"
             referencedColumns: ["sale_id"]
           },
         ]
@@ -2881,6 +3056,51 @@ export type Database = {
           },
         ]
       }
+      v_hoy_last_hour: {
+        Row: {
+          canal: Database["public"]["Enums"]["channel"] | null
+          created_at: string | null
+          item_count: number | null
+          sale_id: string | null
+          total: number | null
+        }
+        Relationships: []
+      }
+      v_hoy_per_channel: {
+        Row: {
+          canal: Database["public"]["Enums"]["channel"] | null
+          ingresos: number | null
+          ordenes: number | null
+        }
+        Relationships: []
+      }
+      v_hoy_per_channel_analista: {
+        Row: {
+          canal: Database["public"]["Enums"]["channel"] | null
+          ingresos: number | null
+          ordenes: number | null
+        }
+        Relationships: []
+      }
+      v_hoy_top_products: {
+        Row: {
+          brand: string | null
+          ingresos: number | null
+          master_sku: string | null
+          nombre_canonico: string | null
+          ordenes: number | null
+          unidades: number | null
+        }
+        Relationships: []
+      }
+      v_hoy_totals: {
+        Row: {
+          ingresos_hoy: number | null
+          ordenes_hoy: number | null
+          unidades_hoy: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       current_role_claim: {
@@ -2888,6 +3108,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
+      find_similar_products: {
+        Args: { k?: number; query_vec: string }
+        Returns: {
+          distance: number
+          master_sku: string
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

@@ -41,9 +41,17 @@ pnpm --filter @faka/db exec supabase link --project-ref <PROJECT_REF>
 ### 1.3 Apply migrations + seed
 
 ```bash
-pnpm --filter @faka/db exec supabase db push          # applies migrations 0001..0013
+pnpm --filter @faka/db exec supabase db push          # applies migrations 0001..0013 (F1) + 20260601000001..2 (F2)
 pnpm --filter @faka/db exec supabase db reset --linked   # OR a clean reset
 ```
+
+> **F2 note:** after adding a migration locally, run
+> `pnpm --filter @faka/db run types` and commit the resulting
+> `packages/db/types/database.ts`. CI's `db-integration` job runs
+> `git diff --exit-code` against this file and hard-fails on drift.
+> If you can't run Supabase locally (e.g. WSL2 network issue), push
+> first and download the regenerated file from the `database-types`
+> artifact on the failed CI run.
 
 Seed the initial Super Admin (locally first to verify, then again against staging if needed):
 
