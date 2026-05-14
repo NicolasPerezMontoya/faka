@@ -1,0 +1,53 @@
+{
+  "id": 4321,
+  "status": "completed",
+  "currency": "COP",
+  "date_created_gmt": "2026-05-13T18:14:32",
+  "date_modified_gmt": "2026-05-13T18:21:05",
+  "discount_total": "5000.00",
+  "shipping_total": "12000.00",
+  "total": "97000.00",
+  "payment_method": "wc-bogus-gateway",
+  "payment_method_title": "Pago contra entrega",
+  "customer_id": 17,
+  "billing": {
+    "first_name": "María",
+    "last_name": "Pérez",
+    "email": "maria.perez@example.com",
+    "phone": "+57 300 1234567",
+    "city": "Bogotá",
+    "state": "DC"
+  },
+  "shipping_lines": [
+    {
+      "id": 9001,
+      "method_title": "Coordinadora",
+      "method_id": "flat_rate",
+      "total": "12000.00"
+    }
+  ],
+  "line_items": [
+    {
+      "id": 5101,
+      "product_id": 808,
+      "variation_id": 0,
+      "name": "Crème Brûlée 250g",
+      "quantity": 2,
+      "subtotal": "40000.00",
+      "total": "40000.00",
+      "sku": "CB-250",
+      "price": 20000
+    },
+    {
+      "id": 5102,
+      "product_id": 919,
+      "variation_id": 0,
+      "name": "Galletas mixtas",
+      "quantity": 1,
+      "subtotal": "50000.00",
+      "total": "50000.00",
+      "sku": "GM-001",
+      "price": 50000
+    }
+  ]
+}
