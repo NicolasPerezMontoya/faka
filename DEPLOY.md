@@ -107,7 +107,10 @@ the Railway dashboard **Settings** for each new service:
 Services declared:
 
 - `orchestrator-web`: HTTP server on `$PORT`, healthcheck at `/health`.
-- `orchestrator-cron`: cron schedule `*/30 * * * *` running `node dist/cron.js`.
+- `orchestrator-cron`: cron schedule `*/30 * * * *` running `node dist/cron.js heartbeat` — proves the cron infra is alive.
+- `orchestrator-cron-process-wp-events`: `*/5 * * * *` (Plan 2.3.2) — drains `raw_orders.processed=false` for WP.
+- `reembed-products` (Plan 2.3.4): daily at `0 4 * * *` UTC (23:00 Bogotá, off-peak) — refreshes `product_embeddings` for `master_products`. The embeddings service short-circuits via `sha256(source_text)` so unchanged rows skip the OpenAI API entirely (RESEARCH §Pitfall 5). Cap defaults to 500 products / run (`REEMBED_BATCH_SIZE` env override). Degrades cleanly when `OPENAI_API_KEY` is unset: writes a `connector_runs` row with `errors_json.reason='no_embedding_provider'` and exits 0.
+- `re-cascade-unmatched` (Plan 2.3.4): every 6h at `0 */6 * * *` UTC — retries the matching cascade on `sale_items` rows still stuck in the queue (`master_sku IS NULL AND created_at > now() - 7d`). Capped at 200 rows / run (`RECASCADE_BATCH_SIZE`) and gated by `LLM_DAILY_TOKEN_CAP` via `TokenBudgetTracker` so the cron can't blow the daily LLM budget (RESEARCH §Pitfall 7). Idempotent: `persistMatch` UPSERTs on `(canal, external_id)` and only writes `sale_items.master_sku` when currently NULL.
 
 ### 2.3 Verify
 

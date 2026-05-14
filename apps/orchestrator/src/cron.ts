@@ -18,11 +18,13 @@
  *   - `sync-wp-products`  → hourly REST pull of `/products?modified_after=...`
  *                            keeping master_products + product_mappings fresh
  *                            for the cascade (Plan 2.3.3). metadata_json.tipo='products'.
- *
- * Future plans land additional subcommands by importing their `run*` entry
- * here and adding a `case`: `reembed-products` + `re-cascade-unmatched`
- * (Plan 2.3.4). The plumbing pattern is identical — small switch, one job
- * per case, exit 0.
+ *   - `reembed-products`  → daily refresh of `product_embeddings` for the
+ *                            master_products catalog (Plan 2.3.4). Uses the
+ *                            sha256(source_text) short-circuit so unchanged
+ *                            rows skip the OpenAI API entirely.
+ *   - `re-cascade-unmatched` → every 6h, retry the cascade for
+ *                            `sale_items.master_sku IS NULL` rows < 7d old
+ *                            (Plan 2.3.4). Gated by LLM_DAILY_TOKEN_CAP.
  *
  * RESEARCH §7 + Pitfall 7:
  *   - Process MUST `process.exit(0)` cleanly on success. Railway cron keeps
@@ -41,10 +43,21 @@ import { recordConnectorRun } from "@faka/connectors";
 import { log } from "./lib/log.js";
 import { getSupabase } from "./lib/supabase.js";
 import { runProcessWpEvents } from "./jobs/process-wp-events.js";
+import { runSyncWpOrders } from "./jobs/sync-wp-orders.js";
+import { runSyncWpProducts } from "./jobs/sync-wp-products.js";
 
-type Subcommand = "heartbeat" | "process-wp-events";
+type Subcommand =
+  | "heartbeat"
+  | "process-wp-events"
+  | "sync-wp-orders"
+  | "sync-wp-products";
 
-const KNOWN: Subcommand[] = ["heartbeat", "process-wp-events"];
+const KNOWN: Subcommand[] = [
+  "heartbeat",
+  "process-wp-events",
+  "sync-wp-orders",
+  "sync-wp-products",
+];
 
 function parseSubcommand(): Subcommand {
   // Default to the F1 heartbeat so an unconfigured cron service keeps doing
@@ -99,6 +112,23 @@ async function main(): Promise<void> {
         // restart-on-failure is the wrong response when the issue is bad
         // data, not a broken process. The connector_runs row with
         // status='failed' is the operator's signal.
+        process.exit(0);
+        break;
+      }
+
+      case "sync-wp-orders": {
+        const result = await runSyncWpOrders();
+        log.info({ result }, "cron.sync-wp-orders.summary");
+        // Same exit policy as process-wp-events: partial/failed status is
+        // surfaced via `connector_runs.status`, not via the process exit
+        // code, so Railway doesn't loop on bad-data conditions.
+        process.exit(0);
+        break;
+      }
+
+      case "sync-wp-products": {
+        const result = await runSyncWpProducts();
+        log.info({ result }, "cron.sync-wp-products.summary");
         process.exit(0);
         break;
       }
