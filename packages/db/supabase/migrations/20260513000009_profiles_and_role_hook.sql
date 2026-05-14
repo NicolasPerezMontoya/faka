@@ -72,7 +72,7 @@ declare
   v_role       public.user_role;
   v_claims     jsonb;
 begin
-  v_user_id := (event -> 'user_id')::uuid;
+  v_user_id := (event ->> 'user_id')::uuid;
 
   -- Look up the role; default to 'analista' if profile missing
   -- (defensive — Super Admin seeder writes the profile on user create).
