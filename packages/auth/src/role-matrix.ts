@@ -65,6 +65,7 @@ export const ROUTE_ROLE_REQUIREMENTS: Record<
   "/hoy": ["super_admin", "admin", "manager", "analista"],
   "/productos": ["super_admin", "admin", "manager", "analista"],
   "/canales": ["super_admin", "admin", "manager", "analista"],
+  "/matching": ["super_admin", "admin", "manager"], // Analista read-only on Hoy + Productos; no validation power.
 };
 
 /**

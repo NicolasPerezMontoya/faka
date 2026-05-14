@@ -15,11 +15,12 @@ export const metadata: Metadata = {
 };
 
 const NAV_ITEMS = [
-  { href: "/hoy", label: "Hoy", enabled: false },
+  { href: "/hoy", label: "Hoy", enabled: true },
+  { href: "/matching", label: "Validación", enabled: true },
   { href: "/productos", label: "Productos", enabled: false },
   { href: "/canales", label: "Canales", enabled: false },
   { href: "/inteligencia", label: "Inteligencia", enabled: false },
-  { href: "/operacion", label: "Operación", enabled: true, active: true },
+  { href: "/operacion", label: "Operación", enabled: true },
 ];
 
 export default function RootLayout({
@@ -48,10 +49,7 @@ export default function RootLayout({
                   key={item.href}
                   href={item.enabled ? item.href : "#"}
                   className={[
-                    "block px-3 py-2 rounded-lg",
-                    item.active
-                      ? "bg-primary-foreground/10 text-primary-foreground font-medium"
-                      : "text-primary-foreground/70",
+                    "block px-3 py-2 rounded-lg text-primary-foreground/70",
                     item.enabled
                       ? "hover:bg-primary-foreground/10"
                       : "opacity-50 cursor-not-allowed",
@@ -62,7 +60,7 @@ export default function RootLayout({
               ))}
             </nav>
             <div className="mt-auto p-4 text-xs text-primary-foreground/50 border-t border-primary-foreground/10">
-              v0.1 · Phase 1 Foundation
+              v0.2 · Phase 2 Walking Skeleton
             </div>
           </aside>
 
