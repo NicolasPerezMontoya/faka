@@ -120,6 +120,48 @@ values (
 on conflict (canal, tipo, nombre, version) do nothing;
 
 ------------------------------------------------------------------------------
+-- WordPress orders profile (F2 — WC Order Export Lite plugin shape)
+-- ADR-001 versioned: if client's actual export columns differ, add v2,
+-- DO NOT modify v1.
+------------------------------------------------------------------------------
+
+insert into public.csv_mapping_profiles
+  (nombre, canal, tipo, column_map_json, reglas_json, version, is_active)
+values (
+  'WordPress · Orders Export (WC Order Export Lite) · v1',
+  'wordpress',
+  'orders',
+  $${
+    "external_order_id": "Order ID",
+    "fecha": "Order Date",
+    "estado": "Order Status",
+    "total": "Order Total",
+    "subtotal": "Order Subtotal",
+    "descuento": "Order Discount",
+    "costo_envio": "Shipping Total",
+    "moneda": "Currency",
+    "customer_name": "Customer Name",
+    "customer_email": "Customer Email",
+    "customer_phone": "Customer Phone",
+    "customer_city": "Billing City",
+    "payment_method": "Payment Method"
+  }$$::jsonb,
+  $${
+    "delimiter": ",",
+    "timezone": "America/Bogota",
+    "status_map": {
+      "completed": "pagado",
+      "processing": "pendiente",
+      "cancelled": "cancelado",
+      "refunded": "devuelto"
+    }
+  }$$::jsonb,
+  1,
+  true
+)
+on conflict (canal, tipo, nombre, version) do nothing;
+
+------------------------------------------------------------------------------
 -- WhatsApp orders placeholder (is_active=false until F3 form ships)
 ------------------------------------------------------------------------------
 
