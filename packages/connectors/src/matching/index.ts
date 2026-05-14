@@ -20,6 +20,11 @@ export {
   matchByNormalizedName,
   normalize,
 } from "./level-3-normalized-name.js";
+export {
+  matchByEmbedding,
+  type EmbeddingsClient,
+  type EmbeddingMatchResult,
+} from "./level-4-embeddings.js";
 export { loadThresholds } from "./thresholds.js";
 export type {
   MatchResult,
