@@ -45,18 +45,24 @@ import { getSupabase } from "./lib/supabase.js";
 import { runProcessWpEvents } from "./jobs/process-wp-events.js";
 import { runSyncWpOrders } from "./jobs/sync-wp-orders.js";
 import { runSyncWpProducts } from "./jobs/sync-wp-products.js";
+import { runReembedJob } from "./jobs/reembed-products.js";
+import { runRecascadeJob } from "./jobs/re-cascade-unmatched.js";
 
 type Subcommand =
   | "heartbeat"
   | "process-wp-events"
   | "sync-wp-orders"
-  | "sync-wp-products";
+  | "sync-wp-products"
+  | "reembed-products"
+  | "re-cascade-unmatched";
 
 const KNOWN: Subcommand[] = [
   "heartbeat",
   "process-wp-events",
   "sync-wp-orders",
   "sync-wp-products",
+  "reembed-products",
+  "re-cascade-unmatched",
 ];
 
 function parseSubcommand(): Subcommand {
@@ -129,6 +135,24 @@ async function main(): Promise<void> {
       case "sync-wp-products": {
         const result = await runSyncWpProducts();
         log.info({ result }, "cron.sync-wp-products.summary");
+        process.exit(0);
+        break;
+      }
+
+      case "reembed-products": {
+        const result = await runReembedJob();
+        log.info({ result }, "cron.reembed-products.summary");
+        // Same exit policy: partial/failed status surfaces via
+        // `connector_runs.status`, not via the process exit code, so
+        // Railway doesn't loop on bad-data conditions (e.g. an OpenAI
+        // outage that resolves in the next tick).
+        process.exit(0);
+        break;
+      }
+
+      case "re-cascade-unmatched": {
+        const result = await runRecascadeJob();
+        log.info({ result }, "cron.re-cascade-unmatched.summary");
         process.exit(0);
         break;
       }
