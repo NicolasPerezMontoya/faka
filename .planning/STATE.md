@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: verifying
+stopped_at: "24 plans landed across 5 waves. **Phase 1 Foundation is code-complete.** Only deferred work: integration tests 1.2.5 (packages/connectors) + 1.4.3 (apps/orchestrator) — both need local Supabase running. Next: push to GitHub for CI verification, or proceed to `/gsd-verify-work` followed by `/gsd-plan-phase 2` (WordPress walking skeleton)."
+last_updated: "2026-05-14T14:58:35.967Z"
+last_activity: "2026-05-14 — Phase 1 Wave 4 executed in 3 atomic commits: Hono orchestrator (server.ts with /health + /connectors + /webhooks/:canal 501; pino logger + service-role supabase singleton + buildRegistry returning 9-entry connector record), cron entry (writes ONE connector_runs heartbeat with kind='cron-heartbeat'/canal=null per W2 + process.exit(0) per Pitfall 7), deploy infra (multi-stage Dockerfile + railway.toml with 2 services + vercel.json with monorepo build + scripts/smoke.sh + DEPLOY.md operator runbook)."
+progress:
+  total_phases: 9
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
+---
+
 # Project State
 
 ## Project Reference
@@ -40,6 +56,10 @@ Progress: [█████████░] Phase 1: 24 of 26 plans (92%); ~7400 
 _Updated after each plan completion_
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 2.1 inserted (URGENT) after Phase 2 — 2026-05-14 — Mercado Libre Colombia integration. Cliente decision: ML es el primer canal real post-F2 (antes de F3 POS+WhatsApp). F4 (ML+Dropi+Mini-CRM) necesita `--edit 4` follow-up para sacar ML (queda Dropi+Mini-CRM).
 
 ### Decisions
 

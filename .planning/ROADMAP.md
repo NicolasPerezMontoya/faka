@@ -16,6 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 0: Discovery & catalog normalization** - Understand the real catalog before building; produce baseline of automatic-vs-manual matching using CSV ingestion from day one.
 - [ ] **Phase 1: Foundation** - Repo, Supabase 5-layer schema (incl. LOCKED CSV tables), auth+RLS, Railway orchestrator skeleton, end-to-end CSV upload endpoint + Operación wizard.
 - [ ] **Phase 2: Walking skeleton (WordPress)** - First real connector end-to-end + matching cascade + human validation queue + "Hoy" view.
+- [ ] **Phase 2.1 (INSERTED): Mercado Libre Colombia integration** - First real integration after walking-skeleton. OAuth (developer app) + orders/products sync + 5-channel matching cascade extension. Bumped from F4 per cliente decision 2026-05-14.
 - [ ] **Phase 3: POS + WhatsApp (form) + Dead Stock** - POS webhook + internal WhatsApp form + "Productos" view + `mart_dead_stock` promoted to MVP + "Operación" health checks. **MVP usable milestone**.
 - [ ] **Phase 4: Mercado Libre + Dropi + Mini-CRM** - ML OAuth + Dropi CSV-primary + advanced marts + email alerts + **Mini-CRM (ADR-004)** with customer matching cascade and "Clientes" view.
 - [ ] **Phase 5: AI layer** - LLMProvider adapter + AM/PM insight jobs + feedback feed + conversational RAG chat + versioned prompts.
@@ -64,6 +65,16 @@ Decimal phases appear between their surrounding integers in numeric order.
 4. The dashboard "Hoy" view displays for the day: total consolidated sales, per-channel breakdown bar chart, top 10 products, last-hour realtime transaction feed — refreshed within the 15-min latency budget.
    **Plans**: TBD
    **UI hint**: yes
+
+### Phase 02.1: Mercado Libre Colombia integration (OAuth + 5-channel matching cascade extension) (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 2
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 02.1 to break down)
 
 ### Phase 3: POS + WhatsApp (form) + Dead Stock
 
