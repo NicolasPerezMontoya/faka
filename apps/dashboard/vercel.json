@@ -3,7 +3,7 @@
   "buildCommand": "cd ../.. && turbo run build --filter=dashboard...",
   "ignoreCommand": "npx turbo-ignore --fallback=HEAD^1",
   "outputDirectory": ".next",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile --filter dashboard...",
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile --filter dashboard...",
   "framework": "nextjs",
   "regions": ["iad1"],
   "headers": [
