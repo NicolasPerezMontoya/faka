@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 0: Discovery & catalog normalization** - Understand the real catalog before building; produce baseline of automatic-vs-manual matching using CSV ingestion from day one.
 - [ ] **Phase 1: Foundation** - Repo, Supabase 5-layer schema (incl. LOCKED CSV tables), auth+RLS, Railway orchestrator skeleton, end-to-end CSV upload endpoint + Operación wizard.
-- [ ] **Phase 2: Walking skeleton (WordPress)** - First real connector end-to-end + matching cascade + human validation queue + "Hoy" view.
+- [~] **Phase 2: Walking skeleton (WordPress)** - First real connector end-to-end + matching cascade + human validation queue + "Hoy" view. **CODE-COMPLETE 2026-05-15** (25/25 plans; degraded-mode until cliente delivers `WORDPRESS_*` creds — see `memoria/F2-PROGRESO.md`).
 - [ ] **Phase 2.1 (INSERTED): Mercado Libre Colombia integration** - First real integration after walking-skeleton. OAuth (developer app) + orders/products sync + 5-channel matching cascade extension. Bumped from F4 per cliente decision 2026-05-14.
 - [ ] **Phase 3: POS + WhatsApp (form) + Dead Stock** - POS webhook + internal WhatsApp form + "Productos" view + `mart_dead_stock` promoted to MVP + "Operación" health checks. **MVP usable milestone**.
 - [ ] **Phase 4: Mercado Libre + Dropi + Mini-CRM** - ML OAuth + Dropi CSV-primary + advanced marts + email alerts + **Mini-CRM (ADR-004)** with customer matching cascade and "Clientes" view.
@@ -63,8 +63,25 @@ Decimal phases appear between their surrounding integers in numeric order.
 2. Historical WordPress data has been backfilled via the `CSVConnector` path (LOCKED — ADR-001) and is visible alongside live data in `sales` + `sale_items`.
 3. The matching cascade produces scores for every ingested item: barcode → supplier code → normalized name → embeddings → LLM arbiter. Items below the high-confidence threshold appear in a human validation queue and a human can validate/reject from the dashboard, which flips `product_mappings.validado_humano=true`.
 4. The dashboard "Hoy" view displays for the day: total consolidated sales, per-channel breakdown bar chart, top 10 products, last-hour realtime transaction feed — refreshed within the 15-min latency budget.
-   **Plans**: TBD
-   **UI hint**: yes
+
+**Status**: In progress (code-complete 2026-05-15; awaiting cliente credentials for live WP-01 verification — see `memoria/F2-PROGRESO.md`)
+**Success criteria status** (verified at code level):
+
+1. ✓ Wired (degraded until creds): webhook route + `process-wp-events` cron + hourly REST pull + 15-min smoke (`scripts/wp-latency-smoke.ts`).
+2. ✓ Met: WP CSV mapping profile seeded; `apps/dashboard/__fixtures__/wp-orders-sample.csv` ingestable via F1's `commitUpload` wizard.
+3. ✓ Met: 5-level cascade implemented + `/matching` queue + `validateMapping` / `rejectMapping` / `bulkValidate` Server Actions write `validado_humano=true` + audit_log.
+4. ✓ Met: `/hoy` page renders 4 panels (totals, per-channel chart, top products, live-feed via Realtime); analista-variant view redacts `$ total` per RLS.
+
+**Plans (25 total)**:
+
+- Wave 0 (Scaffolding): 2.0.1 `@faka/llm` extraction · 2.0.2 env vars + CC-11 regex · 2.0.3 WP CSV mapping profile · 2.0.4 Wave 2 deps pin
+- Wave 1 (Schema): 2.1.1 product_embeddings + HNSW · 2.1.2 hoy views (SECURITY INVOKER ×5) · 2.1.3 database.ts regen
+- Wave 2 (Connectors): 2.2.1 WP connector + degraded mode · 2.2.2 cascade L1-3 · 2.2.3 cascade L4 embeddings · 2.2.4 cascade L5 LLM + TokenBudgetTracker · 2.2.5 cascade orchestrator + persistMatch
+- Wave 3 (Orchestrator): 2.3.1 `/webhooks/wordpress` route · 2.3.2 process-wp-events cron · 2.3.3 hourly REST crons · 2.3.4 reembed + re-cascade-unmatched crons
+- Wave 4 (Dashboard UI): 2.4.1 `/matching` queue · 2.4.2 `/matching/[id]` detail · 2.4.3 validate/reject Server Actions · 2.4.4 `/hoy` page · 2.4.5 live-feed Realtime + CSV upload callout
+- Wave 5 (Tests + verify): 2.5.1 vitest integration configs · 2.5.2 cascade 5-level test · 2.5.3 webhook+RLS+Hoy tests (consolidated into 2.5.2 + smoke-f2.sh; see memoria gaps) · 2.5.4 E2E latency smoke + DEPLOY.md F2 runbook + ROADMAP closeout
+
+**UI hint**: yes
 
 ### Phase 02.1: Mercado Libre Colombia integration (OAuth + 5-channel matching cascade extension) (INSERTED)
 
