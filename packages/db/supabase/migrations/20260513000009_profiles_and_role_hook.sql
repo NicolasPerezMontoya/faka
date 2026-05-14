@@ -86,9 +86,11 @@ begin
 
   v_claims := coalesce(event -> 'claims', '{}'::jsonb);
 
-  -- Inject claim at top level (for direct JWT access) and in app_metadata
-  -- (where @supabase/supabase-js's getUser() surfaces it).
-  v_claims := jsonb_set(v_claims, '{role}', to_jsonb(v_role::text));
+  -- DO NOT overwrite top-level `role`. That claim is the Postgres
+  -- DB role (authenticated/anon/service_role) used for RLS. Writing
+  -- a user_role enum value there breaks every query with
+  -- "role <X> does not exist". Only write to app_metadata.role —
+  -- that's where @supabase/supabase-js's getUser() surfaces it.
   v_claims := jsonb_set(
     v_claims,
     '{app_metadata,role}',

@@ -1,7 +1,8 @@
 /**
  * JWT claims helpers. The custom_access_token Auth Hook (migration 0009)
- * writes `role` into BOTH `claims.role` (top-level) AND
- * `claims.app_metadata.role`. We read with a fallback chain.
+ * writes the user_role enum into `claims.app_metadata.role` only —
+ * top-level `claims.role` is reserved for the Postgres DB role
+ * (authenticated/anon/service_role) that RLS keys off of.
  */
 
 import type { UserRole } from "@faka/schema";
@@ -19,7 +20,10 @@ export function extractRole(
   claims: JwtClaims | null | undefined,
 ): UserRole | null {
   if (!claims) return null;
-  return claims.role ?? claims.app_metadata?.role ?? null;
+  // Read ONLY from app_metadata.role. Top-level `role` is the
+  // Postgres DB role (authenticated/anon/service_role) — never the
+  // application user_role.
+  return claims.app_metadata?.role ?? null;
 }
 
 /**
