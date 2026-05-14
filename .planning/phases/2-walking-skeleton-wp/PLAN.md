@@ -520,6 +520,7 @@ Cross-wave parallelism: once W0 closes, W1 (schema migrations + types regen) and
 
 - **Task:** Two artifacts.
   - **Live-feed Client Component** at `apps/dashboard/app/(app)/hoy/_components/live-feed.tsx` per RESEARCH §Code Examples verbatim:
+
     ```typescript
     "use client";
     import { useEffect, useState } from "react";
@@ -533,7 +534,9 @@ Cross-wave parallelism: once W0 closes, W1 (schema migrations + types regen) and
     - Reads `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` only (CC-11 — NO service role in browser).
     - Renders: a table with columns: hora, canal (badge), sale_id (truncated link to detail), item_count, total. Analista: `total` cell shows "—".
     - **Graceful degrade:** if Realtime fails to connect (e.g., WebSocket blocked by firewall), the component remains functional with the SSR initial rows; show a non-blocking "Sin actualización en tiempo real" indicator in the corner.
+
   - **WP CSV upload wizard step bump** — extend the F1 wizard at `apps/dashboard/app/(app)/operacion/upload/_components/step-source.tsx` to highlight WordPress as the F2 primary channel (e.g., a small "Backfill histórico Phase 2" callout under the WordPress card). Add the WordPress orders profile to the `<Select>` of available profiles (Wave 0 already seeded it). **No new files needed for the wizard itself** — F1's CSV path already handles WordPress; just verify the orders profile is selectable and a sample CSV (`apps/dashboard/__fixtures__/wp-orders-sample.csv` — 10-row sample matching the WC Order Export Lite shape) lands rows in `sales` + `sale_items` end-to-end via `commitUpload`. Add this fixture as part of the plan.
+
 - **Files:** `apps/dashboard/app/(app)/hoy/_components/live-feed.tsx`, `apps/dashboard/__fixtures__/wp-orders-sample.csv` (10-row WP orders CSV matching `WordPress · Orders Export (WC Order Export Lite) · v1` profile), `apps/dashboard/app/(app)/operacion/upload/_components/step-source.tsx` (MODIFY — light callout, no logic change).
 - **Depends on:** 2.4.4 (Hoy page exists), 2.0.3 (WP orders profile seeded).
 - **References:** RESEARCH §Code Examples (live-feed code verbatim), RESEARCH §Pitfall 8 (Realtime can't span multiple tables; subscribe to sales only), RESEARCH §Pitfall 10 (Bogota timezone for fecha filter), invariant CC-11.
