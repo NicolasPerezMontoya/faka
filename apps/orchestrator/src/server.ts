@@ -3,6 +3,7 @@ import { serve } from "@hono/node-server";
 import { log } from "./lib/log.js";
 import { getSupabase } from "./lib/supabase.js";
 import { buildRegistry } from "./connectors/registry.js";
+import { mountWordPressWebhook } from "./routes/webhooks-wordpress.js";
 
 const app = new Hono();
 
@@ -49,9 +50,22 @@ app.get("/connectors", async (c) => {
   return c.json({ connectors: results });
 });
 
-app.post("/webhooks/:canal", (c) =>
-  c.json({ error: "NOT_IMPLEMENTED_F2", canal: c.req.param("canal") }, 501),
-);
+// Plan 2.3.1 — real WP webhook receiver. The mounter registers
+// `POST /webhooks/wordpress` directly; the catch-all below keeps every other
+// canal on the F1 501 stub until its own route lands (F2.1 ML, F3 POS).
+mountWordPressWebhook(app);
+
+app.post("/webhooks/:canal", (c) => {
+  const canal = c.req.param("canal");
+  // wordpress is intentionally NOT listed here — the mounter above takes
+  // precedence (Hono routes match in registration order). If a request still
+  // hits this catch-all with `canal=wordpress`, something has been
+  // mis-registered upstream — fail loud.
+  if (canal === "wordpress") {
+    return c.json({ error: "route_misregistration", canal }, 500);
+  }
+  return c.json({ error: "NOT_IMPLEMENTED_F2", canal }, 501);
+});
 
 app.notFound((c) => c.json({ error: "not_found", path: c.req.path }, 404));
 
