@@ -14,8 +14,11 @@ RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
 
 WORKDIR /app
 
-# Copy lockfile + workspace manifests first (cache-friendly).
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
+# Copy lockfile (if present) + workspace manifests first (cache-friendly).
+# The wildcard on pnpm-lock.yaml makes the COPY tolerant when no lockfile
+# is committed — matches the Vercel build's `--no-frozen-lockfile` posture
+# until we land a lockfile generated from a network-stable env.
+COPY pnpm-lock.yaml* pnpm-workspace.yaml package.json .npmrc ./
 COPY turbo.json tsconfig.json ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/db/package.json ./packages/db/
@@ -27,7 +30,7 @@ COPY apps/dashboard/package.json ./apps/dashboard/
 COPY apps/orchestrator/package.json ./apps/orchestrator/
 COPY scripts/discovery/package.json ./scripts/discovery/
 
-RUN pnpm install --frozen-lockfile --filter @faka/orchestrator...
+RUN pnpm install --no-frozen-lockfile --filter @faka/orchestrator...
 
 # Copy the rest and build only what the orchestrator needs.
 COPY . .
