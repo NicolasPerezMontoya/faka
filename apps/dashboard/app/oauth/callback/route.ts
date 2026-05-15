@@ -99,7 +99,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       reason: "invalid_state",
     });
   }
-  const stateRow = stateLookup.data as {
+  const stateRow = stateLookup.data as unknown as {
     state: string;
     canal: string;
     expires_at: string;
