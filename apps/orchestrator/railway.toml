@@ -151,3 +151,13 @@ schedule = "0 */6 * * *"
 #   AI_GATEWAY_API_KEY | ANTHROPIC_API_KEY | OPENAI_API_KEY |
 #   GOOGLE_GENERATIVE_AI_API_KEY | MOONSHOT_API_KEY
 #   plus optional LLM_PROVIDER + LLM_MODEL overrides.
+#
+# Mercado Libre (F2.1) — OAuth + webhook. Graceful degrade when any
+# of these are unset (healthCheck ok:false, syncs no-op, webhook 503,
+# crons exit 0 with connector_runs.errors_json.reason='not_configured').
+# Cliente registers the developer app at https://developers.mercadolibre.com.co
+# and delivers the four secrets before live OAuth. Crons land in
+# Plans 2.1.3.2 (sync-ml-orders) / 2.1.3.3 (sync-ml-products) /
+# 2.1.3.4 (ml-refresh-tokens) — Wave 0 only documents the env contract.
+#   ML_CLIENT_ID, ML_CLIENT_SECRET, ML_REDIRECT_URI, ML_WEBHOOK_SECRET,
+#   ML_SITE_ID (hardcoded to "MCO"; F2.1 ships single-site only)
