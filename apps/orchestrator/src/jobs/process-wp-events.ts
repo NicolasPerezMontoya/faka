@@ -66,18 +66,19 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  loadWordPressConfig,
-  normalizeOrder,
-  recordConnectorRun,
-  type LoadedWordPressConfig,
-} from "@faka/connectors";
+import { recordConnectorRun } from "@faka/connectors";
 import {
   loadThresholds,
   persistMatch,
   runMatchCascade,
 } from "@faka/connectors/matching";
-import { WCOrderSchema, type WCOrder } from "@faka/connectors/wordpress";
+import {
+  loadWordPressConfig,
+  normalizeOrder,
+  WCOrderSchema,
+  type LoadedWordPressConfig,
+  type WCOrder,
+} from "@faka/connectors/wordpress";
 import { resolveLLMConfig } from "@faka/llm";
 import { getSupabase } from "../lib/supabase.js";
 import { log as orchestratorLog } from "../lib/log.js";

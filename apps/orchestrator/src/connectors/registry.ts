@@ -23,14 +23,8 @@ export type Registry = Record<Channel, ChannelConnector | null>;
 export function buildRegistry(): Registry {
   return {
     "csv-upload": createCSVConnector({}),
-    wordpress: createWordPressConnector({
-      baseUrl: process.env.WORDPRESS_API_URL ?? "",
-      apiKey: process.env.WORDPRESS_API_KEY ?? "",
-    }),
-    mercadolibre: createMercadoLibreConnector({
-      clientId: process.env.ML_CLIENT_ID ?? "",
-      clientSecret: process.env.ML_CLIENT_SECRET ?? "",
-    }),
+    wordpress: createWordPressConnector({}),
+    mercadolibre: createMercadoLibreConnector({}),
     dropi: createDropiConnector({
       username: process.env.DROPI_USER ?? "",
       password: process.env.DROPI_PASS ?? "",

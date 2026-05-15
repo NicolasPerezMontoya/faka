@@ -56,7 +56,7 @@ import {
   loadWordPressConfig,
   verifyWooSignature,
   type LoadedWordPressConfig,
-} from "@faka/connectors";
+} from "@faka/connectors/wordpress";
 import { getSupabase } from "../lib/supabase.js";
 import { log as orchestratorLog } from "../lib/log.js";
 
