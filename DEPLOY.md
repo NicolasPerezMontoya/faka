@@ -412,3 +412,300 @@ two channels run side-by-side.
 | Cascade always routes to queue (master_sku NULL)       | `master_products.nombre_normalizado` not backfilled                     | Run one-off: `update master_products set nombre_normalizado = normalize(name);`     |
 | `wp-latency-smoke.ts` exits 1 with `pg_not_installed`  | `pg` not in workspace deps and script is run from cold install          | `pnpm add -D pg @types/pg` at the repo root, or rely on smoke-f2.sh instead          |
 | `reembed-products` writes `no_embedding_provider`      | `OPENAI_API_KEY` unset (intentional — embeddings are optional in F2)    | Set the key when ready; cron picks it up on next fire without redeploy              |
+
+---
+
+# F2.1 — Mercado Libre Colombia
+
+Phase 2.1 (INSERTED 2026-05-14 per cliente decision) layers Mercado Libre Colombia
+on top of the F2 walking-skeleton. Same architectural shape as F2: production-ready
+code that **DEGRADES GRACEFULLY** when ML env vars are unset, plus one new dashboard
+route (`/operacion/conectar-mercadolibre`) used once per seller for OAuth bootstrap.
+ML rows surface on F2's existing `/hoy` + `/matching` views with NO new ML-specific
+pages (CC-12 invariant carried forward).
+
+> **2026-05-15 — ML app already registered.** Cliente registered the developer app
+> at https://developers.mercadolibre.com.co with app_id `3933497047128728`. Env
+> vars currently live in **Vercel** (orchestrator-temporarily — until the
+> orchestrator gets its own Railway deploy, dashboard server actions read the
+> client_id from Vercel env and the callback writes to oauth_tokens via the
+> service-role client). When the orchestrator deploys to Railway, move
+> `ML_CLIENT_SECRET` + `ML_WEBHOOK_SECRET` to Railway and leave `ML_CLIENT_ID` +
+> `ML_REDIRECT_URI` mirrored in both (the dashboard still needs the client_id +
+> redirect to build the authorize URL server-side).
+
+## F2.1.0 Prerequisites
+
+The cliente MUST register the Mercado Libre developer app at
+https://developers.mercadolibre.com.co BEFORE F2.1 sync runs in production.
+**This is already done as of 2026-05-15** (app_id `3933497047128728`). If the
+app is ever rotated (compromised, deleted, or rebuilt against a fresh seller),
+re-run the registration runbook below.
+
+### F2.1.0.a App registration runbook (only re-run if rotating)
+
+Operator (or cliente) performs these steps at https://developers.mercadolibre.com.co
+ONCE per seller account:
+
+1. Log in with the seller's ML account (the same login that owns the storefront).
+2. Click **Crear app** → fill name (`faka-orchestrator`), short description
+   (`Sincronización de pedidos y productos para faka — dashboard interno`),
+   category (`Gestión de pedidos`).
+3. **Redirect URI** — set to EXACTLY (no trailing slash, no extra path):
+   - Production: `https://orchestrator.fakawholesale.com/oauth/mercadolibre/callback`
+   - Dev/local:  `http://localhost:8080/oauth/mercadolibre/callback`
+   - **Vercel preview URLs are NOT valid** — ML's auth server rejects redirects
+     it has not pre-approved. Use the stable orchestrator hostname or `localhost`
+     (RESEARCH §Pitfall 12).
+4. **Webhook URL** — set to:
+   - Production: `https://orchestrator.fakawholesale.com/webhooks/mercadolibre`
+5. **Scopes** — request `read write offline_access` (the `offline_access` scope
+   is the one that issues the refresh_token; without it, tokens go invalid after
+   6h with no recovery).
+6. Copy the credentials from the ML dev console:
+   - App ID → `ML_CLIENT_ID`
+   - Secret Key → `ML_CLIENT_SECRET`
+   - Notification Secret → `ML_WEBHOOK_SECRET`
+7. Hand off the secret values via 1Password / Bitwarden / equivalent shared
+   vault. **NEVER paste them into email, Slack, or any chat.**
+
+## F2.1.1 Environment variables
+
+Set in the Vercel (or Railway when orchestrator deploys) project → orchestrator
+service → **Variables**. All five are server-only — never expose them via
+`NEXT_PUBLIC_*` (the eslint rule extended by F2.1 Plan 2.1.0.3 in
+`packages/config/eslint.base.cjs` will fail CI if you try).
+
+| Variable                   | Value                                                                      | Required for                                |
+| -------------------------- | -------------------------------------------------------------------------- | ------------------------------------------- |
+| `ML_CLIENT_ID`             | App ID from ML dev console (e.g. `3933497047128728`)                       | OAuth authorize + token exchange + refresh  |
+| `ML_CLIENT_SECRET`         | Secret Key from ML dev console (shown ONCE on app creation; rotatable)     | OAuth token exchange + refresh              |
+| `ML_REDIRECT_URI`          | `https://orchestrator.fakawholesale.com/oauth/mercadolibre/callback`       | OAuth callback (must EXACT-match app config) |
+| `ML_WEBHOOK_SECRET`        | Notification Secret from ML dev console (signed-query-params HMAC verify)  | `POST /webhooks/mercadolibre` HMAC verify   |
+| `ML_SITE_ID`               | `MCO` (hardcoded in `types.ts`; env mirror for ops visibility)             | Currency / locale assertions in connector   |
+
+**Where they live today (2026-05-15):** All five in **Vercel** (orchestrator-
+temporarily). When the orchestrator deploys to Railway, move `ML_CLIENT_SECRET`
++ `ML_WEBHOOK_SECRET` to Railway and keep `ML_CLIENT_ID` + `ML_REDIRECT_URI`
+mirrored in both (dashboard server actions need the client_id to build
+authorize URLs).
+
+Until ALL FIVE are set, the connector ships in **degraded mode** — see §F2.1.6
+for the surface-by-surface behavior table.
+
+## F2.1.2 Migrations to apply (order matters)
+
+F2.1 adds **four new migrations** on top of the F1+F2 baseline. They are additive
+and apply cleanly via `supabase db push` after F1's 13 + F2's 7 migrations land:
+
+```bash
+pnpm --filter @faka/db exec supabase db push
+```
+
+The expected migration files in `packages/db/supabase/migrations/`, in apply
+order (after the F2 series ending at `20260601000008_sale_items_unique.sql`):
+
+| File                                                | Adds                                                                         |
+| --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `20260615000001_oauth_tokens.sql`                   | `oauth_tokens` table + service-role-only RLS + `unique (canal, user_id)`     |
+| `20260615000001b_advisory_lock_fn.sql`              | `pg_try_advisory_xact_lock` wrapper fn for refresh-race protection           |
+| `20260615000002_product_variants_unique.sql`        | Additive unique `(master_sku, attributes_hash)` on `product_variants`        |
+| `20260615000003_oauth_state.sql`                    | `oauth_state` CSRF nonce table + 10-min TTL cleanup                          |
+
+After every successful local run:
+
+```bash
+pnpm --filter @faka/db run types
+git add packages/db/types/database.ts
+```
+
+> The `oauth_tokens` row count after the cliente completes the connect-flow
+> should be exactly **1** per canal — the connector reads "the one row" via
+> `limit 1`. Multi-account support is multi-ready in the schema (`unique
+> (canal, user_id)`) but v1 writes only one row.
+
+## F2.1.3 Railway services added in F2.1
+
+`apps/orchestrator/railway.toml` declares additional services on top of the
+F1+F2 set. After `git pull` on the Railway-connected branch, the dashboard
+auto-detects and offers to create them — accept all:
+
+| Service                                  | Schedule          | Purpose                                                                                                       |
+| ---------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| `orchestrator-cron-ml-refresh-tokens`    | `0 */5 * * *`     | Plan 2.1.1.4 — 5h safety-net refresh; advisory-lock-gated so it never races with the lazy in-flight refresh. |
+| `orchestrator-cron-sync-ml-orders`       | `*/15 * * * *`    | Plan 2.1.3.2 — every 15min REST pull from `/orders/search` with `from_id` pagination + idempotent UPSERT.    |
+| `orchestrator-cron-sync-ml-products`     | `0 * * * *`       | Plan 2.1.3.3 — hourly REST pull from `/users/{id}/items/search` with `scroll_id` pagination + variants.      |
+
+All three crons use `kind:"channel", canal:"mercadolibre"` in `connector_runs`
+(W2 invariant carried forward from F2). They `process.exit(0)` on success AND
+on degraded mode (silences pager noise during pre-OAuth period — RESEARCH
+§Environment Availability).
+
+> **Staggering:** `sync-ml-products` runs at the top of the hour (`0 * * * *`).
+> `sync-ml-orders` runs every 15min (`*/15 * * * *`) — so at top-of-hour both
+> fire together. ML's documented rate limit (10k calls/h per seller per scope)
+> easily absorbs this; no staggering is needed for v1. If a future cron is
+> added that competes for the same access_token, stagger it 5–10min off.
+
+## F2.1.4 OAuth bootstrap procedure (one-time per seller)
+
+The orchestrator + dashboard talk to ML on behalf of the cliente by holding a
+long-lived `refresh_token` in `oauth_tokens`. The operator initiates the
+authorize flow ONCE; ML redirects to the orchestrator's callback; tokens land
+in the DB; from then on all syncs use those tokens transparently.
+
+1. **Login** to the dashboard as **super_admin** (the only role with access
+   to `/operacion/conectar-mercadolibre`).
+2. **Navigate** to `/operacion/conectar-mercadolibre`. The page surfaces one
+   of two states:
+   - **Not configured** — env vars missing; surfaces a red pill "Not
+     configured. Set `ML_CLIENT_ID/SECRET/REDIRECT_URI/WEBHOOK_SECRET` on
+     orchestrator and reload." NO connect button. **STOP** — finish §F2.1.1
+     first.
+   - **Ready to connect** — env vars set; surfaces a green "Connect Mercado
+     Libre" button.
+3. **Click** "Connect Mercado Libre". The Server Action `start-oauth.ts`:
+   - Inserts a fresh row into `oauth_state` with a UUID nonce + 10-min TTL.
+   - Redirects the browser to
+     `https://auth.mercadolibre.com.co/authorization?response_type=code&client_id=$ML_CLIENT_ID&redirect_uri=$ML_REDIRECT_URI&state=<nonce>`.
+4. **Cliente approves on ML** — at the ML auth page, the cliente logs in
+   with the seller account and clicks **Autorizar**. ML redirects to
+   `$ML_REDIRECT_URI?code=<auth_code>&state=<nonce>`.
+5. **Orchestrator callback** at `/oauth/mercadolibre/callback`:
+   - Verifies the `state` nonce matches a non-expired row in `oauth_state`
+     (CSRF check); deletes the row on use.
+   - Exchanges `code` for tokens via `POST /oauth/token` (grant_type=authorization_code).
+   - UPSERTs the resulting `{ access_token, refresh_token, expires_at, user_id }`
+     into `oauth_tokens` keyed by `(canal='mercadolibre', user_id)`.
+   - Redirects back to `/operacion/conectar-mercadolibre?status=success`.
+6. **Verify** the token landed with a single read-only SQL (NO values are
+   displayed — just confirm the row exists):
+
+   ```sql
+   SELECT canal, user_id, expires_at
+   FROM oauth_tokens
+   WHERE canal = 'mercadolibre';
+   ```
+
+   Expected: exactly 1 row; `expires_at` ~6h in the future; `user_id` is the
+   seller's ML internal id.
+
+After this ceremony completes, the three crons (§F2.1.3) start producing real
+data within their next scheduled tick. No code redeploy is required to flip
+from degraded mode to live.
+
+### F2.1.4.a Secret rotation runbook
+
+If `ML_CLIENT_SECRET` needs to be rotated (suspected leak, scheduled rotation,
+etc.):
+
+1. Rotate in ML dev console → app settings → **Regenerate Secret Key**. ML
+   shows the new value ONCE — capture it before navigating away.
+2. Update Railway (or Vercel) env: `ML_CLIENT_SECRET=<new-value>`.
+3. **Restart** the orchestrator service so the new value loads.
+4. **DO NOT re-run the OAuth flow.** Existing access + refresh tokens keep
+   working until they expire (~6h for access; refresh is single-use but
+   long-lived). The new secret is ONLY used the next time the connector
+   calls `POST /oauth/token` (refresh). Forcing a re-auth is unnecessary and
+   would interrupt active syncs.
+
+### F2.1.4.b Revoke + re-auth runbook (compromise)
+
+If `oauth_tokens` is suspected compromised (e.g., service-role key leaked, DB
+backup exfiltrated):
+
+1. **Revoke the app** in ML dev console — this invalidates ALL tokens
+   immediately, including in-flight refresh tokens.
+2. Delete the row(s) via service-role SQL (the only role with write
+   access — F2.1 Plan 2.1.1.1 RLS):
+
+   ```sql
+   DELETE FROM oauth_tokens WHERE canal = 'mercadolibre';
+   ```
+
+3. Rotate `ML_CLIENT_SECRET` per §F2.1.4.a.
+4. Cliente re-completes the connect-flow at `/operacion/conectar-mercadolibre`
+   per §F2.1.4 (steps 1–6).
+
+## F2.1.5 Post-deploy verification
+
+After the orchestrator + dashboard redeploy and migrations apply:
+
+```bash
+# (A) F1 + F2 + F2.1 HTTP smoke — passes in both degraded and configured modes.
+bash scripts/smoke-f2.1.sh \
+  https://<dashboard-url>.vercel.app \
+  https://<orchestrator-url>.up.railway.app
+
+# (B) Optional: end-to-end 15-min latency smoke (Plan 2.1.4.4).
+#     Requires ML_WEBHOOK_SECRET + DATABASE_URL locally; exits cleanly in
+#     degraded mode (no creds → skips the live HMAC step + reports skip).
+ORCHESTRATOR_URL=https://<orchestrator-url>.up.railway.app \
+DATABASE_URL='postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres' \
+ML_WEBHOOK_SECRET='<same-string-as-in-railway>' \
+  pnpm --filter @faka/orchestrator exec tsx scripts/ml-latency-smoke.ts | tee /tmp/ml-latency.json
+
+# (C) Optional: one-off manual sync run (catches up any backlog).
+railway run --service orchestrator-cron-sync-ml-orders node dist/cron.js sync-ml-orders
+```
+
+The JSON report from (B) carries timings — `t_webhook_acked`, `t_raw_event_landed`,
+`t_cascade_fired`, `t_view_reflects`. Only `t_view_reflects ≤ 15 min` is the
+formal ML-01 budget; the others are tight engineering targets so we have headroom.
+
+## F2.1.6 Degraded-mode behaviour reference
+
+Quick reference for what each surface returns when ML env vars are unset (the
+default until cliente completes the bootstrap):
+
+| Surface                                                | Behaviour without ML env                                                                |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `GET /connectors` (orchestrator)                       | `mercadolibre` entry: `{ ok: false, last_error: "not configured", missing: [...] }`     |
+| `fetchOrders` / `fetchProducts` (connector)            | Returns `[]` + structured warning; NO API call attempted                                |
+| `POST /webhooks/mercadolibre`                          | `503 { error: "not_configured" }` — webhook route degraded short-circuit               |
+| `GET /oauth/mercadolibre/callback`                     | `503 { error: "not_configured" }` — callback route degraded short-circuit              |
+| `orchestrator-cron-ml-refresh-tokens` (every 5h)       | `connector_runs` row with `errors_json.reason='not_configured'`, exit 0                |
+| `orchestrator-cron-sync-ml-orders` (every 15min)       | `connector_runs` row with `errors_json.reason='not_configured'`, exit 0                |
+| `orchestrator-cron-sync-ml-products` (every 1h)        | `connector_runs` row with `errors_json.reason='not_configured'`, exit 0                |
+| `/operacion/conectar-mercadolibre` (dashboard)         | Red pill "Not configured"; lists missing env vars; NO connect button                   |
+| `/hoy` page                                            | Renders with whatever non-ML data exists (CSV + WP); per-channel chart shows no `mercadolibre` slice |
+| `/matching` queue                                      | Empty of ML rows; WP + CSV rows still surface normally                                  |
+
+These behaviours satisfy F2.1 requirement **ML-06** ("connector ships in
+degraded mode") and the cross-cutting check **F2.1-CC-DEGRADED**. They are
+stable; the cliente can take as long as they need to complete the OAuth
+bootstrap.
+
+## F2.1.7 Out-of-scope reminder
+
+F2.1 is **MCO only, single seller, items mode only**. Explicitly NOT included:
+
+- Other ML sites (MLA Argentina, MLM Mexico, MLB Brazil) — `siteId` is hardcoded
+  `"MCO"` in `types.ts`; currency hardcoded `"COP"`.
+- Multi-account ML support — schema is multi-ready but v1 writes 1 row only.
+- ML Shipments / Logistics API — carrier metadata stays in `raw_orders.payload_json`.
+- ML Messaging / Questions API — webhook topic `messages` is logged + dropped
+  with 200; `messaging_log` stays empty (CC-14 invariant carried forward; the
+  smoke asserts it).
+- ML Catalog Products mode — items with `catalog_product_id != null` are DLQ'd
+  + skipped by variant-mapper. MCO 2026 adoption is unconfirmed
+  (RESEARCH §Assumption A2); if the smoke's catalog-mode counter shows > 0
+  per cron run, revisit in a follow-up phase.
+- Per-variant pricing schema column — F2.1 stashes per-variation `price` +
+  `available_quantity` under `atributos_json.__pricing` as nested metadata.
+- Dashboard ML-specific pages — F2.1 adds NO new views besides
+  `/operacion/conectar-mercadolibre`. ML rows surface on F2's channel-agnostic
+  `/hoy` + `/matching` automatically.
+
+## F2.1.8 Troubleshooting (F2.1-specific additions)
+
+| Symptom                                                       | Probable cause                                                                                  | Fix                                                                                                       |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Webhook returns 401 `invalid_signature` consistently          | `ML_WEBHOOK_SECRET` mismatch between Railway and ML dev console                                | Re-paste the Notification Secret from the ML dev console into Railway env; restart service                |
+| Webhook returns 401 with a CORRECT secret                     | Signed-query-params canonical-string builder mismatch (sort order, URL-encoding edge case)      | Check `packages/connectors/src/mercadolibre/webhook-verify.ts` — ML signs SORTED query params, NOT body  |
+| OAuth callback returns 403 `invalid_state`                    | `oauth_state` row expired (>10min) OR state nonce mismatch (cookie/storage cleared mid-flow)    | Cliente retries the connect ceremony — the nonce is single-use; old links die after 10min                 |
+| Refresh-token cron writes `concurrent_refresh_in_progress`    | Two crons OR cron + lazy-refresh raced; advisory lock did its job — one held, one skipped       | Expected behaviour; not a bug. Verify the held one wrote a new row; the skipped one exits 0 silently     |
+| `/orders/search` returns currency NOT `COP`                   | Seller has a non-MCO listing in their catalog (rare); F2.1 hardcodes MCO/COP                   | Connector rejects the order at `assertCurrency` + writes a DLQ row; investigate seller's catalog          |
+| `sync-ml-products` writes `catalog_mode_skipped` counter > 0  | ML's catalog-products mode (Assumption A2) has > 0 adoption in MCO 2026                        | Decision point: revisit catalog-mode support in a follow-up phase. Track count for trend; not a bug      |
+| `/operacion/conectar-mercadolibre` 404                        | Dashboard not deployed yet OR user lacks `super_admin` role                                     | Check Vercel deploy + `auth.users.role`; only super_admin sees the route per role-matrix.ts              |
+| `ml-refresh-tokens` exits 0 but no new row in `oauth_tokens`  | `oauth_tokens` is empty — bootstrap not completed                                              | Complete §F2.1.4 OAuth bootstrap first. Cron has nothing to refresh until the first row exists           |
