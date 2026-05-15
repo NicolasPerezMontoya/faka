@@ -19,6 +19,7 @@ const PUBLIC_PATHS = new Set([
   "/login",
   "/signup",
   "/auth/callback",
+  "/oauth/callback",
   "/api/health",
   "/forbidden",
 ]);
