@@ -4,6 +4,7 @@ import { log } from "./lib/log.js";
 import { getSupabase } from "./lib/supabase.js";
 import { buildRegistry } from "./connectors/registry.js";
 import { mountWordPressWebhook } from "./routes/webhooks-wordpress.js";
+import { mountMercadoLibreWebhook } from "./routes/webhooks-mercadolibre.js";
 
 const app = new Hono();
 
@@ -52,16 +53,21 @@ app.get("/connectors", async (c) => {
 
 // Plan 2.3.1 — real WP webhook receiver. The mounter registers
 // `POST /webhooks/wordpress` directly; the catch-all below keeps every other
-// canal on the F1 501 stub until its own route lands (F2.1 ML, F3 POS).
+// canal on the F1 501 stub until its own route lands (F3 POS).
 mountWordPressWebhook(app);
+
+// Plan 2.1.3.1 — Mercado Libre signed-query-params webhook. Distinct verifier
+// from WP (HMAC-PATTERN-DIVERGENCE): ML signs the canonical query string, WP
+// signs the raw body — the two routes share an envelope, not a primitive.
+mountMercadoLibreWebhook(app);
 
 app.post("/webhooks/:canal", (c) => {
   const canal = c.req.param("canal");
-  // wordpress is intentionally NOT listed here — the mounter above takes
-  // precedence (Hono routes match in registration order). If a request still
-  // hits this catch-all with `canal=wordpress`, something has been
-  // mis-registered upstream — fail loud.
-  if (canal === "wordpress") {
+  // wordpress + mercadolibre are intentionally NOT listed here — their
+  // mounters above take precedence (Hono matches in registration order).
+  // If a request still hits this catch-all with one of those canals,
+  // something has been mis-registered upstream — fail loud.
+  if (canal === "wordpress" || canal === "mercadolibre") {
     return c.json({ error: "route_misregistration", canal }, 500);
   }
   return c.json({ error: "NOT_IMPLEMENTED_F2", canal }, 501);

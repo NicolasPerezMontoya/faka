@@ -27,6 +27,8 @@
     "./mercadolibre/normalize-order.js": "./src/mercadolibre/normalize-order.ts",
     "./mercadolibre/normalize-product": "./src/mercadolibre/normalize-product.ts",
     "./mercadolibre/normalize-product.js": "./src/mercadolibre/normalize-product.ts",
+    "./mercadolibre/webhook-verify": "./src/mercadolibre/webhook-verify.ts",
+    "./mercadolibre/webhook-verify.js": "./src/mercadolibre/webhook-verify.ts",
     "./dropi": "./src/dropi/index.ts",
     "./pos": "./src/pos/index.ts",
     "./whatsapp": "./src/whatsapp/index.ts",
