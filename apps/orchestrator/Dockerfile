@@ -55,6 +55,9 @@ COPY --from=builder /out /app
 
 EXPOSE 8080
 
-# Default CMD is the web server; Railway cron service overrides via
-# railway.toml startCommand=node dist/cron.js.
-CMD ["node", "dist/server.js"]
+# Default CMD is the web server; Railway cron services override via the
+# serviceInstance.startCommand (e.g. `pnpm tsx src/cron.ts <job>`). We use
+# tsx at runtime because workspace packages (`@faka/connectors`, etc.)
+# expose their `main` as TypeScript source — Node 22 refuses to strip
+# types under node_modules, so tsx handles compilation on demand.
+CMD ["node_modules/.bin/tsx", "src/server.ts"]

@@ -6,9 +6,9 @@
   "type": "module",
   "main": "./dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "start:cron": "node dist/cron.js",
+    "build": "tsc --noEmit",
+    "start": "tsx src/server.ts",
+    "start:cron": "tsx src/cron.ts",
     "dev": "tsx watch src/server.ts",
     "lint": "echo '(uses base eslint via app/package configs)'",
     "test": "vitest run --passWithNoTests",
@@ -27,12 +27,12 @@
     "hono": "^4.6.14",
     "p-retry": "^7.0.0",
     "pino": "^9.5.0",
+    "tsx": "^4.19.2",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@faka/config": "workspace:*",
     "@types/node": "^22.10.5",
-    "tsx": "^4.19.2",
     "typescript": "5.7.3",
     "vitest": "^2.1.8"
   },
