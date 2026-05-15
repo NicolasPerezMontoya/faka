@@ -131,6 +131,36 @@ restartPolicyType = "NEVER"
 [services.cron]
 schedule = "0 */6 * * *"
 
+# ─── Cron service: ml-refresh-tokens (F2.1 Plan 2.1.1.4) ─────────
+# Every 5h: sweep `oauth_tokens` rows that will expire within 1h and rotate
+# their (access_token, refresh_token) pair via the OAuth refresh flow in
+# `@faka/connectors/mercadolibre/oauth`. This is the SAFETY NET behind the
+# primary lazy-refresh-on-401 path inside the ML api-client (Plan 2.1.2.1)
+# and the `expires_at < now() + 60s` skew check inside `loadAccessToken`
+# (Plan 2.1.1.2) — those handle the common case; this cron handles the
+# dormant-token edge case (>6h with no API traffic).
+#
+# Race-condition mitigation: refreshToken() guards each rotation with a
+# Postgres transactional advisory lock (RESEARCH §Pitfall 1) so concurrent
+# crons can't double-rotate and lose the single-use refresh_token.
+#
+# Cadence rationale: 5h is calibrated to ML's 6h access-token TTL — always
+# at least 1h of headroom even if Railway's scheduler is delayed.
+#
+# Degraded mode (any ML_* env unset): writes `status=succeeded,
+# records_processed=0, errors_json.reason='not_configured'` and exits 0.
+# `failed` would page the cliente during the pre-OAuth period and we don't
+# want that noise — the connector_runs row is the audit trail.
+[[services]]
+name = "orchestrator-cron-ml-refresh-tokens"
+
+[services.deploy]
+startCommand = "node dist/cron.js ml-refresh-tokens"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "0 */5 * * *"
+
 # ─── F2 environment surface ──────────────────────────────────────
 # Operator runbook: set these in the Railway service variables tab.
 # Both services (web + cron) read the same list. See DEPLOY.md for the

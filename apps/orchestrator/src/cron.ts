@@ -25,6 +25,16 @@
  *   - `re-cascade-unmatched` → every 6h, retry the cascade for
  *                            `sale_items.master_sku IS NULL` rows < 7d old
  *                            (Plan 2.3.4). Gated by LLM_DAILY_TOKEN_CAP.
+ *   - `ml-refresh-tokens`    → every 5h, sweep `oauth_tokens` rows that
+ *                            will expire within 1h and rotate them (F2.1
+ *                            Plan 2.1.1.4). Safety net behind the primary
+ *                            lazy-refresh-on-401 path in the ML api-client.
+ *                            Writes connector_runs with kind=channel +
+ *                            canal=mercadolibre + metadata_json.tipo=
+ *                            'refresh-tokens'. Degraded mode (any ML_*
+ *                            env unset) → succeeded run with reason=
+ *                            not_configured and process.exit(0) (no pager
+ *                            noise pre-OAuth).
  *
  * RESEARCH §7 + Pitfall 7:
  *   - Process MUST `process.exit(0)` cleanly on success. Railway cron keeps
@@ -47,6 +57,7 @@ import { runSyncWpOrders } from "./jobs/sync-wp-orders.js";
 import { runSyncWpProducts } from "./jobs/sync-wp-products.js";
 import { runReembedJob } from "./jobs/reembed-products.js";
 import { runRecascadeJob } from "./jobs/re-cascade-unmatched.js";
+import { runMlRefreshTokens } from "./jobs/ml-refresh-tokens.js";
 
 type Subcommand =
   | "heartbeat"
@@ -54,7 +65,8 @@ type Subcommand =
   | "sync-wp-orders"
   | "sync-wp-products"
   | "reembed-products"
-  | "re-cascade-unmatched";
+  | "re-cascade-unmatched"
+  | "ml-refresh-tokens";
 
 const KNOWN: Subcommand[] = [
   "heartbeat",
@@ -63,6 +75,7 @@ const KNOWN: Subcommand[] = [
   "sync-wp-products",
   "reembed-products",
   "re-cascade-unmatched",
+  "ml-refresh-tokens",
 ];
 
 function parseSubcommand(): Subcommand {
@@ -153,6 +166,17 @@ async function main(): Promise<void> {
       case "re-cascade-unmatched": {
         const result = await runRecascadeJob();
         log.info({ result }, "cron.re-cascade-unmatched.summary");
+        process.exit(0);
+        break;
+      }
+
+      case "ml-refresh-tokens": {
+        const result = await runMlRefreshTokens();
+        log.info({ result }, "cron.ml-refresh-tokens.summary");
+        // Same exit policy as the WP crons: partial/failed status is
+        // surfaced via `connector_runs.status`, NOT via the process exit
+        // code. exit(0) keeps Railway's restart-on-failure quiet during
+        // the pre-OAuth period (degraded mode is a "succeeded" no-op).
         process.exit(0);
         break;
       }
