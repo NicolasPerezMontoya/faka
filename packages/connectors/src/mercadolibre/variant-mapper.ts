@@ -77,7 +77,7 @@ export interface AttributeCombination {
  *   IGNORED by the fingerprint (so price changes don't cause variant
  *   duplication on UPSERT).
  */
-export type AtributosJson = Record<string, string | null | { __pricing?: Record<string, unknown> }>;
+export type AtributosJson = Record<string, unknown>;
 
 // -----------------------------------------------------------------------------
 // Pure helpers
