@@ -66,6 +66,7 @@ export const ROUTE_ROLE_REQUIREMENTS: Record<
   "/clientes": ["super_admin", "admin"], // Mini-CRM hidden from Manager/Analista (ADR-004)
   "/inteligencia": ["super_admin", "admin", "manager", "analista"],
   "/hoy": ["super_admin", "admin", "manager", "analista"],
+  "/ventas": ["super_admin", "admin", "manager", "analista"],
   "/productos": ["super_admin", "admin", "manager", "analista"],
   "/canales": ["super_admin", "admin", "manager", "analista"],
   "/matching": ["super_admin", "admin", "manager"], // Analista read-only on Hoy + Productos; no validation power.

@@ -26,6 +26,7 @@ interface NavItem {
 }
 const NAV_ITEMS: NavItem[] = [
   { href: "/hoy", label: "Hoy", enabled: true },
+  { href: "/ventas", label: "Ventas", enabled: true },
   { href: "/matching", label: "Validación", enabled: true },
   { href: "/productos", label: "Productos", enabled: false },
   { href: "/canales", label: "Canales", enabled: false },
