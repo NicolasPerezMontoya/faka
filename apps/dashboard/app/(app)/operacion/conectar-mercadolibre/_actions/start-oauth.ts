@@ -77,12 +77,15 @@ export async function startMlOAuthAction(): Promise<void> {
   const codeChallenge = base64Url(createHash("sha256").update(codeVerifier).digest());
 
   const supabase = createServiceRoleClient();
+  // Cast: code_verifier column was added in migration 20260615000005 but
+  // database.ts hasn't been regenerated yet. Drop this cast once codegen
+  // refreshes the Database type.
   const insert = await supabase.from("oauth_state").insert({
     state,
     canal: "mercadolibre",
     redirect_after: "/operacion/conectar-mercadolibre",
     code_verifier: codeVerifier,
-  });
+  } as unknown as never);
   if (insert.error) {
     redirect(
       `/operacion/conectar-mercadolibre?status=error&reason=oauth_state_insert_failed`,
