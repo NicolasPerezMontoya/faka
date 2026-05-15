@@ -53,3 +53,7 @@ coverage/
 *.local.csv
 /tmp/
 /scratch/
+
+# Local operator artifacts (Vercel CLI metadata + ad-hoc SQL bundles)
+.vercel/
+scripts/demo-bundle/
