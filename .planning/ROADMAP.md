@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 0: Discovery & catalog normalization** - Understand the real catalog before building; produce baseline of automatic-vs-manual matching using CSV ingestion from day one.
 - [ ] **Phase 1: Foundation** - Repo, Supabase 5-layer schema (incl. LOCKED CSV tables), auth+RLS, Railway orchestrator skeleton, end-to-end CSV upload endpoint + Operación wizard.
 - [~] **Phase 2: Walking skeleton (WordPress)** - First real connector end-to-end + matching cascade + human validation queue + "Hoy" view. **CODE-COMPLETE 2026-05-15** (25/25 plans; degraded-mode until cliente delivers `WORDPRESS_*` creds — see `memoria/F2-PROGRESO.md`).
-- [ ] **Phase 2.1 (INSERTED): Mercado Libre Colombia integration** - First real integration after walking-skeleton. OAuth (developer app) + orders/products sync + 5-channel matching cascade extension. Bumped from F4 per cliente decision 2026-05-14.
+- [~] **Phase 2.1 (INSERTED): Mercado Libre Colombia integration** - First real integration after walking-skeleton. OAuth (developer app) + orders/products sync + 5-channel matching cascade extension. Bumped from F4 per cliente decision 2026-05-14. **CODE-COMPLETE 2026-05-15** (22/22 plans across 6 waves; F2 cascade dependency satisfied; degraded-mode until cliente completes OAuth bootstrap + production cutover — see `memoria/F2.1-PROGRESO.md`).
 - [ ] **Phase 3: POS + WhatsApp (form) + Dead Stock** - POS webhook + internal WhatsApp form + "Productos" view + `mart_dead_stock` promoted to MVP + "Operación" health checks. **MVP usable milestone**.
 - [ ] **Phase 4: Mercado Libre + Dropi + Mini-CRM** - ML OAuth + Dropi CSV-primary + advanced marts + email alerts + **Mini-CRM (ADR-004)** with customer matching cascade and "Clientes" view.
 - [ ] **Phase 5: AI layer** - LLMProvider adapter + AM/PM insight jobs + feedback feed + conversational RAG chat + versioned prompts.
@@ -85,13 +85,32 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 02.1: Mercado Libre Colombia integration (OAuth + 5-channel matching cascade extension) (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** First real integration after the walking skeleton. Ship a production-ready Mercado Libre Colombia (siteId `MCO`) channel that pulls orders every 15 min and items every 60 min via the official REST API, exchanges/rotates OAuth tokens, receives signed-query-params webhooks, plugs unmatched `sale_items` into F2's existing 5-level matching cascade without re-implementing it, and surfaces ML rows in F2's channel-agnostic `/hoy` + `/matching` views with NO new dashboard pages (besides a single `/operacion/conectar-mercadolibre` "connect" route used once per seller). Connector ships in graceful **degraded mode** until the cliente registers the developer app at https://developers.mercadolibre.com.co and delivers the four env vars.
+**Requirements:** ML-01, ML-02, ML-03, ML-04, ML-05, ML-06
 **Depends on:** Phase 2
-**Plans:** 0 plans
+**Plans:** 22 plans
 
-Plans:
-- [ ] TBD (run /gsd-plan-phase 02.1 to break down)
+**Status**: Code-complete 2026-05-15; awaiting cliente OAuth bootstrap + production cutover (orchestrator deploy to Railway) — see `memoria/F2.1-PROGRESO.md`. ML developer app registered (app_id 3933497047128728); env vars currently in Vercel orchestrator-temporarily; will move ML_CLIENT_SECRET + ML_WEBHOOK_SECRET to Railway when orchestrator deploys.
+
+**Success criteria status** (verified at code level):
+
+1. **ML-01** ✓ Wired (degraded until OAuth bootstrap): webhook route + `sync-ml-orders` cron (`*/15 * * * *`) + 15-min latency smoke (`scripts/ml-latency-smoke.ts`).
+2. **ML-02** ✓ Met: `sync-ml-products` cron (`0 * * * *`) with scroll_id pagination + variant attribute hashing + catalog-mode DLQ counter.
+3. **ML-03** ✓ Met: F2 5-level cascade REUSED via `runMatchCascade` import (zero `matchByX` imports inside `packages/connectors/src/mercadolibre/` — grep-asserted by smoke).
+4. **ML-04** ✓ Met: OAuth lifecycle (exchange + single-use refresh rotation + advisory-lock race protection + 5h safety-net cron); `oauth_tokens` service-role-only RLS; `oauth_state` CSRF table with 10-min TTL.
+5. **ML-05** ✓ Met: ML webhook signed-query-params HMAC verify (NOT body — divergent from WP pattern); raw_events dedupe on `(canal, tipo_evento, resource, sent)`.
+6. **ML-06** ✓ Met: degraded-mode all surfaces (healthCheck, fetchOrders, fetchProducts, webhook, callback, 3 crons, connect page) — exit 0 / 503 / empty-array as appropriate.
+
+**Plans (22 total)**:
+
+- Wave 0 (Prep + scaffolding): 2.1.0.1 undici + p-retry/zod/hono pin parity · 2.1.0.2 env vars + railway.toml · 2.1.0.3 CC-11 eslint regex extension · 2.1.0.4 orchestrator test dir + ML fixtures
+- Wave 1 (OAuth lifecycle): 2.1.1.1 oauth_tokens migration + types · 2.1.1.2 oauth.ts (exchange + refresh + advisory lock + lazy refresh) · 2.1.1.3 ML status → sales.estado mapper · 2.1.1.4 ml-refresh-tokens cron (5h safety net)
+- Wave 2 (Connector + API client): 2.1.2.1 api-client (undici + from_id + scroll_id + 401-refresh) · 2.1.2.2 variant-mapper + additive unique constraint · 2.1.2.3 config.ts degraded-mode discriminant · 2.1.2.4 connector index.ts REWRITE
+- Wave 3 (Orchestrator routes + crons): 2.1.3.1 /webhooks/mercadolibre route + signed-query-params verify + raw_events dedup migration · 2.1.3.2 sync-ml-orders cron (cascade integrated) · 2.1.3.3 sync-ml-products cron · 2.1.3.4 OAuth bootstrap (dashboard connect page + callback route + oauth_state)
+- Wave 4 (Tests + smoke): 2.1.4.1 state-mapper test · 2.1.4.2 OAuth refresh race regression test (advisory lock proof) · 2.1.4.3 webhook signature verify exhaustive (8 cases) · 2.1.4.4 ml-latency-smoke + smoke-f2.1.sh
+- Wave 5 (Docs + deploy notes): 2.1.5.1 DEPLOY.md F2.1 section + ML app registration runbook · 2.1.5.2 F2.1-PROGRESO memo + ROADMAP/STATE closeout
+
+**UI hint**: yes (single new dashboard route — `/operacion/conectar-mercadolibre` — no ML-specific analytics views)
 
 ### Phase 3: POS + WhatsApp (form) + Dead Stock
 

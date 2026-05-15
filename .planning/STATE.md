@@ -60,6 +60,7 @@ _Updated after each plan completion_
 ### Roadmap Evolution
 
 - Phase 2.1 inserted (URGENT) after Phase 2 — 2026-05-14 — Mercado Libre Colombia integration. Cliente decision: ML es el primer canal real post-F2 (antes de F3 POS+WhatsApp). F4 (ML+Dropi+Mini-CRM) necesita `--edit 4` follow-up para sacar ML (queda Dropi+Mini-CRM).
+- Phase 2.1 code-complete 2026-05-15: 22 plans landed across 6 waves (W0 prep + W1 OAuth lifecycle + W2 connector/api-client + W3 orchestrator routes/crons + W4 tests/smoke + W5 docs/closeout). F2 cascade dependency satisfied (W2 plans 2.2.2–2.2.5 landed before F2.1 W3 sync-ml-orders cron). ML developer app registered (app_id 3933497047128728); env vars in Vercel orchestrator-temporarily. Awaiting cliente OAuth bootstrap + production cutover to flip from degraded → configured mode. See `memoria/F2.1-PROGRESO.md`.
 
 ### Decisions
 
