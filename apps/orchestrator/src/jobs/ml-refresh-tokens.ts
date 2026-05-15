@@ -9,7 +9,8 @@
  * so the next `sync-ml-orders` tick doesn't lose its first round-trip to
  * a 401 + lazy-refresh detour.
  *
- * Cadence: every 5 hours (the cron service entry sets `0 */5 * * *`). The
+ * Cadence: every 5 hours (the cron service entry sets the cron expression
+ * with five fields: minute=0, hour=star-slash-5, day/month/dow=star). The
  * 5h cadence is calibrated to ML's 6h access-token TTL — we always have at
  * least 1h of headroom even if the cron itself is delayed by Railway's
  * scheduler jitter.
