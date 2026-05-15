@@ -23,22 +23,67 @@ interface NavItem {
   label: string;
   enabled: boolean;
   requiresPathAllowed?: boolean;
+  /** Nested children rendered indented when present. */
+  children?: NavItem[];
 }
 const NAV_ITEMS: NavItem[] = [
   { href: "/hoy", label: "Hoy", enabled: true },
   { href: "/ventas", label: "Ventas", enabled: true },
   { href: "/matching", label: "Validación", enabled: true },
   { href: "/productos", label: "Productos", enabled: false },
-  { href: "/canales", label: "Canales", enabled: false },
   { href: "/inteligencia", label: "Inteligencia", enabled: false },
   { href: "/operacion", label: "Operación", enabled: true },
   {
-    href: "/operacion/conectar-mercadolibre",
-    label: "Conectar Mercado Libre",
+    href: "/configuracion",
+    label: "Configuración",
     enabled: true,
     requiresPathAllowed: true,
+    children: [
+      {
+        href: "/configuracion/canales",
+        label: "Canales",
+        enabled: true,
+        requiresPathAllowed: true,
+        children: [
+          {
+            href: "/operacion/conectar-mercadolibre",
+            label: "Conectar Mercado Libre",
+            enabled: true,
+            requiresPathAllowed: true,
+          },
+        ],
+      },
+    ],
   },
 ];
+
+function renderNav(items: NavItem[], role: UserRole | null, depth = 0): React.ReactNode {
+  return items
+    .filter((item) =>
+      item.requiresPathAllowed ? isPathAllowed(item.href, role) : true,
+    )
+    .map((item) => (
+      <div key={item.href}>
+        <a
+          href={item.enabled ? item.href : "#"}
+          className={[
+            "block py-2 rounded-lg text-primary-foreground/70",
+            depth === 0 ? "px-3 text-sm" : "",
+            depth === 1 ? "pl-7 pr-3 text-xs" : "",
+            depth >= 2 ? "pl-11 pr-3 text-xs" : "",
+            item.enabled
+              ? "hover:bg-primary-foreground/10"
+              : "opacity-50 cursor-not-allowed",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {item.label}
+        </a>
+        {item.children ? renderNav(item.children, role, depth + 1) : null}
+      </div>
+    ));
+}
 
 export default function RootLayout({
   children,
@@ -60,23 +105,8 @@ export default function RootLayout({
               </div>
               <div className="text-lg font-semibold">Dashboard Omnicanal</div>
             </div>
-            <nav className="px-2 py-3 space-y-1 text-sm">
-              {NAV_ITEMS.filter((item) =>
-                item.requiresPathAllowed ? isPathAllowed(item.href, role) : true,
-              ).map((item) => (
-                <a
-                  key={item.href}
-                  href={item.enabled ? item.href : "#"}
-                  className={[
-                    "block px-3 py-2 rounded-lg text-primary-foreground/70",
-                    item.enabled
-                      ? "hover:bg-primary-foreground/10"
-                      : "opacity-50 cursor-not-allowed",
-                  ].join(" ")}
-                >
-                  {item.label}
-                </a>
-              ))}
+            <nav className="px-2 py-3 space-y-1">
+              {renderNav(NAV_ITEMS, role)}
             </nav>
             <div className="mt-auto p-4 text-xs text-primary-foreground/50 border-t border-primary-foreground/10">
               v0.2 · Phase 2 Walking Skeleton

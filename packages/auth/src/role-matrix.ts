@@ -63,6 +63,9 @@ export const ROUTE_ROLE_REQUIREMENTS: Record<
   // F2.1 Plan 2.1.3.4 — ML connect bootstrap. super_admin + admin only
   // (only the owner connects a channel; manager/analista never authorize).
   "/operacion/conectar-mercadolibre": ["super_admin", "admin"],
+  // Configuración hub — channel + integration management.
+  "/configuracion": ["super_admin", "admin"],
+  "/configuracion/canales": ["super_admin", "admin"],
   "/clientes": ["super_admin", "admin"], // Mini-CRM hidden from Manager/Analista (ADR-004)
   "/inteligencia": ["super_admin", "admin", "manager", "analista"],
   "/hoy": ["super_admin", "admin", "manager", "analista"],
