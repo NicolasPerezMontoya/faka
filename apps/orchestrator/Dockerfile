@@ -37,8 +37,10 @@ RUN pnpm install --no-frozen-lockfile --filter @faka/orchestrator...
 COPY . .
 RUN pnpm --filter @faka/orchestrator... build
 
-# Prune dev deps for runtime image.
-RUN pnpm --filter @faka/orchestrator --prod deploy /out
+# Prune dev deps for runtime image. pnpm v10 requires --legacy unless every
+# workspace package opts into inject-workspace-packages; we don't, so use the
+# legacy deploy strategy (matches the pre-v10 behavior).
+RUN pnpm --filter @faka/orchestrator --prod deploy --legacy /out
 
 # ─── Stage 2: runtime ────────────────────────────────────────────
 FROM node:22-alpine AS runtime
