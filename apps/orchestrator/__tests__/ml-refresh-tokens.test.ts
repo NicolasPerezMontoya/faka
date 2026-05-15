@@ -144,10 +144,11 @@ function makeCfg(ok: boolean, missing: string[] = []): LoadedMLConfig {
         clientSecret: "TEST_SECRET",
         redirectUri: "https://orchestrator.test/oauth/mercadolibre/callback",
         webhookSecret: "TEST_WEBHOOK",
+        siteId: "MCO",
       },
     };
   }
-  return { ok: false, missing };
+  return { ok: false, reason: "not_configured", missing };
 }
 
 // -----------------------------------------------------------------------------
