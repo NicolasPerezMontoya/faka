@@ -103,8 +103,8 @@ export default async function VentasPage({
     .order("fecha", { ascending: false })
     .order("hora", { ascending: false, nullsFirst: false });
 
-  if (canalFilter) query = query.eq("canal", canalFilter);
-  if (estadoFilter) query = query.eq("estado", estadoFilter);
+  if (canalFilter) query = query.eq("canal", canalFilter as never);
+  if (estadoFilter) query = query.eq("estado", estadoFilter as never);
   if (q) {
     // Search across external_order_id and customer_name.
     query = query.or(`external_order_id.ilike.%${q}%,customer_name.ilike.%${q}%`);
