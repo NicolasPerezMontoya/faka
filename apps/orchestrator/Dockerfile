@@ -24,6 +24,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/db/package.json ./packages/db/
 COPY packages/schema/package.json ./packages/schema/
 COPY packages/connectors/package.json ./packages/connectors/
+COPY packages/llm/package.json ./packages/llm/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/auth/package.json ./packages/auth/
 COPY apps/dashboard/package.json ./apps/dashboard/
