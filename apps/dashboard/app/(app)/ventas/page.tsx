@@ -40,12 +40,12 @@ const CANAL_LABELS: Record<string, string> = {
   "csv-upload": "CSV manual",
 };
 
-const ESTADO_VARIANT: Record<string, "ok" | "muted" | "destructive"> = {
+const ESTADO_VARIANT: Record<string, "ok" | "muted" | "warn" | "err"> = {
   pagado: "ok",
-  pendiente: "muted",
-  parcial: "muted",
-  cancelado: "destructive",
-  devuelto: "destructive",
+  pendiente: "warn",
+  parcial: "warn",
+  cancelado: "err",
+  devuelto: "err",
 };
 
 const PAGE_SIZE = 50;
