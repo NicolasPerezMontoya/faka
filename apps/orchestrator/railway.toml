@@ -194,6 +194,36 @@ restartPolicyType = "NEVER"
 [services.cron]
 schedule = "*/15 * * * *"
 
+# ─── Cron service: sync-ml-products (F2.1 Plan 2.1.3.3) ──────────
+# Every 60 min: pull ML items via search_type=scan + scroll_id (bypasses
+# the 1000-record cap), 20-id batched /items?ids=... detail fetch with
+# include_attributes=all (Pitfall 5 — surfaces out-of-stock variations),
+# and call upsertProductWithVariants per item — the three-write UPSERT
+# chain (master_products + product_variants + product_mappings) keeps
+# the cascade's barcode/supplier_code/embeddings levels fresh.
+#
+# Cadence rationale: 60 min matches ML's items endpoint's eventual-
+# consistency floor; tighter would just churn the UPSERT chain.
+# Stagger: ml-orders at :00/:15/:30/:45 (15-min), ml-products at :07
+# to avoid colliding with the orders cron's first window after the hour.
+#
+# Cascade is NOT called here (products are the candidates, not the
+# to-be-matched). Re-embedding happens in the reembed-products cron via
+# source_hash short-circuit (Pitfall 5 cross-cite).
+#
+# Degraded mode: same shape as sync-ml-orders / ml-refresh-tokens —
+# succeeded no-op + exit 0 when ML envs are unset or no oauth_tokens
+# row exists yet.
+[[services]]
+name = "orchestrator-cron-sync-ml-products"
+
+[services.deploy]
+startCommand = "node dist/cron.js sync-ml-products"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "7 * * * *"
+
 # ─── F2 environment surface ──────────────────────────────────────
 # Operator runbook: set these in the Railway service variables tab.
 # Both services (web + cron) read the same list. See DEPLOY.md for the

@@ -59,6 +59,7 @@ import { runReembedJob } from "./jobs/reembed-products.js";
 import { runRecascadeJob } from "./jobs/re-cascade-unmatched.js";
 import { runMlRefreshTokens } from "./jobs/ml-refresh-tokens.js";
 import { runSyncMlOrders } from "./jobs/sync-ml-orders.js";
+import { runSyncMlProducts } from "./jobs/sync-ml-products.js";
 
 type Subcommand =
   | "heartbeat"
@@ -68,7 +69,8 @@ type Subcommand =
   | "reembed-products"
   | "re-cascade-unmatched"
   | "ml-refresh-tokens"
-  | "sync-ml-orders";
+  | "sync-ml-orders"
+  | "sync-ml-products";
 
 const KNOWN: Subcommand[] = [
   "heartbeat",
@@ -79,6 +81,7 @@ const KNOWN: Subcommand[] = [
   "re-cascade-unmatched",
   "ml-refresh-tokens",
   "sync-ml-orders",
+  "sync-ml-products",
 ];
 
 function parseSubcommand(): Subcommand {
@@ -191,6 +194,15 @@ async function main(): Promise<void> {
         // failed status is surfaced via `connector_runs.status` (not the
         // process exit code) so Railway doesn't restart-loop on bad-data
         // or pre-OAuth degraded conditions.
+        process.exit(0);
+        break;
+      }
+
+      case "sync-ml-products": {
+        const result = await runSyncMlProducts();
+        log.info({ result }, "cron.sync-ml-products.summary");
+        // Same exit policy. Partial/failed status surfaces via
+        // connector_runs.status; exit 0 keeps Railway quiet pre-OAuth.
         process.exit(0);
         break;
       }
