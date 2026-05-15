@@ -58,6 +58,7 @@ import { runSyncWpProducts } from "./jobs/sync-wp-products.js";
 import { runReembedJob } from "./jobs/reembed-products.js";
 import { runRecascadeJob } from "./jobs/re-cascade-unmatched.js";
 import { runMlRefreshTokens } from "./jobs/ml-refresh-tokens.js";
+import { runSyncMlOrders } from "./jobs/sync-ml-orders.js";
 
 type Subcommand =
   | "heartbeat"
@@ -66,7 +67,8 @@ type Subcommand =
   | "sync-wp-products"
   | "reembed-products"
   | "re-cascade-unmatched"
-  | "ml-refresh-tokens";
+  | "ml-refresh-tokens"
+  | "sync-ml-orders";
 
 const KNOWN: Subcommand[] = [
   "heartbeat",
@@ -76,6 +78,7 @@ const KNOWN: Subcommand[] = [
   "reembed-products",
   "re-cascade-unmatched",
   "ml-refresh-tokens",
+  "sync-ml-orders",
 ];
 
 function parseSubcommand(): Subcommand {
@@ -177,6 +180,17 @@ async function main(): Promise<void> {
         // surfaced via `connector_runs.status`, NOT via the process exit
         // code. exit(0) keeps Railway's restart-on-failure quiet during
         // the pre-OAuth period (degraded mode is a "succeeded" no-op).
+        process.exit(0);
+        break;
+      }
+
+      case "sync-ml-orders": {
+        const result = await runSyncMlOrders();
+        log.info({ result }, "cron.sync-ml-orders.summary");
+        // Same exit policy as the WP crons + ml-refresh-tokens: partial /
+        // failed status is surfaced via `connector_runs.status` (not the
+        // process exit code) so Railway doesn't restart-loop on bad-data
+        // or pre-OAuth degraded conditions.
         process.exit(0);
         break;
       }

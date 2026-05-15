@@ -161,6 +161,39 @@ restartPolicyType = "NEVER"
 [services.cron]
 schedule = "0 */5 * * *"
 
+# ─── Cron service: sync-ml-orders (F2.1 Plan 2.1.3.2) ────────────
+# Every 15 min: pull ML orders since the last successful tipo='orders' run,
+# UPSERT into `sales` on (canal, external_order_id), insert sale_items on
+# (sale_id, external_product_id), and run the F2 5-level matching cascade
+# (runMatchCascade + persistMatch from @faka/connectors/matching) on every
+# unmatched line item. The cron is the authoritative orders path for ML —
+# the webhook (Plan 2.1.3.1) is the < 15-min latency path that drops a
+# pointer into raw_orders; this cron does the actual reconciliation.
+#
+# Cadence rationale: 15 min matches ML's eventual-consistency floor for
+# /orders/search; a tighter cadence wouldn't surface new data faster but
+# would burn ML's rate-limit budget. The cron applies a 5-min overlap
+# window so edits ML surfaced just after the prior run's cutoff still
+# land (UPSERTs absorb the overlap — RESEARCH §Pattern 3).
+#
+# F2-CASCADE-REUSE invariant: runMatchCascade is imported from
+# @faka/connectors/matching — F2 Wave 2 output. We never re-implement
+# levels 1-5 here.
+#
+# Degraded mode (any ML_* env unset OR no oauth_tokens row yet): records
+# `status=succeeded, records_processed=0, errors_json.reason='not_configured'
+# or 'no_oauth_token_row'` and exits 0 — same pre-OAuth-silence policy as
+# ml-refresh-tokens above.
+[[services]]
+name = "orchestrator-cron-sync-ml-orders"
+
+[services.deploy]
+startCommand = "node dist/cron.js sync-ml-orders"
+restartPolicyType = "NEVER"
+
+[services.cron]
+schedule = "*/15 * * * *"
+
 # ─── F2 environment surface ──────────────────────────────────────
 # Operator runbook: set these in the Railway service variables tab.
 # Both services (web + cron) read the same list. See DEPLOY.md for the
