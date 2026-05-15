@@ -89,7 +89,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   // [1] Validate state — must exist, must be for this canal, must be unexpired.
   const stateLookup = await supabase
     .from("oauth_state")
-    .select("state, canal, expires_at")
+    .select("state, canal, expires_at, code_verifier")
     .eq("state", state)
     .eq("canal", "mercadolibre")
     .maybeSingle();
@@ -103,6 +103,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     state: string;
     canal: string;
     expires_at: string;
+    code_verifier: string | null;
   };
   if (new Date(stateRow.expires_at).getTime() < Date.now()) {
     // Expired — clean up + reject.
@@ -118,8 +119,14 @@ export async function GET(request: Request): Promise<NextResponse> {
   // against replay).
   await supabase.from("oauth_state").delete().eq("state", state);
 
-  // [3] Exchange the code. NEVER logs the secret or the response body.
-  const exchange = await exchangeCodeForToken(cfg.cfg, code, supabase);
+  // [3] Exchange the code (with PKCE verifier when the row carries one).
+  // NEVER logs the secret or the response body.
+  const exchange = await exchangeCodeForToken(
+    cfg.cfg,
+    code,
+    supabase,
+    stateRow.code_verifier ?? undefined,
+  );
   if (!exchange.ok) {
     return redirectToConnectPage(origin, {
       status: "error",

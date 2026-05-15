@@ -37,13 +37,17 @@
 
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import type { UserRole } from "@faka/schema";
 
 const ML_AUTHORIZE_BASE = "https://auth.mercadolibre.com.co/authorization";
+
+function base64Url(buf: Buffer): string {
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
 export async function startMlOAuthAction(): Promise<void> {
   // [0] Defense-in-depth role check — middleware should have blocked already.
@@ -64,13 +68,20 @@ export async function startMlOAuthAction(): Promise<void> {
     );
   }
 
-  // [2] Mint a random nonce + persist it.
+  // [2] Mint state + PKCE verifier/challenge. ML Colombia enforces PKCE on
+  // the app config, so every authorize → exchange round-trip needs a fresh
+  // (verifier, challenge) pair. We persist the verifier alongside the
+  // state nonce; the callback fetches it back and sends it in the token POST.
   const state = randomBytes(32).toString("hex");
+  const codeVerifier = base64Url(randomBytes(64));
+  const codeChallenge = base64Url(createHash("sha256").update(codeVerifier).digest());
+
   const supabase = createServiceRoleClient();
   const insert = await supabase.from("oauth_state").insert({
     state,
     canal: "mercadolibre",
     redirect_after: "/operacion/conectar-mercadolibre",
+    code_verifier: codeVerifier,
   });
   if (insert.error) {
     redirect(
@@ -86,6 +97,8 @@ export async function startMlOAuthAction(): Promise<void> {
   authorize.searchParams.set("client_id", clientId);
   authorize.searchParams.set("redirect_uri", redirectUri);
   authorize.searchParams.set("state", state);
+  authorize.searchParams.set("code_challenge", codeChallenge);
+  authorize.searchParams.set("code_challenge_method", "S256");
 
   redirect(authorize.toString());
 }

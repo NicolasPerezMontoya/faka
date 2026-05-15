@@ -111,6 +111,8 @@ interface TokenPostBody {
   code?: string;
   /** authorization_code only */
   redirect_uri?: string;
+  /** authorization_code only — required when the ML app config enforces PKCE. */
+  code_verifier?: string;
   /** refresh_token only */
   refresh_token?: string;
 }
@@ -172,6 +174,7 @@ export async function exchangeCodeForToken(
   cfg: MLConfig,
   code: string,
   supabase: SupabaseClient,
+  codeVerifier?: string,
 ): Promise<MLTokenResult> {
   const result = await withRetryAndDLQ(
     () =>
@@ -181,6 +184,7 @@ export async function exchangeCodeForToken(
         client_secret: cfg.clientSecret,
         code,
         redirect_uri: cfg.redirectUri,
+        code_verifier: codeVerifier,
       }),
     {
       canal: "mercadolibre",
