@@ -1,0 +1,117 @@
+{
+  "id": 2000000001,
+  "status": "paid",
+  "status_detail": null,
+  "date_created": "2026-05-15T10:00:00.000-05:00",
+  "date_closed": "2026-05-15T10:05:00.000-05:00",
+  "last_updated": "2026-05-15T10:05:00.000-05:00",
+  "expiration_date": "2026-05-16T10:00:00.000-05:00",
+  "site_id": "MCO",
+  "currency_id": "COP",
+  "total_amount": 75000,
+  "paid_amount": 75000,
+  "coupon": null,
+  "shipping_cost": 0,
+  "buyer": {
+    "id": 999999999,
+    "nickname": "TESTBUYER",
+    "email": "redacted@example.com",
+    "first_name": "Test",
+    "last_name": "Buyer",
+    "phone": {
+      "area_code": "57",
+      "number": "3000000000",
+      "extension": ""
+    },
+    "billing_info": {
+      "doc_type": "CC",
+      "doc_number": "0000000000"
+    }
+  },
+  "seller": {
+    "id": 1234567890,
+    "nickname": "FAKA_TEST_SELLER"
+  },
+  "order_items": [
+    {
+      "item": {
+        "id": "MCO123456789",
+        "title": "Camiseta MCO Roja Talla M",
+        "category_id": "MCO1430",
+        "variation_id": 987654321,
+        "seller_custom_field": null,
+        "variation_attributes": [
+          { "name": "Color", "value_name": "Rojo" },
+          { "name": "Talla", "value_name": "M" }
+        ],
+        "warranty": null,
+        "condition": "new",
+        "seller_sku": "TEST-SKU-ROJO-M"
+      },
+      "quantity": 1,
+      "unit_price": 75000,
+      "full_unit_price": 75000,
+      "currency_id": "COP",
+      "manufacturing_days": null,
+      "sale_fee": 11250,
+      "listing_type_id": "gold_special"
+    }
+  ],
+  "payments": [
+    {
+      "id": 300000000001,
+      "order_id": 2000000001,
+      "payer_id": 999999999,
+      "collector": { "id": 1234567890 },
+      "currency_id": "COP",
+      "status": "approved",
+      "status_code": null,
+      "status_detail": "accredited",
+      "transaction_amount": 75000,
+      "shipping_cost": 0,
+      "overpaid_amount": 0,
+      "total_paid_amount": 75000,
+      "marketplace_fee": 11250,
+      "coupon_amount": 0,
+      "date_created": "2026-05-15T10:00:30.000-05:00",
+      "date_last_modified": "2026-05-15T10:05:00.000-05:00",
+      "date_approved": "2026-05-15T10:05:00.000-05:00",
+      "payment_method_id": "visa",
+      "payment_type": "credit_card",
+      "installments": 1,
+      "issuer_id": "25",
+      "atm_transfer_reference": { "transaction_id": null, "company_id": null },
+      "coupon_id": null,
+      "operation_type": "regular_payment",
+      "transaction_order_id": null,
+      "reason": "Camiseta MCO Roja Talla M"
+    }
+  ],
+  "shipping": {
+    "id": 400000000001,
+    "shipment_type": "shipping",
+    "status": "delivered",
+    "substatus": null,
+    "receiver_address": {
+      "id": 500000000001,
+      "address_line": "Calle Falsa 123",
+      "street_name": "Calle Falsa",
+      "street_number": "123",
+      "comment": "",
+      "zip_code": "110111",
+      "city": { "id": "TUxDQk9HQXJlYmFkb2dhYg", "name": "Bogotá" },
+      "state": { "id": "CO-DC", "name": "Bogotá D.C." },
+      "country": { "id": "CO", "name": "Colombia" },
+      "receiver_phone": "3000000000",
+      "receiver_name": "Test Buyer"
+    }
+  },
+  "feedback": { "sale": null, "purchase": null },
+  "tags": ["paid", "not_delivered"],
+  "cancel_detail": null,
+  "context": {
+    "channel": "marketplace",
+    "site": "MCO",
+    "flows": ["regular"]
+  }
+}

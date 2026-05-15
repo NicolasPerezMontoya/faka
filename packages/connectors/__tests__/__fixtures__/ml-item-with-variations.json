@@ -1,0 +1,72 @@
+{
+  "id": "MCO123456789",
+  "site_id": "MCO",
+  "title": "Camiseta MCO Multicolor",
+  "subtitle": null,
+  "seller_id": 1234567890,
+  "category_id": "MCO1430",
+  "official_store_id": null,
+  "price": 75000,
+  "base_price": 75000,
+  "original_price": null,
+  "currency_id": "COP",
+  "initial_quantity": 30,
+  "available_quantity": 22,
+  "sold_quantity": 8,
+  "buying_mode": "buy_it_now",
+  "listing_type_id": "gold_special",
+  "condition": "new",
+  "permalink": "https://articulo.mercadolibre.com.co/MCO-123456789-camiseta-mco-multicolor-_JM",
+  "thumbnail": "https://http2.mlstatic.com/D_test-fixture.jpg",
+  "secure_thumbnail": "https://http2.mlstatic.com/D_test-fixture.jpg",
+  "status": "active",
+  "domain_id": "MCO-T_SHIRTS",
+  "seller_custom_field": "TEST-SKU-PARENT",
+  "attributes": [
+    { "id": "BRAND", "name": "Marca", "value_name": "Faka Test Brand" },
+    { "id": "GENDER", "name": "Género", "value_name": "Unisex" }
+  ],
+  "pictures": [
+    { "id": "test_pic_1", "url": "https://http2.mlstatic.com/D_test-fixture-1.jpg", "secure_url": "https://http2.mlstatic.com/D_test-fixture-1.jpg" }
+  ],
+  "variations": [
+    {
+      "id": 987654321,
+      "price": 75000,
+      "attribute_combinations": [
+        { "id": "COLOR", "name": "Color", "value_name": "Rojo" },
+        { "id": "SIZE",  "name": "Talla", "value_name": "M" }
+      ],
+      "available_quantity": 8,
+      "sold_quantity": 4,
+      "seller_custom_field": "TEST-SKU-ROJO-M",
+      "picture_ids": ["test_pic_1"]
+    },
+    {
+      "id": 987654322,
+      "price": 75000,
+      "attribute_combinations": [
+        { "id": "COLOR", "name": "Color", "value_name": "Azul" },
+        { "id": "SIZE",  "name": "Talla", "value_name": "M" }
+      ],
+      "available_quantity": 7,
+      "sold_quantity": 2,
+      "seller_custom_field": "TEST-SKU-AZUL-M",
+      "picture_ids": ["test_pic_1"]
+    },
+    {
+      "id": 987654323,
+      "price": 75000,
+      "attribute_combinations": [
+        { "id": "COLOR", "name": "Color", "value_name": "Rojo" },
+        { "id": "SIZE",  "name": "Talla", "value_name": "L" }
+      ],
+      "available_quantity": 7,
+      "sold_quantity": 2,
+      "seller_custom_field": "TEST-SKU-ROJO-L",
+      "picture_ids": ["test_pic_1"]
+    }
+  ],
+  "date_created": "2026-04-01T08:00:00.000-05:00",
+  "last_updated": "2026-05-15T09:00:00.000-05:00"
+}

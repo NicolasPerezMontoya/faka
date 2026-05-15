@@ -1,0 +1,16 @@
+{
+  "_id": "60a1b2c3d4e5f6a7b8c9d0e1",
+  "resource": "/orders/2000000001",
+  "user_id": 123456789,
+  "topic": "orders_v2",
+  "application_id": 3933497047128728,
+  "attempts": 1,
+  "sent": "2026-05-15T10:05:30.000-05:00",
+  "received": "2026-05-15T10:05:31.000-05:00",
+  "actions": [],
+  "_query_params": {
+    "ts": "1747314330",
+    "topic": "orders_v2",
+    "resource": "/orders/2000000001"
+  }
+}

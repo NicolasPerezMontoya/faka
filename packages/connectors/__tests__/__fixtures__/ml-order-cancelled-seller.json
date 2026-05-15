@@ -1,0 +1,88 @@
+{
+  "id": 2000000002,
+  "status": "cancelled",
+  "status_detail": null,
+  "date_created": "2026-05-15T11:00:00.000-05:00",
+  "date_closed": "2026-05-15T11:30:00.000-05:00",
+  "last_updated": "2026-05-15T11:30:00.000-05:00",
+  "expiration_date": "2026-05-16T11:00:00.000-05:00",
+  "site_id": "MCO",
+  "currency_id": "COP",
+  "total_amount": 50000,
+  "paid_amount": 0,
+  "coupon": null,
+  "shipping_cost": 0,
+  "buyer": {
+    "id": 999999998,
+    "nickname": "TESTBUYER",
+    "email": "redacted@example.com",
+    "first_name": "Test",
+    "last_name": "Buyer",
+    "phone": {
+      "area_code": "57",
+      "number": "3000000000",
+      "extension": ""
+    },
+    "billing_info": {
+      "doc_type": "CC",
+      "doc_number": "0000000000"
+    }
+  },
+  "seller": {
+    "id": 1234567890,
+    "nickname": "FAKA_TEST_SELLER"
+  },
+  "order_items": [
+    {
+      "item": {
+        "id": "MCO123456789",
+        "title": "Camiseta MCO Azul Talla M",
+        "category_id": "MCO1430",
+        "variation_id": 987654322,
+        "seller_custom_field": null,
+        "variation_attributes": [
+          { "name": "Color", "value_name": "Azul" },
+          { "name": "Talla", "value_name": "M" }
+        ],
+        "warranty": null,
+        "condition": "new",
+        "seller_sku": "TEST-SKU-AZUL-M"
+      },
+      "quantity": 1,
+      "unit_price": 50000,
+      "full_unit_price": 50000,
+      "currency_id": "COP",
+      "manufacturing_days": null,
+      "sale_fee": 7500,
+      "listing_type_id": "gold_special"
+    }
+  ],
+  "payments": [],
+  "shipping": {
+    "id": null,
+    "shipment_type": null,
+    "status": null,
+    "substatus": null,
+    "receiver_address": {
+      "id": 500000000002,
+      "address_line": "Calle Falsa 123",
+      "street_name": "Calle Falsa",
+      "street_number": "123",
+      "comment": "",
+      "zip_code": "110111",
+      "city": { "id": "TUxDQk9HQXJlYmFkb2dhYg", "name": "Bogotá" },
+      "state": { "id": "CO-DC", "name": "Bogotá D.C." },
+      "country": { "id": "CO", "name": "Colombia" },
+      "receiver_phone": "3000000000",
+      "receiver_name": "Test Buyer"
+    }
+  },
+  "feedback": { "sale": null, "purchase": null },
+  "tags": ["cancelled"],
+  "cancel_detail": "seller_cancelled",
+  "context": {
+    "channel": "marketplace",
+    "site": "MCO",
+    "flows": ["regular"]
+  }
+}

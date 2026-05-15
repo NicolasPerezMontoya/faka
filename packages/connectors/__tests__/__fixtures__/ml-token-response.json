@@ -1,0 +1,8 @@
+{
+  "access_token": "TEST_ACCESS_TOKEN",
+  "token_type": "bearer",
+  "expires_in": 21600,
+  "scope": "offline_access read write",
+  "user_id": 123456789,
+  "refresh_token": "TG-TEST-REFRESH-TOKEN"
+}
