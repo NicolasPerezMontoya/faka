@@ -92,7 +92,7 @@ export async function startMlOAuthAction(): Promise<void> {
   authorize.searchParams.set("client_id", clientId);
   authorize.searchParams.set("redirect_uri", redirectUri);
   authorize.searchParams.set("state", state);
-  authorize.searchParams.set("scope", "offline_access read write");
+  authorize.searchParams.set("scope", "offline_access");
 
   redirect(authorize.toString());
 }
