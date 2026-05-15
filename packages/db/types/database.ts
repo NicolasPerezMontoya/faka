@@ -1081,6 +1081,30 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_state: {
+        Row: {
+          canal: Database["public"]["Enums"]["channel"]
+          created_at: string
+          expires_at: string
+          redirect_after: string | null
+          state: string
+        }
+        Insert: {
+          canal: Database["public"]["Enums"]["channel"]
+          created_at?: string
+          expires_at?: string
+          redirect_after?: string | null
+          state: string
+        }
+        Update: {
+          canal?: Database["public"]["Enums"]["channel"]
+          created_at?: string
+          expires_at?: string
+          redirect_after?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
       oauth_tokens: {
         Row: {
           access_token: string

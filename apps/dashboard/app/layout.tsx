@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { SignInLink, UserBadge } from "@faka/ui";
 import { signOutAction } from "@/app/(auth)/login/_actions";
+import { isPathAllowed } from "@faka/auth";
 import type { UserRole } from "@faka/schema";
 import "./globals.css";
 
@@ -14,13 +15,28 @@ export const metadata: Metadata = {
   description: "Dashboard de ventas omnicanal + capa de IA",
 };
 
-const NAV_ITEMS = [
+// F2.1 Plan 2.1.3.4 — the "Conectar Mercado Libre" entry is gated to
+// super_admin + admin via `isPathAllowed` below (middleware enforces the
+// security boundary; this is the UI hint layer).
+interface NavItem {
+  href: string;
+  label: string;
+  enabled: boolean;
+  requiresPathAllowed?: boolean;
+}
+const NAV_ITEMS: NavItem[] = [
   { href: "/hoy", label: "Hoy", enabled: true },
   { href: "/matching", label: "Validación", enabled: true },
   { href: "/productos", label: "Productos", enabled: false },
   { href: "/canales", label: "Canales", enabled: false },
   { href: "/inteligencia", label: "Inteligencia", enabled: false },
   { href: "/operacion", label: "Operación", enabled: true },
+  {
+    href: "/operacion/conectar-mercadolibre",
+    label: "Conectar Mercado Libre",
+    enabled: true,
+    requiresPathAllowed: true,
+  },
 ];
 
 export default function RootLayout({
@@ -44,7 +60,9 @@ export default function RootLayout({
               <div className="text-lg font-semibold">Dashboard Omnicanal</div>
             </div>
             <nav className="px-2 py-3 space-y-1 text-sm">
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS.filter((item) =>
+                item.requiresPathAllowed ? isPathAllowed(item.href, role) : true,
+              ).map((item) => (
                 <a
                   key={item.href}
                   href={item.enabled ? item.href : "#"}
