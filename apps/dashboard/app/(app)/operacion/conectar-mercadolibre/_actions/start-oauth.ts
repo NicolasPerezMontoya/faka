@@ -81,18 +81,11 @@ export async function startMlOAuthAction(): Promise<void> {
   // [3] Build the authorize URL — the .co host is the Colombia-specific
   // authorize gateway. ML's docs allow falling back to the .com.ar host with
   // a `site_id` query param, but the .co host is the canonical path for MCO.
-  //
-  // `scope=offline_access read write` is REQUIRED for ML to return a
-  // refresh_token alongside access_token. Sin el `offline_access`, ML asume
-  // sesión efímera y solo manda access_token — el upsert revienta con
-  // not-null constraint en refresh_token. La app además necesita tener
-  // habilitado offline_access en su panel de developer.
   const authorize = new URL(ML_AUTHORIZE_BASE);
   authorize.searchParams.set("response_type", "code");
   authorize.searchParams.set("client_id", clientId);
   authorize.searchParams.set("redirect_uri", redirectUri);
   authorize.searchParams.set("state", state);
-  authorize.searchParams.set("scope", "offline_access");
 
   redirect(authorize.toString());
 }
