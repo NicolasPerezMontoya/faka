@@ -15,6 +15,7 @@ import {
   Button,
 } from "@faka/ui";
 import { getMLConnectionStatus } from "@faka/connectors/mercadolibre";
+import { getPOSConnectionStatus } from "@faka/connectors/pos";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import type { UserRole } from "@faka/schema";
 
@@ -24,11 +25,13 @@ interface ChannelTile {
   key: string;
   name: string;
   description: string;
-  /** "connected" | "ready" | "not_configured" | "coming_soon" */
-  status: "connected" | "ready" | "not_configured" | "coming_soon";
+  /** "connected" | "ready" | "not_configured" | "coming_soon" | "blocked" */
+  status: "connected" | "ready" | "not_configured" | "coming_soon" | "blocked";
   ctaLabel: string;
   ctaHref: string | null;
   meta?: string;
+  /** Optional list of sub-rows rendered below the main meta. */
+  subRows?: Array<{ label: string; value: string; tone?: "ok" | "warn" | "err" }>;
 }
 
 function statusBadge(s: ChannelTile["status"]): React.ReactNode {
@@ -41,6 +44,8 @@ function statusBadge(s: ChannelTile["status"]): React.ReactNode {
       return <Badge variant="muted">Sin configurar</Badge>;
     case "coming_soon":
       return <Badge variant="muted">Próximamente</Badge>;
+    case "blocked":
+      return <Badge variant="warn">Esperando WAF</Badge>;
   }
 }
 
@@ -49,7 +54,10 @@ export default async function CanalesPage() {
 
   // Mercado Libre — real status from oauth_tokens + env.
   const supabase = createServiceRoleClient();
-  const mlStatus = await getMLConnectionStatus(supabase);
+  const [mlStatus, posStatus] = await Promise.all([
+    getMLConnectionStatus(supabase),
+    getPOSConnectionStatus(supabase),
+  ]);
 
   const mlTile: ChannelTile = {
     key: "mercadolibre",
@@ -64,6 +72,56 @@ export default async function CanalesPage() {
     ctaLabel: mlStatus.connected ? "Reconectar" : "Conectar",
     ctaHref: "/operacion/conectar-mercadolibre",
     meta: mlStatus.connected ? `user_id=${mlStatus.user_id ?? "?"}` : undefined,
+  };
+
+  // POS — env-driven status + per-location last run.
+  const allLocsRanOnce = posStatus.locations.every(
+    (l) => l.last_started_at !== null,
+  );
+  const allLocsHealthy =
+    posStatus.locations.length > 0 &&
+    posStatus.locations.every(
+      (l) => l.last_status === "succeeded" || l.last_status === "partial",
+    );
+  let posTileStatus: ChannelTile["status"];
+  if (!posStatus.configured) {
+    posTileStatus = "not_configured";
+  } else if (!allLocsRanOnce) {
+    posTileStatus = "blocked"; // Configured but no successful run yet → WAF likely.
+  } else if (allLocsHealthy) {
+    posTileStatus = "connected";
+  } else {
+    posTileStatus = "ready";
+  }
+
+  const posTile: ChannelTile = {
+    key: "pos",
+    name: "Punto de venta (PHP POS)",
+    description: posStatus.configured
+      ? "PHP Point Of Sale REST v1 · 2 tiendas físicas con pull horario."
+      : "PHP Point Of Sale REST v1. Configura POS_API_URL, POS_API_KEY y POS_LOCATION_MAP en Railway para activar.",
+    status: posTileStatus,
+    ctaLabel: posStatus.configured ? "Ver últimas ventas" : "Pendiente de configuración",
+    ctaHref: posStatus.configured ? "/ventas?canal=pos1" : null,
+    meta: posStatus.configured
+      ? `${posStatus.locations.length} tienda(s) mapeada(s)`
+      : posStatus.missing.length > 0
+        ? `Faltan envs: ${posStatus.missing.join(", ")}`
+        : undefined,
+    subRows: posStatus.locations.map((l) => ({
+      label: `${l.canal} (location_id=${l.location_id})`,
+      value: l.last_started_at
+        ? `${l.last_status} · ${l.last_records_processed} procesadas · ${l.last_started_at.slice(0, 19).replace("T", " ")}`
+        : "sin corridas aún",
+      tone:
+        l.last_status === "succeeded"
+          ? "ok"
+          : l.last_status === "partial"
+            ? "warn"
+            : l.last_status === "failed"
+              ? "err"
+              : undefined,
+    })),
   };
 
   const otherTiles: ChannelTile[] = [
@@ -85,8 +143,8 @@ export default async function CanalesPage() {
       ctaHref: null,
     },
     {
-      key: "pos",
-      name: "POS · WhatsApp · Falabella",
+      key: "whatsapp",
+      name: "WhatsApp · Falabella",
       description: "Canales programados para fases siguientes.",
       status: "coming_soon",
       ctaLabel: "Disponible en próxima fase",
@@ -94,7 +152,7 @@ export default async function CanalesPage() {
     },
   ];
 
-  const tiles: ChannelTile[] = [mlTile, ...otherTiles];
+  const tiles: ChannelTile[] = [mlTile, posTile, ...otherTiles];
 
   return (
     <div className="space-y-6">
@@ -123,6 +181,34 @@ export default async function CanalesPage() {
             <CardContent className="space-y-3">
               {t.meta && (
                 <p className="text-xs text-muted-foreground font-mono">{t.meta}</p>
+              )}
+              {t.subRows && t.subRows.length > 0 && (
+                <div className="border-t border-border pt-3 space-y-1">
+                  {t.subRows.map((sr, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between text-xs gap-2"
+                    >
+                      <span className="text-muted-foreground font-mono">
+                        {sr.label}
+                      </span>
+                      <span
+                        className={[
+                          "tabular-nums",
+                          sr.tone === "ok"
+                            ? "text-emerald-700"
+                            : sr.tone === "warn"
+                              ? "text-amber-700"
+                              : sr.tone === "err"
+                                ? "text-destructive"
+                                : "text-foreground",
+                        ].join(" ")}
+                      >
+                        {sr.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
               {t.ctaHref ? (
                 <Link href={t.ctaHref}>

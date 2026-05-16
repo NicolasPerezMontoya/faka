@@ -75,3 +75,78 @@ export const createPOSConnector: ConnectorFactory<POSConnectorConfig> = (
 
   return connector;
 };
+
+// -----------------------------------------------------------------------------
+// Connection status — read by /configuracion/canales POS tile.
+// -----------------------------------------------------------------------------
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadPOSConfig } from "./config.js";
+
+export interface POSConnectionStatus {
+  configured: boolean;
+  missing: string[];
+  locations: Array<{
+    location_id: string;
+    canal: Channel;
+    last_started_at: string | null;
+    last_status: string | null;
+    last_records_processed: number;
+    last_records_failed: number;
+  }>;
+}
+
+export async function getPOSConnectionStatus(
+  supabase: SupabaseClient,
+): Promise<POSConnectionStatus> {
+  const cfg = loadPOSConfig();
+  if (!cfg.ok) {
+    return { configured: false, missing: cfg.missing, locations: [] };
+  }
+
+  const locs: POSConnectionStatus["locations"] = [];
+  for (const [locationId, canal] of cfg.locations.entries()) {
+    // Latest connector_runs row for this canal, tipo=orders.
+    const { data } = await supabase
+      .from("connector_runs")
+      .select(
+        "started_at, status, records_processed, records_failed, metadata_json",
+      )
+      .eq("kind", "channel")
+      .eq("canal", canal)
+      .order("started_at", { ascending: false })
+      .limit(20);
+    let last: {
+      started_at: string;
+      status: string;
+      records_processed: number | null;
+      records_failed: number | null;
+    } | null = null;
+    for (const r of (data ?? []) as Array<{
+      started_at: string;
+      status: string;
+      records_processed: number | null;
+      records_failed: number | null;
+      metadata_json: { tipo?: string } | null;
+    }>) {
+      if (r.metadata_json?.tipo === "orders") {
+        last = r;
+        break;
+      }
+    }
+    locs.push({
+      location_id: locationId,
+      canal,
+      last_started_at: last?.started_at ?? null,
+      last_status: last?.status ?? null,
+      last_records_processed: Number(last?.records_processed ?? 0),
+      last_records_failed: Number(last?.records_failed ?? 0),
+    });
+  }
+
+  return {
+    configured: true,
+    missing: [],
+    locations: locs,
+  };
+}
