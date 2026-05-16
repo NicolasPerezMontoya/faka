@@ -19,6 +19,7 @@ import {
 } from "@faka/ui";
 import type { UserRole } from "@faka/schema";
 import { createClient } from "@/lib/supabase/server";
+import { VentasSummary } from "./_components/ventas-summary.js";
 
 export const dynamic = "force-dynamic";
 
@@ -130,13 +131,6 @@ export default async function VentasPage({
       );
     }
   }
-
-  // ── KPIs over the filtered range (independent of pagination) ─────────────
-  // We compute these from the same filtered slice using a separate aggregate
-  // query — Supabase REST returns counts only with exact, not server-side
-  // aggregates, so we sum a capped-recent slice for an honest preview.
-  const kpiIngresos = sales.reduce((acc, s) => acc + Number(s.total ?? 0), 0);
-  const kpiOrders = totalCount ?? sales.length;
 
   const totalPages = Math.max(1, Math.ceil((totalCount ?? sales.length) / PAGE_SIZE));
 
@@ -263,52 +257,15 @@ export default async function VentasPage({
         </CardContent>
       </Card>
 
-      {/* ── KPI strip ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Órdenes en el rango
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              {NUM.format(kpiOrders)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ingresos · página visible
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              {showMoney ? COP.format(kpiIngresos) : "—"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Suma de las {sales.length} órdenes visibles. Cambia de página
-              o filtra para ver agregados distintos.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Página
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              {page} / {totalPages}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {PAGE_SIZE} por página
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* ── KPI strip + monthly chart over the FULL filtered range ───────── */}
+      <VentasSummary
+        role={role}
+        from={toISODate(from)}
+        to={toISODate(to)}
+        canal={canalFilter}
+        estado={estadoFilter}
+        q={q}
+      />
 
       {/* ── Results table ────────────────────────────────────────────────── */}
       <Card>

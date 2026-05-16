@@ -9,6 +9,7 @@ import { TotalsCard } from "./_components/totals-card.js";
 import { PerChannelChart } from "./_components/per-channel-chart.js";
 import { TopProductsTable } from "./_components/top-products-table.js";
 import { LiveFeedRows } from "./_components/live-feed-rows.js";
+import { LastThirtyDaysChart } from "./_components/last-30d-chart.js";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,8 @@ export default function HoyPage() {
       </header>
 
       <TotalsCard role={role} />
+
+      <LastThirtyDaysChart role={role} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <PerChannelChart role={role} />
