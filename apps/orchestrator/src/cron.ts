@@ -60,6 +60,7 @@ import { runRecascadeJob } from "./jobs/re-cascade-unmatched.js";
 import { runMlRefreshTokens } from "./jobs/ml-refresh-tokens.js";
 import { runSyncMlOrders } from "./jobs/sync-ml-orders.js";
 import { runSyncMlProducts } from "./jobs/sync-ml-products.js";
+import { runSyncPosOrders } from "./jobs/sync-pos-orders.js";
 
 type Subcommand =
   | "heartbeat"
@@ -70,7 +71,8 @@ type Subcommand =
   | "re-cascade-unmatched"
   | "ml-refresh-tokens"
   | "sync-ml-orders"
-  | "sync-ml-products";
+  | "sync-ml-products"
+  | "sync-pos-orders";
 
 const KNOWN: Subcommand[] = [
   "heartbeat",
@@ -82,6 +84,7 @@ const KNOWN: Subcommand[] = [
   "ml-refresh-tokens",
   "sync-ml-orders",
   "sync-ml-products",
+  "sync-pos-orders",
 ];
 
 function parseSubcommand(): Subcommand {
@@ -203,6 +206,15 @@ async function main(): Promise<void> {
         log.info({ result }, "cron.sync-ml-products.summary");
         // Same exit policy. Partial/failed status surfaces via
         // connector_runs.status; exit 0 keeps Railway quiet pre-OAuth.
+        process.exit(0);
+        break;
+      }
+
+      case "sync-pos-orders": {
+        const result = await runSyncPosOrders();
+        log.info({ result }, "cron.sync-pos-orders.summary");
+        // Same exit policy: per-location partial/failed surfaces via
+        // connector_runs.status (one row per canal). Don't restart-loop.
         process.exit(0);
         break;
       }
