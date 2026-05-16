@@ -143,7 +143,7 @@ export async function runSyncPosOrders(
     logger: log,
   });
 
-  const thresholds = await loadThresholds(supabase);
+  const thresholds = loadThresholds();
   const llmConfig = resolveLLMConfig({});
 
   const perLocation: LocationResult[] = [];
