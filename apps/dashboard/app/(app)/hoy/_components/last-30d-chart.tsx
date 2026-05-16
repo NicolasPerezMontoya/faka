@@ -34,7 +34,11 @@ export async function LastThirtyDaysChart({
 }) {
   const showMoney = role !== "analista";
   const supabase = createClient();
-  const { data, error } = await supabase
+  // Cast to `any` — v_ventas_30d_daily was just added; database.ts hasn't
+  // been regenerated yet. Drop once codegen catches up.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
+  const { data, error } = await sb
     .from("v_ventas_30d_daily")
     .select("fecha, ordenes, ingresos, unidades");
 
