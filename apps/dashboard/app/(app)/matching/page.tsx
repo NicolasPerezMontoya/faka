@@ -19,6 +19,7 @@ import {
 } from "@faka/ui";
 import type { UserRole } from "@faka/schema";
 import { listMappings, type MappingRow } from "./_actions/list";
+import { UnmatchedItemsTable } from "./_components/unmatched-items";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +66,8 @@ export default async function MatchingPage() {
   const rows = await listMappings({ limit: 50, status: "queue" });
 
   return (
-    <div>
-      <header className="mb-6">
+    <div className="space-y-6">
+      <header>
         <h1 className="text-2xl font-semibold tracking-tight">
           Cola de validación
         </h1>
@@ -75,6 +76,8 @@ export default async function MatchingPage() {
           rechaza la sugerencia del catálogo maestro.
         </p>
       </header>
+
+      <UnmatchedItemsTable role={role} />
 
       {rows.length === 0 ? (
         <Card>
